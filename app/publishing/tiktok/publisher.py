@@ -104,16 +104,17 @@ class TikTokPublisher(BasePublisher):
 
         title = (request.caption or request.title or "").strip()[:2200]
 
+        # Descobre se temos permissao de Direct Post (video.publish) ou apenas
+        # de upload para rascunho (video.upload). No Sandbox normalmente so temos
+        # video.upload, entao enviamos o video como rascunho para o TikTok e o
+        # usuario finaliza a postagem no app.
+        scopes = (os.getenv("TIKTOK_SCOPES") or "user.info.basic,video.upload").lower()
+        direct_post = "video.publish" in scopes
+
         try:
-            # 3) Inicia a publicacao com upload direto (FILE_UPLOAD).
-            #    Enviamos o arquivo inteiro num unico pedaco.
-            init = requests.post(
-                f"{API_BASE}/post/publish/video/init/",
-                headers={
-                    "Authorization": f"Bearer {token}",
-                    "Content-Type": "application/json; charset=UTF-8",
-                },
-                json={
+            if direct_post:
+                init_url = f"{API_BASE}/post/publish/video/init/"
+                init_body = {
                     "post_info": {
                         "title": title,
                         "privacy_level": DEFAULT_PRIVACY,
@@ -127,7 +128,27 @@ class TikTokPublisher(BasePublisher):
                         "chunk_size": video_size,
                         "total_chunk_count": 1,
                     },
+                }
+            else:
+                # Upload para a "caixa de entrada" do criador (rascunho).
+                init_url = f"{API_BASE}/post/publish/inbox/video/init/"
+                init_body = {
+                    "source_info": {
+                        "source": "FILE_UPLOAD",
+                        "video_size": video_size,
+                        "chunk_size": video_size,
+                        "total_chunk_count": 1,
+                    },
+                }
+
+            # 3) Inicia a publicacao/upload com envio direto (FILE_UPLOAD).
+            init = requests.post(
+                init_url,
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json; charset=UTF-8",
                 },
+                json=init_body,
                 timeout=60,
             )
             data = init.json()
@@ -181,6 +202,14 @@ class TikTokPublisher(BasePublisher):
                     "market": market,
                     "publish_id": publish_id,
                     "async": True,
+                    "direct_post": direct_post,
+                    "note": (
+                        "Postado direto no perfil."
+                        if direct_post
+                        else "Enviado como rascunho para o TikTok. "
+                        "Abra o app do TikTok (Caixa de entrada > Rascunhos) "
+                        "para finalizar a publicacao."
+                    ),
                 },
             )
 

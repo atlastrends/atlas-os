@@ -26,7 +26,16 @@ AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/"
 TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/"
 
 # Permissoes necessarias para postar video pelo Content Posting API.
-SCOPES = "user.info.basic,video.publish,video.upload"
+# Por padrao pedimos apenas os scopes disponiveis no Sandbox
+# (user.info.basic + video.upload). Se voce habilitar o "Direct Post"
+# no portal do TikTok, pode adicionar "video.publish" definindo a
+# variavel TIKTOK_SCOPES no .env.
+_DEFAULT_SCOPES = "user.info.basic,video.upload"
+
+
+def _scopes() -> str:
+    return (os.getenv("TIKTOK_SCOPES") or _DEFAULT_SCOPES).strip()
+
 
 MARKETS = ("BR", "US")
 
@@ -87,7 +96,7 @@ def build_authorize_url(market: str) -> str:
 
     params = {
         "client_key": _client_key(),
-        "scope": SCOPES,
+        "scope": _scopes(),
         "response_type": "code",
         "redirect_uri": redirect_uri(),
         "state": state,
