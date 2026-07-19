@@ -23,6 +23,7 @@ from app.services.publishing_service import PublishingService
 from app.services.shortlink_service import ShortLinkService
 from app.services.video_library_service import VideoLibraryService
 from app.services import update_service
+from app.services import tiktok_oauth_service
 
 router = APIRouter(prefix="/api", tags=["Dashboard"])
 
@@ -388,6 +389,80 @@ def update_check():
 @router.post("/update/apply")
 def update_apply():
     return update_service.apply()
+
+
+# ----------------------------------------------------------------
+# LOGIN DO TIKTOK (OAuth pelo proprio painel)
+# ----------------------------------------------------------------
+
+@router.get("/tiktok/status")
+def tiktok_status():
+    return tiktok_oauth_service.status()
+
+
+@router.get("/tiktok/connect")
+def tiktok_connect(market: str = Query("BR")):
+    """Abre o login do TikTok. Redireciona para a pagina de autorizacao."""
+    from fastapi.responses import RedirectResponse
+
+    if not (tiktok_oauth_service._client_key() and tiktok_oauth_service._client_secret()):
+        raise HTTPException(
+            status_code=400,
+            detail="Faltam TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET no .env.",
+        )
+    if not tiktok_oauth_service.redirect_uri():
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "ATLAS_PUBLIC_BASE_URL nao esta definido. Inicie o ATLAS com o link "
+                "publico (ATLAS.bat) antes de conectar o TikTok."
+            ),
+        )
+    url = tiktok_oauth_service.build_authorize_url(market)
+    return RedirectResponse(url, status_code=302)
+
+
+@router.get("/tiktok/callback")
+def tiktok_callback(code: str = Query(default=""), state: str = Query(default=""), error: str = Query(default="")):
+    """Retorno do TikTok apos o login. Troca o code por tokens e salva."""
+    from fastapi.responses import HTMLResponse
+
+    def _page(title: str, message: str, ok: bool) -> HTMLResponse:
+        color = "#22c55e" if ok else "#f59e0b"
+        html = f"""<!doctype html><html lang="pt-br"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATLAS - TikTok</title></head>
+<body style="font-family:system-ui,Segoe UI,Arial;background:#0b1220;color:#e5e7eb;
+display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
+<div style="max-width:520px;padding:32px;background:#111827;border-radius:16px;
+border:1px solid #1f2937;text-align:center">
+<div style="font-size:44px;margin-bottom:8px">{'✅' if ok else '⚠️'}</div>
+<h2 style="color:{color};margin:0 0 12px">{title}</h2>
+<p style="line-height:1.6;color:#cbd5e1">{message}</p>
+<p style="margin-top:24px;color:#64748b;font-size:14px">Pode fechar esta aba e voltar ao ATLAS.</p>
+</div></body></html>"""
+        return HTMLResponse(html)
+
+    if error:
+        return _page("Login cancelado", f"O TikTok retornou: {error}", ok=False)
+    if not code:
+        return _page("Faltou o codigo", "O TikTok nao enviou o codigo de autorizacao.", ok=False)
+
+    market = tiktok_oauth_service.market_from_state(state)
+    try:
+        data = tiktok_oauth_service.exchange_code(code)
+    except Exception as exc:  # noqa: BLE001
+        return _page("Erro ao conectar", f"Nao consegui falar com o TikTok: {exc}", ok=False)
+
+    if not (data.get("access_token") or "").strip():
+        return _page("Nao autorizado", f"O TikTok nao retornou o token. Resposta: {data}", ok=False)
+
+    tiktok_oauth_service.save_tokens(market, data)
+    return _page(
+        f"TikTok {market} conectado!",
+        f"A conta do TikTok ({market}) foi conectada e sera renovada automaticamente.",
+        ok=True,
+    )
 
 
 # ----------------------------------------------------------------

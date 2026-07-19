@@ -77,6 +77,10 @@ export const Api = {
   updateCheck: () => api.get("/update/check").then((r) => r.data),
   updateApply: () => api.post("/update/apply").then((r) => r.data),
 
+  // ----- TikTok (conexao das contas) -----
+  tiktokStatus: () => api.get("/tiktok/status").then((r) => r.data),
+  tiktokConnectUrl: (market = "BR") => `/api/tiktok/connect?market=${market}`,
+
   // ----- Marketing / Anuncios -----
   marketingStatus: () => api.get("/marketing/status").then((r) => r.data),
   marketingBestVideo: () => api.get("/marketing/best-video").then((r) => r.data),

@@ -7,6 +7,7 @@ import Toast from "../components/Toast.jsx";
 export default function Publishing() {
   const [pubs, setPubs] = useState(null);
   const [platforms, setPlatforms] = useState([]);
+  const [tiktok, setTiktok] = useState(null);
   const [toast, setToast] = useState(null);
 
   const load = async () => {
@@ -18,6 +19,11 @@ export default function Publishing() {
       setPubs([]);
       setToast({ type: "error", msg: "Falha ao carregar publicações." });
     }
+    try {
+      setTiktok(await Api.tiktokStatus());
+    } catch {
+      setTiktok(null);
+    }
   };
 
   useEffect(() => {
@@ -25,6 +31,29 @@ export default function Publishing() {
     const t = setInterval(load, 15000);
     return () => clearInterval(t);
   }, []);
+
+  const connectTiktok = (market) => {
+    if (!tiktok?.has_client) {
+      setToast({
+        type: "error",
+        msg: "Falta a chave do TikTok no .env (TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET).",
+      });
+      return;
+    }
+    if (!tiktok?.is_public_https) {
+      setToast({
+        type: "error",
+        msg: "Abra o ATLAS com o link público (ATLAS.bat) antes de conectar o TikTok.",
+      });
+      return;
+    }
+    // Abre o login do TikTok numa nova aba.
+    window.open(Api.tiktokConnectUrl(market), "_blank");
+    setToast({
+      type: "info",
+      msg: `Abrindo o login do TikTok (${market})… autorize e volte aqui.`,
+    });
+  };
 
   return (
     <div>
@@ -61,6 +90,67 @@ export default function Publishing() {
             <div className="accent" />
           </div>
         ))}
+      </div>
+
+      <div className="section-title">Conectar TikTok</div>
+      <div className="card" style={{ padding: 20 }}>
+        {!tiktok ? (
+          <p style={{ color: "var(--text-faint)" }}>Carregando…</p>
+        ) : (
+          <>
+            {!tiktok.has_client && (
+              <p style={{ color: "var(--amber)", marginTop: 0 }}>
+                ⚠️ Falta colocar a <b>Client key</b> e o <b>Client secret</b> do
+                TikTok no arquivo <code>.env</code>. Sem isso o botão não funciona.
+              </p>
+            )}
+            {tiktok.has_client && !tiktok.is_public_https && (
+              <p style={{ color: "var(--amber)", marginTop: 0 }}>
+                ⚠️ Abra o ATLAS com o <b>link público</b> (clique duas vezes em{" "}
+                <b>ATLAS.bat</b>). O TikTok só aceita conexão por um endereço
+                https público.
+              </p>
+            )}
+            {tiktok.is_public_https && tiktok.redirect_uri && (
+              <p style={{ color: "var(--text-faint)", marginTop: 0 }}>
+                Endereço de retorno (cole no painel do TikTok em <i>Redirect URI</i>):
+                <br />
+                <code style={{ userSelect: "all" }}>{tiktok.redirect_uri}</code>
+              </p>
+            )}
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 12 }}>
+              {["BR", "US"].map((m) => {
+                const info = tiktok.markets?.[m] || {};
+                return (
+                  <div
+                    key={m}
+                    className="card"
+                    style={{ padding: 16, minWidth: 220, flex: "1 1 220px" }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <PlatformLogo platform="tiktok" size={22} />
+                      <b>TikTok {m === "BR" ? "Brasil" : "US"}</b>
+                    </div>
+                    <div style={{ marginTop: 10, fontSize: 15 }}>
+                      {info.connected ? (
+                        <span style={{ color: "var(--green)" }}>● Conectado</span>
+                      ) : (
+                        <span style={{ color: "var(--amber)" }}>● Não conectado</span>
+                      )}
+                    </div>
+                    <button
+                      className="btn"
+                      style={{ marginTop: 12, width: "100%" }}
+                      onClick={() => connectTiktok(m)}
+                    >
+                      {info.connected ? "Reconectar" : "Conectar"} TikTok {m}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="section-title">Envios</div>
