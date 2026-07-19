@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>ATLAS · Conectando ao TikTok</title>
+  <style>
+    html,body{height:100%;margin:0}
+    body{font-family:system-ui,Segoe UI,Arial;background:#0b1220;color:#e5e7eb;
+      display:flex;align-items:center;justify-content:center}
+    .card{max-width:520px;padding:32px;background:#111827;border-radius:16px;
+      border:1px solid #1f2937;text-align:center}
+    h2{margin:0 0 12px;color:#22c55e}
+    p{line-height:1.6;color:#cbd5e1}
+    a{color:#60a5fa}
+    .small{color:#64748b;font-size:14px;margin-top:20px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="font-size:44px;margin-bottom:8px">🔗</div>
+    <h2>Conectando ao ATLAS…</h2>
+    <p>Estou devolvendo a autorizacao do TikTok para o ATLAS que esta aberto no seu computador.</p>
+    <p class="small">Se esta pagina nao avancar sozinha em 3 segundos,
+      <a id="lnk" href="#">clique aqui para continuar</a>.</p>
+  </div>
+  <script>
+    // Esta pagina fica no GitHub Pages (endereco fixo e liberado).
+    // Ela apenas REENVIA o "code" do TikTok para o ATLAS local (localhost:8000),
+    // que roda no seu proprio computador. Nada e guardado aqui.
+    (function () {
+      var qs = window.location.search || "";
+      var dest = "http://localhost:8000/api/tiktok/callback" + qs;
+      var link = document.getElementById("lnk");
+      if (link) { link.href = dest; }
+      // Redireciona (navegacao de pagina inteira: o navegador permite ir para localhost).
+      window.location.replace(dest);
+    })();
+  </script>
+</body>
+</html>

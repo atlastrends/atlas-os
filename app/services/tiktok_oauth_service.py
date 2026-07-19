@@ -53,9 +53,18 @@ def public_base() -> str:
 def redirect_uri() -> str:
     """Endereco de retorno que o TikTok chama depois do login.
 
-    Precisa ser HTTPS publico e cadastrado no painel do TikTok
+    Precisa ser HTTPS e cadastrado no painel do TikTok
     (Login Kit -> Configure for Web -> Redirect URI).
+
+    Preferimos um endereco FIXO (ATLAS_TIKTOK_REDIRECT_URI): uma pagininha
+    hospedada no GitHub Pages que apenas reenvia o "code" para o ATLAS local
+    (http://localhost:8000/api/tiktok/callback). Assim NAO precisamos de tunel
+    publico, e o endereco nunca muda. Se essa variavel estiver vazia, caimos
+    no modo antigo (link publico/tunel), se existir.
     """
+    fixed = (os.getenv("ATLAS_TIKTOK_REDIRECT_URI") or "").strip()
+    if fixed:
+        return fixed
     base = public_base()
     return f"{base}/api/tiktok/callback" if base else ""
 
@@ -189,7 +198,10 @@ def get_access_token(market: str) -> str:
 def status() -> dict:
     has_client = bool(_client_key() and _client_secret())
     base = public_base()
-    is_https = base.lower().startswith("https://")
+    redirect = redirect_uri()
+    # O que importa para conectar e o redirect_uri ser https (pagina fixa no
+    # GitHub Pages OU link publico). Nao exigimos mais o tunel.
+    is_https = redirect.lower().startswith("https://")
 
     markets = {}
     for m in MARKETS:

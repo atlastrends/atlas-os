@@ -414,8 +414,8 @@ def tiktok_connect(market: str = Query("BR")):
         raise HTTPException(
             status_code=400,
             detail=(
-                "ATLAS_PUBLIC_BASE_URL nao esta definido. Inicie o ATLAS com o link "
-                "publico (ATLAS.bat) antes de conectar o TikTok."
+                "Falta o endereco de retorno (ATLAS_TIKTOK_REDIRECT_URI) no .env. "
+                "Use a pagina fixa do GitHub Pages."
             ),
         )
     url = tiktok_oauth_service.build_authorize_url(market)

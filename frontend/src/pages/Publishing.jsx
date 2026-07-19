@@ -43,7 +43,7 @@ export default function Publishing() {
     if (!tiktok?.is_public_https) {
       setToast({
         type: "error",
-        msg: "Abra o ATLAS com o link público (ATLAS.bat) antes de conectar o TikTok.",
+        msg: "Falta o endereço de retorno (ATLAS_TIKTOK_REDIRECT_URI) no .env.",
       });
       return;
     }
@@ -106,9 +106,8 @@ export default function Publishing() {
             )}
             {tiktok.has_client && !tiktok.is_public_https && (
               <p style={{ color: "var(--amber)", marginTop: 0 }}>
-                ⚠️ Abra o ATLAS com o <b>link público</b> (clique duas vezes em{" "}
-                <b>ATLAS.bat</b>). O TikTok só aceita conexão por um endereço
-                https público.
+                ⚠️ Falta o <b>endereço de retorno</b> no arquivo <code>.env</code>{" "}
+                (<code>ATLAS_TIKTOK_REDIRECT_URI</code>).
               </p>
             )}
             {tiktok.is_public_https && tiktok.redirect_uri && (
