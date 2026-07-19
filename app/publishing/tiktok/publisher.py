@@ -20,6 +20,32 @@ API_BASE = "https://open.tiktokapis.com/v2"
 # 64MB por pedaco; usamos o arquivo inteiro num pedaco so quando cabe.
 _MAX_SINGLE_CHUNK = 64 * 1024 * 1024
 
+# Tamanho minimo/maximo de pedaco exigido pelo TikTok e o tamanho padrao que
+# usamos quando precisamos dividir um video grande.
+_MIN_CHUNK = 5 * 1024 * 1024
+_DEFAULT_CHUNK = 20 * 1024 * 1024
+
+
+def _plan_chunks(video_size: int) -> tuple[int, int]:
+    """Decide o tamanho do pedaco e a quantidade de pedacos para o upload.
+
+    Regra do TikTok:
+      - Cada pedaco deve ter entre 5MB e 64MB.
+      - Se o video couber em 64MB, enviamos tudo num pedaco so.
+      - Se for maior, dividimos em pedacos de tamanho fixo e o ultimo
+        pedaco absorve o resto (podendo passar um pouco do tamanho padrao,
+        mas sempre abaixo de 64MB).
+    """
+    if video_size <= _MAX_SINGLE_CHUNK:
+        return video_size, 1
+
+    chunk_size = _DEFAULT_CHUNK
+    total = video_size // chunk_size  # divisao inteira; o resto vai no ultimo
+    if total < 1:
+        total = 1
+    return chunk_size, total
+
+
 # Nivel de privacidade do post. Enquanto o app estiver em modo sandbox/auditoria,
 # use SELF_ONLY (privado). Depois de aprovado, PUBLIC_TO_EVERYONE.
 DEFAULT_PRIVACY = os.getenv("TIKTOK_PRIVACY_LEVEL", "SELF_ONLY")
@@ -104,6 +130,11 @@ class TikTokPublisher(BasePublisher):
 
         title = (request.caption or request.title or "").strip()[:2200]
 
+        # O TikTok exige que o video seja enviado em "pedacos" (chunks) de
+        # 5MB a 64MB. Se o video for ate 64MB, mandamos num pedaco so. Se for
+        # maior, dividimos em varios pedacos; o ultimo pedaco leva o resto.
+        chunk_size, total_chunk_count = _plan_chunks(video_size)
+
         # Descobre se temos permissao de Direct Post (video.publish) ou apenas
         # de upload para rascunho (video.upload). No Sandbox normalmente so temos
         # video.upload, entao enviamos o video como rascunho para o TikTok e o
@@ -125,8 +156,8 @@ class TikTokPublisher(BasePublisher):
                     "source_info": {
                         "source": "FILE_UPLOAD",
                         "video_size": video_size,
-                        "chunk_size": video_size,
-                        "total_chunk_count": 1,
+                        "chunk_size": chunk_size,
+                        "total_chunk_count": total_chunk_count,
                     },
                 }
             else:
@@ -136,8 +167,8 @@ class TikTokPublisher(BasePublisher):
                     "source_info": {
                         "source": "FILE_UPLOAD",
                         "video_size": video_size,
-                        "chunk_size": video_size,
-                        "total_chunk_count": 1,
+                        "chunk_size": chunk_size,
+                        "total_chunk_count": total_chunk_count,
                     },
                 }
 
@@ -170,26 +201,36 @@ class TikTokPublisher(BasePublisher):
                     detail={"platform": self.platform, "market": market},
                 )
 
-            # 4) Envia os bytes do video para o upload_url (PUT).
-            put = requests.put(
-                upload_url,
-                data=video_bytes,
-                headers={
-                    "Content-Type": "video/mp4",
-                    "Content-Length": str(video_size),
-                    "Content-Range": f"bytes 0-{video_size - 1}/{video_size}",
-                },
-                timeout=600,
-            )
-            if put.status_code >= 400:
-                return PublishResult(
-                    status="failed",
-                    error=(
-                        f"Falha ao enviar o video para o TikTok "
-                        f"(HTTP {put.status_code}): {put.text[:300]}"
-                    ),
-                    detail={"platform": self.platform, "market": market},
+            # 4) Envia os bytes do video para o upload_url (PUT), pedaco a pedaco.
+            for index in range(total_chunk_count):
+                start = index * chunk_size
+                if index == total_chunk_count - 1:
+                    # O ultimo pedaco leva todo o resto do arquivo.
+                    end = video_size - 1
+                else:
+                    end = start + chunk_size - 1
+                chunk_bytes = video_bytes[start : end + 1]
+
+                put = requests.put(
+                    upload_url,
+                    data=chunk_bytes,
+                    headers={
+                        "Content-Type": "video/mp4",
+                        "Content-Length": str(len(chunk_bytes)),
+                        "Content-Range": f"bytes {start}-{end}/{video_size}",
+                    },
+                    timeout=600,
                 )
+                if put.status_code >= 400:
+                    return PublishResult(
+                        status="failed",
+                        error=(
+                            f"Falha ao enviar o video para o TikTok "
+                            f"(pedaco {index + 1}/{total_chunk_count}, "
+                            f"HTTP {put.status_code}): {put.text[:300]}"
+                        ),
+                        detail={"platform": self.platform, "market": market},
+                    )
 
             # O processamento e assincrono no TikTok. O status pode ser
             # consultado depois em /post/publish/status/fetch/ com o publish_id.
