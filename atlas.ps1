@@ -26,14 +26,44 @@ function Get-Python {
     return $c
 }
 
+# Instala o Python sozinho (sem o usuario precisar fazer nada), se faltar.
+function Install-Python {
+    Write-Info "Python nao encontrado. Instalando automaticamente (pode demorar) ..."
+    # 1) Tenta pela loja de aplicativos do Windows (winget), silencioso.
+    $winget = Get-Command winget -ErrorAction SilentlyContinue
+    if ($winget) {
+        try {
+            & winget install --id Python.Python.3.12 --source winget `
+                --accept-package-agreements --accept-source-agreements --silent | Out-Null
+        } catch {}
+    }
+    # 2) Se ainda nao houver, baixa o instalador oficial e roda silencioso.
+    if ($null -eq (Get-Python)) {
+        try {
+            $pyExe = Join-Path $env:TEMP "python-setup.exe"
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 300 `
+                -Uri "https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe" `
+                -OutFile $pyExe
+            Start-Process -FilePath $pyExe -Wait -ArgumentList `
+                "/quiet InstallAllUsers=0 PrependPath=1 Include_launcher=1 Include_test=0"
+        } catch {}
+    }
+    # 3) Atualiza o PATH desta sessao para achar o Python recem-instalado.
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
+                [System.Environment]::GetEnvironmentVariable("Path", "User")
+    return (Get-Python)
+}
+
 # ------------------------------------------------------------
 # 1) INSTALA O QUE FALTAR (so na primeira vez)
 # ------------------------------------------------------------
 if (-not (Test-Path ".\.venv-dash\Scripts\python.exe")) {
     Write-Info "Preparando o ambiente pela primeira vez (pode demorar alguns minutos) ..."
     $py = Get-Python
+    if ($null -eq $py) { $py = Install-Python }
     if ($null -eq $py) {
-        Write-Warn "Python nao encontrado. Instale em https://www.python.org (marque 'Add Python to PATH') e abra de novo."
+        Write-Warn "Nao consegui instalar o Python automaticamente."
+        Write-Warn "Instale manualmente em https://www.python.org (marque 'Add Python to PATH') e abra de novo."
         Read-Host "Pressione ENTER para fechar"
         exit 1
     }

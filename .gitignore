@@ -59,6 +59,11 @@ Thumbs.db
 # --- Docker ---
 *.pid
 
+# --- Instalador gerado (CONTEM O .env / segredos: NUNCA versionar) ---
+dist-installer/
+ATLAS-Instalador.exe
+*.iss
+
 # ============================================================
 # BLINDAGEM PARA REPOSITÓRIO PÚBLICO
 # (segredos, dados do usuário e lixo NUNCA vão para a nuvem)
