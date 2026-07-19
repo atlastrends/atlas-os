@@ -2,12 +2,11 @@
 # ATLAS OS - criar-instalador.ps1
 #
 # Gera UM UNICO arquivo: ATLAS-Instalador.exe
-# Esse .exe e um instalador profissional (assistente com "Avancar,
-# Avancar, Concluir") que ja traz TUDO dentro dele:
+# Esse .exe e um instalador (assistente) que ja traz TUDO dentro:
 #   - o programa ATLAS completo
 #   - o painel ja compilado (nao precisa de Node no outro PC)
 #   - o seu arquivo .env (contas e chaves)   <-- IMPORTANTE
-#   - o componente do link publico (cloudflared)
+#   - o componente do link publico (cloudflared), se existir
 #
 # COMO USAR (faca isto UMA vez, NESTE computador):
 #   1) De dois cliques neste arquivo (ou rode no PowerShell).
@@ -15,6 +14,9 @@
 #   3) Pegue o arquivo gerado em:  dist-installer\ATLAS-Instalador.exe
 #   4) Leve SO esse .exe para o outro computador e instale como
 #      qualquer programa. Nao precisa copiar mais nada.
+#
+# Nao precisa de admin nem de baixar programas: o instalador e
+# montado com o compilador que ja vem dentro do Windows (.NET).
 #
 # OBS: como o .env vai DENTRO do instalador, trate o .exe como
 # um arquivo confidencial (nao publique na internet).
@@ -52,30 +54,7 @@ try {
     }
 
     # --------------------------------------------------------
-    # 2) Garante o Inno Setup (o programa que monta o instalador .exe).
-    #    Se nao estiver instalado, baixa e instala em modo silencioso.
-    # --------------------------------------------------------
-    $iscc = @(
-        "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
-        "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
-    ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-    if (-not $iscc) {
-        Write-Step "Instalando o Inno Setup (uma unica vez) ..."
-        $isSetup = Join-Path $env:TEMP "innosetup.exe"
-        Invoke-WebRequest -UseBasicParsing -TimeoutSec 300 `
-            -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile $isSetup
-        Start-Process -FilePath $isSetup -Wait -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
-        $iscc = @(
-            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
-            "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
-        ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-    }
-    if (-not $iscc) { throw "Nao encontrei o Inno Setup (ISCC.exe) apos a instalacao." }
-    Write-Ok "Inno Setup pronto: $iscc"
-
-    # --------------------------------------------------------
-    # 3) Monta a pasta com os arquivos que vao DENTRO do instalador.
+    # 2) Monta a pasta com os arquivos que vao DENTRO do instalador.
     #    Copia tudo, menos lixo e coisas especificas deste PC.
     #    (O .env E INCLUIDO de proposito.)
     # --------------------------------------------------------
@@ -110,68 +89,150 @@ try {
     }
 
     # --------------------------------------------------------
-    # 4) Escreve o roteiro do instalador (arquivo .iss do Inno Setup).
+    # 3) Compacta tudo em um unico .zip (sera embutido no .exe).
     # --------------------------------------------------------
+    Write-Step "Compactando o programa ..."
+    $zipInside = Join-Path $build "payload.zip"
+    Compress-Archive -Path (Join-Path $payload "*") -DestinationPath $zipInside -Force
+
+    # --------------------------------------------------------
+    # 4) Codigo do instalador (C#). Ele extrai o programa, cria os
+    #    atalhos e abre o ATLAS. Roda por usuario, sem admin.
+    # --------------------------------------------------------
+    $cs = @'
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
+using System.Reflection;
+using System.Windows.Forms;
+
+class AtlasInstaller
+{
+    [STAThread]
+    static void Main()
+    {
+        try
+        {
+            string target = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Programs", "ATLAS OS");
+
+            DialogResult ask = MessageBox.Show(
+                "Deseja instalar o ATLAS OS neste computador?\n\nSera instalado em:\n" + target,
+                "ATLAS OS - Instalador",
+                MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+            if (ask != DialogResult.OK) return;
+
+            Directory.CreateDirectory(target);
+
+            string tmpZip = Path.Combine(Path.GetTempPath(),
+                "atlas_payload_" + Guid.NewGuid().ToString("N") + ".zip");
+            Assembly asm = Assembly.GetExecutingAssembly();
+            using (Stream s = asm.GetManifestResourceStream("payload.zip"))
+            using (FileStream f = File.Create(tmpZip))
+            {
+                s.CopyTo(f);
+            }
+
+            using (ZipArchive za = ZipFile.OpenRead(tmpZip))
+            {
+                foreach (ZipArchiveEntry entry in za.Entries)
+                {
+                    string dest = Path.Combine(target, entry.FullName);
+                    if (string.IsNullOrEmpty(entry.Name))
+                    {
+                        Directory.CreateDirectory(dest);
+                        continue;
+                    }
+                    Directory.CreateDirectory(Path.GetDirectoryName(dest));
+                    entry.ExtractToFile(dest, true);
+                }
+            }
+            try { File.Delete(tmpZip); } catch { }
+
+            string bat = Path.Combine(target, "ATLAS.bat");
+            CreateShortcut(Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ATLAS OS.lnk"), bat, target);
+            CreateShortcut(Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Programs), "ATLAS OS.lnk"), bat, target);
+
+            MessageBox.Show(
+                "ATLAS OS instalado com sucesso!\n\nUm atalho foi criado na Area de Trabalho.\nO painel vai abrir agora.",
+                "ATLAS OS", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            ProcessStartInfo psi = new ProcessStartInfo(bat);
+            psi.WorkingDirectory = target;
+            psi.UseShellExecute = true;
+            Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Falha na instalacao:\n" + ex.Message,
+                "ATLAS OS", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    static void CreateShortcut(string lnkPath, string targetPath, string workDir)
+    {
+        try
+        {
+            Type t = Type.GetTypeFromProgID("WScript.Shell");
+            object shell = Activator.CreateInstance(t);
+            object sc = t.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod,
+                null, shell, new object[] { lnkPath });
+            Type st = sc.GetType();
+            st.InvokeMember("TargetPath", BindingFlags.SetProperty, null, sc, new object[] { targetPath });
+            st.InvokeMember("WorkingDirectory", BindingFlags.SetProperty, null, sc, new object[] { workDir });
+            st.InvokeMember("IconLocation", BindingFlags.SetProperty, null, sc, new object[] { "shell32.dll,220" });
+            st.InvokeMember("Save", BindingFlags.InvokeMethod, null, sc, null);
+        }
+        catch { }
+    }
+}
+'@
+    $csPath = Join-Path $build "installer.cs"
+    Set-Content -Path $csPath -Value $cs -Encoding utf8
+
+    # --------------------------------------------------------
+    # 5) Compila o instalador final (.exe) com o compilador do Windows.
+    # --------------------------------------------------------
+    $fw = Join-Path $env:WINDIR "Microsoft.NET\Framework64\v4.0.30319"
+    $csc = Join-Path $fw "csc.exe"
+    if (-not (Test-Path $csc)) { throw ".NET Framework (csc.exe) nao encontrado neste Windows." }
+
     $distOut = Join-Path $root "dist-installer"
     New-Item -ItemType Directory -Path $distOut -Force | Out-Null
+    $finalExe = Join-Path $distOut "ATLAS-Instalador.exe"
+    if (Test-Path $finalExe) { Remove-Item $finalExe -Force }
 
-    $iss = @"
-; Roteiro gerado automaticamente por criar-instalador.ps1
-[Setup]
-AppId={{ATLAS-OS-0FE1B7A4-8C2D-4E6A-9B10-ATLAS0000001}}
-AppName=ATLAS OS
-AppVersion=1.0
-AppPublisher=ATLAS Trends
-DefaultDirName={autopf}\ATLAS OS
-DisableProgramGroupPage=yes
-OutputDir=$distOut
-OutputBaseFilename=ATLAS-Instalador
-Compression=lzma2
-SolidCompression=yes
-WizardStyle=modern
-PrivilegesRequired=lowest
-ArchitecturesInstallIn64BitMode=x64compatible
-UninstallDisplayName=ATLAS OS
-
-[Languages]
-Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
-
-[Tasks]
-Name: "desktopicon"; Description: "Criar um atalho na Area de Trabalho"; GroupDescription: "Atalhos:"
-
-[Files]
-Source: "$payload\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
-
-[Icons]
-Name: "{autoprograms}\ATLAS OS"; Filename: "{app}\ATLAS.bat"; WorkingDir: "{app}"
-Name: "{autodesktop}\ATLAS OS"; Filename: "{app}\ATLAS.bat"; WorkingDir: "{app}"; Tasks: desktopicon
-
-[Run]
-Filename: "{app}\ATLAS.bat"; Description: "Abrir o ATLAS agora"; Flags: postinstall nowait skipifsilent shellexec
-"@
-
-    $issPath = Join-Path $build "atlas.iss"
-    Set-Content -Path $issPath -Value $iss -Encoding UTF8
-
-    # --------------------------------------------------------
-    # 5) Compila o instalador final (.exe).
-    # --------------------------------------------------------
     Write-Step "Montando o instalador final (.exe) ..."
-    & $iscc $issPath | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "O Inno Setup retornou erro ($LASTEXITCODE)." }
+    $refs = @(
+        "System.dll", "System.Core.dll",
+        "System.IO.Compression.dll", "System.IO.Compression.FileSystem.dll",
+        "System.Windows.Forms.dll", "System.Drawing.dll"
+    ) | ForEach-Object { "/reference:" + (Join-Path $fw $_) }
 
-    $final = Join-Path $distOut "ATLAS-Instalador.exe"
-    if (-not (Test-Path $final)) { throw "O instalador nao foi gerado." }
+    $cscArgs = @(
+        "/nologo", "/target:winexe",
+        "/out:$finalExe",
+        "/resource:$zipInside,payload.zip"
+    ) + $refs + @($csPath)
+
+    & $csc @cscArgs
+    if ($LASTEXITCODE -ne 0) { throw "O compilador retornou erro ($LASTEXITCODE)." }
+    if (-not (Test-Path $finalExe)) { throw "O instalador nao foi gerado." }
 
     # Limpa a pasta temporaria de montagem.
     try { Remove-Item $build -Recurse -Force -ErrorAction SilentlyContinue } catch {}
 
+    $mb = [math]::Round((Get-Item $finalExe).Length / 1MB, 1)
     Write-Host ""
-    Write-Ok "PRONTO! Instalador criado com sucesso:"
-    Write-Host "   $final" -ForegroundColor Green
+    Write-Ok "PRONTO! Instalador criado com sucesso ($mb MB):"
+    Write-Host "   $finalExe" -ForegroundColor Green
     Write-Host ""
     Write-Host "Leve SO esse arquivo para o outro computador e de dois cliques nele." -ForegroundColor Yellow
-    Write-Host "Ele instala o ATLAS como um programa, cria o atalho e ja abre o painel." -ForegroundColor Yellow
+    Write-Host "Ele instala o ATLAS, cria o atalho na Area de Trabalho e ja abre o painel." -ForegroundColor Yellow
     Write-Host "Nao precisa copiar mais nenhum arquivo (o .env ja vai dentro)." -ForegroundColor Yellow
     Write-Host ""
     Write-Warn "Guarde esse .exe com cuidado: ele contem suas contas e chaves."
