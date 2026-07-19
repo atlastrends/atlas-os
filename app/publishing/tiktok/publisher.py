@@ -10,6 +10,7 @@ from app.publishing.base import (
     PublishRequest,
     PublishResult,
     public_media_url,
+    resolve_tiktok_token,
 )
 
 API_BASE = "https://open.tiktokapis.com/v2"
@@ -27,8 +28,40 @@ class TikTokPublisher(BasePublisher):
         "TIKTOK_ACCESS_TOKEN",
     )
 
+    def missing_credentials(self) -> list[str]:
+        """Aceita o token unico (TIKTOK_ACCESS_TOKEN) OU os tokens por
+        mercado (TIKTOK_ACCESS_TOKEN_BR / _US)."""
+        missing: list[str] = []
+        if not (os.getenv("TIKTOK_CLIENT_KEY") or "").strip():
+            missing.append("TIKTOK_CLIENT_KEY")
+        if not (os.getenv("TIKTOK_CLIENT_SECRET") or "").strip():
+            missing.append("TIKTOK_CLIENT_SECRET")
+        has_token = any(
+            (os.getenv(name) or "").strip()
+            for name in (
+                "TIKTOK_ACCESS_TOKEN",
+                "TIKTOK_ACCESS_TOKEN_BR",
+                "TIKTOK_ACCESS_TOKEN_US",
+            )
+        )
+        if not has_token:
+            missing.append("TIKTOK_ACCESS_TOKEN")
+        return missing
+
     def _do_publish(self, request: PublishRequest) -> PublishResult:
-        token = os.getenv("TIKTOK_ACCESS_TOKEN")
+        token, market = resolve_tiktok_token(
+            request.country_code, request.language
+        )
+        if not token:
+            return PublishResult(
+                status="credentials_missing",
+                error=(
+                    f"Conta do TikTok nao configurada para o mercado {market}. "
+                    f"Defina TIKTOK_ACCESS_TOKEN_{market} (ou TIKTOK_ACCESS_TOKEN) "
+                    "no .env."
+                ),
+                detail={"platform": self.platform, "market": market},
+            )
 
         video_url = public_media_url(request.video_path)
         if not video_url or video_url.startswith("http://localhost"):

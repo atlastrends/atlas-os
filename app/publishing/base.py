@@ -230,6 +230,31 @@ def resolve_meta_targets(
     return page_id, ig_id, role, market
 
 
+def resolve_tiktok_token(
+    country_code: str = "",
+    language: str = "",
+) -> tuple[str, str]:
+    """Escolhe o token (conta) do TikTok conforme o mercado (BR/US).
+
+    Afiliados e trends do mesmo pais publicam na MESMA conta do TikTok
+    (o TikTok separa so por mercado, igual ao YouTube).
+
+    Ordem de resolucao:
+      1) TIKTOK_ACCESS_TOKEN_{MERCADO}   (conta BR ou conta US)
+      2) TIKTOK_ACCESS_TOKEN             (token unico, quando ha uma conta so)
+
+    Retorna (access_token, market).
+    """
+    market = market_code(country_code, language)
+    token = (
+        os.getenv(f"TIKTOK_ACCESS_TOKEN_{market}")
+        or os.getenv("TIKTOK_ACCESS_TOKEN")
+        or ""
+    ).strip()
+    return token, market
+
+
+
 def resolve_youtube_channel(
     country_code: str = "",
     language: str = "",

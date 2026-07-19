@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
+import Api from "../api/client.js";
 
 const groups = [
   {
@@ -25,6 +26,58 @@ const groups = [
 ];
 
 export default function Sidebar() {
+  const [upd, setUpd] = useState(null);
+  const [updBusy, setUpdBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const checkUpdate = async () => {
+    setUpdBusy(true);
+    setMsg("Verificando…");
+    try {
+      const r = await Api.updateCheck();
+      setUpd(r);
+      if (!r?.configured) {
+        setMsg("Atualizações não configuradas.");
+      } else if (r?.error) {
+        setMsg(r.error);
+      } else if (r?.update_available) {
+        setMsg("Nova versão disponível!");
+      } else {
+        setMsg("Você já está na versão mais recente. 👍");
+      }
+    } catch {
+      setMsg("Não consegui verificar agora.");
+    } finally {
+      setUpdBusy(false);
+    }
+  };
+
+  const applyUpdate = async () => {
+    const ok = window.confirm(
+      "Vou baixar e instalar a versão mais nova.\n\n" +
+        "O painel vai fechar e voltar sozinho em alguns instantes numa janela nova. " +
+        "Seus dados e senhas NÃO são apagados.\n\nDeseja continuar?"
+    );
+    if (!ok) return;
+    setUpdBusy(true);
+    try {
+      const r = await Api.updateApply();
+      if (r?.started) {
+        window.alert(
+          "🔄 Atualização iniciada em uma janela nova!\n\n" +
+            "Aguarde ela terminar (baixa, instala e reinicia). " +
+            "Quando o painel voltar, aperte F5 para recarregar."
+        );
+      } else {
+        setMsg(r?.error || "Não consegui iniciar a atualização.");
+      }
+    } catch {
+      setMsg("Falha ao iniciar a atualização.");
+    } finally {
+      setUpdBusy(false);
+    }
+  };
+
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -47,6 +100,22 @@ export default function Sidebar() {
           </React.Fragment>
         ))}
       </nav>
+      <div className="sidebar-update">
+        <div className="su-title">🔄 Atualizações</div>
+        <div className="su-line">
+          Versão: <b>{upd?.current || "—"}</b>
+          {upd?.update_available && <span className="su-badge">nova!</span>}
+        </div>
+        {msg && <div className="su-msg">{msg}</div>}
+        <button className="su-btn" onClick={checkUpdate} disabled={updBusy}>
+          {updBusy ? "Verificando…" : "🔎 Procurar atualizações"}
+        </button>
+        {upd?.update_available && (
+          <button className="su-btn primary" onClick={applyUpdate} disabled={updBusy}>
+            ⬇️ Atualizar agora
+          </button>
+        )}
+      </div>
       <div className="sidebar-foot">
         <div className="foot-row">
           <span className="dot on" />

@@ -33,8 +33,6 @@ export default function Overview() {
   const [jobs, setJobs] = useState({});
   const [top, setTop] = useState([]);
   const [toast, setToast] = useState(null);
-  const [upd, setUpd] = useState(null);
-  const [updBusy, setUpdBusy] = useState(false);
   const nav = useNavigate();
 
   const load = async () => {
@@ -86,53 +84,6 @@ export default function Overview() {
     await Api.collectMetrics();
     setToast({ type: "ok", msg: "Atualização de estatísticas iniciada." });
     load();
-  };
-
-  const checkUpdate = async () => {
-    setUpdBusy(true);
-    try {
-      const r = await Api.updateCheck();
-      setUpd(r);
-      if (!r?.configured) {
-        setToast({ type: "error", msg: "Atualizações ainda não configuradas (ATLAS_UPDATE_REPO)." });
-      } else if (r?.error) {
-        setToast({ type: "error", msg: r.error });
-      } else if (r?.update_available) {
-        setToast({ type: "ok", msg: "Nova versão disponível! Clique em Atualizar agora." });
-      } else {
-        setToast({ type: "ok", msg: "Você já está na versão mais recente. 👍" });
-      }
-    } catch (e) {
-      setToast({ type: "error", msg: "Não consegui verificar atualizações agora." });
-    } finally {
-      setUpdBusy(false);
-    }
-  };
-
-  const applyUpdate = async () => {
-    const ok = window.confirm(
-      "Vou baixar e instalar a versão mais nova.\n\n" +
-        "O painel vai fechar e voltar sozinho em alguns instantes numa janela nova. " +
-        "Seus dados e senhas NÃO são apagados.\n\nDeseja continuar?"
-    );
-    if (!ok) return;
-    setUpdBusy(true);
-    try {
-      const r = await Api.updateApply();
-      if (r?.started) {
-        window.alert(
-          "🔄 Atualização iniciada em uma janela nova!\n\n" +
-            "Aguarde ela terminar (baixa, instala e reinicia). " +
-            "Quando o painel voltar, aperte F5 para recarregar."
-        );
-      } else {
-        setToast({ type: "error", msg: r?.error || "Não consegui iniciar a atualização." });
-      }
-    } catch (e) {
-      setToast({ type: "error", msg: "Falha ao iniciar a atualização." });
-    } finally {
-      setUpdBusy(false);
-    }
   };
 
   const jobBadge = (name) => {
@@ -416,65 +367,6 @@ export default function Overview() {
             </tbody>
           </table>
         )}
-      </div>
-
-      {/* Atualizações do sistema */}
-      <h3 className="section-title">🔄 Atualizações do sistema</h3>
-      <div className="card">
-        <div className="upd-row">
-          <div>
-            <div className="upd-line">
-              Versão instalada:{" "}
-              <b>{upd?.current || "—"}</b>
-              {upd?.configured === false && (
-                <span className="badge created" style={{ marginLeft: 8 }}>
-                  não configurado
-                </span>
-              )}
-              {upd?.update_available && (
-                <span className="badge failed" style={{ marginLeft: 8 }}>
-                  nova versão disponível
-                </span>
-              )}
-              {upd && !upd.update_available && upd.configured && !upd.error && (
-                <span className="badge approved" style={{ marginLeft: 8 }}>
-                  atualizado
-                </span>
-              )}
-            </div>
-            {upd?.update_available && (
-              <div className="foot" style={{ marginTop: 6 }}>
-                Novidade: {upd.latest_message || "melhorias"}
-                {upd.latest_date ? ` · ${new Date(upd.latest_date).toLocaleString()}` : ""}
-              </div>
-            )}
-            {upd?.error && (
-              <div className="foot" style={{ marginTop: 6, color: "#f59e0b" }}>
-                {upd.error}
-              </div>
-            )}
-            {!upd && (
-              <div className="foot" style={{ marginTop: 6 }}>
-                Clique em “Procurar atualizações” para verificar se há uma versão
-                nova na nuvem.
-              </div>
-            )}
-          </div>
-          <div className="upd-actions">
-            <button className="btn" onClick={checkUpdate} disabled={updBusy}>
-              {updBusy ? "Verificando…" : "🔎 Procurar atualizações"}
-            </button>
-            {upd?.update_available && (
-              <button
-                className="btn primary"
-                onClick={applyUpdate}
-                disabled={updBusy}
-              >
-                ⬇️ Atualizar agora
-              </button>
-            )}
-          </div>
-        </div>
       </div>
 
       <Toast toast={toast} onClose={() => setToast(null)} />
