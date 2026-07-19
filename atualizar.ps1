@@ -122,14 +122,14 @@ try {
 
     Write-Ok "Atualizacao concluida! Reiniciando o painel ..."
     Write-Host ""
-    # 10) Reinicia o painel nesta mesma janela.
-    & (Join-Path $root "start-dashboard-local.ps1")
+    # 10) Reinicia o painel nesta mesma janela (ja com o link publico).
+    & (Join-Path $root "atlas.ps1")
 }
 catch {
     Write-Err "Falha na atualizacao: $($_.Exception.Message)"
     Write-Host ""
     Write-Host "Seu ATLAS anterior NAO foi apagado. Voce pode iniciar de novo com:" -ForegroundColor Yellow
-    Write-Host "   ./start-dashboard-local.ps1" -ForegroundColor Yellow
+    Write-Host "   dois cliques em ATLAS.bat" -ForegroundColor Yellow
     Read-Host "Pressione ENTER para fechar"
     exit 1
 }

@@ -128,12 +128,20 @@ try {
     Write-Host ""
     Write-Host "PROXIMOS PASSOS:" -ForegroundColor Yellow
     Write-Host "  1) Abra o arquivo .env e preencha suas chaves (IA, contas, etc.)." -ForegroundColor Yellow
-    Write-Host "  2) Para iniciar o painel, rode:  ./start-dashboard-local.ps1" -ForegroundColor Yellow
-    Write-Host "  3) Abra no navegador:  http://127.0.0.1:8000" -ForegroundColor Yellow
+    Write-Host "  2) Depois, para usar o ATLAS, de dois cliques em:  ATLAS.bat" -ForegroundColor Yellow
+    Write-Host "     (ele abre o painel sozinho, ja com o link publico)." -ForegroundColor Yellow
     Write-Host ""
     Write-Host "Para atualizar no futuro, use o botao 'Procurar atualizacoes' no painel." -ForegroundColor Green
     Write-Host ""
-    Read-Host "Pressione ENTER para fechar"
+
+    # Ja abre o ATLAS na hora (um clique), sem precisar de mais nada.
+    $atlas = Join-Path $root "atlas.ps1"
+    if (Test-Path $atlas) {
+        Write-Step "Abrindo o ATLAS ..."
+        & $atlas
+    } else {
+        Read-Host "Pressione ENTER para fechar"
+    }
 }
 catch {
     Write-Err "Falha na instalacao: $($_.Exception.Message)"
