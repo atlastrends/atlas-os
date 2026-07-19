@@ -184,6 +184,7 @@ def list_publishing_accounts() -> list[dict]:
             or os.getenv("TIKTOK_ACCESS_TOKEN")
             or ""
         ).strip()
+        open_id = (os.getenv(f"TIKTOK_OPEN_ID_{market}") or "").strip()
         accounts.append(
             {
                 "key": account_key("tiktok", None, market),
@@ -191,7 +192,8 @@ def list_publishing_accounts() -> list[dict]:
                 "role": None,
                 "market": market,
                 "label": _account_label("tiktok", None, market),
-                "external_id": "",
+                # open_id identifica a conta; a coleta usa o token do mercado.
+                "external_id": open_id,
                 "connected": bool(tok),
             }
         )

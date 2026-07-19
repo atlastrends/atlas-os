@@ -53,7 +53,9 @@ class MetricsService:
 
         for pub in publications:
             try:
-                metrics = self._collect_video(pub.platform, pub.external_id)
+                metrics = self._collect_video(
+                    pub.platform, pub.external_id, pub.video_asset_id
+                )
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"{pub.platform}:{pub.external_id} -> {exc}")
                 metrics = None
@@ -110,7 +112,9 @@ class MetricsService:
     # COLETORES POR VIDEO
     # ----------------------------------------------------------------
 
-    def _collect_video(self, platform: str, external_id: str) -> dict | None:
+    def _collect_video(
+        self, platform: str, external_id: str, video_asset_id: int | None = None
+    ) -> dict | None:
         if platform == "youtube":
             return self._youtube_video(external_id)
         if platform == "instagram":
@@ -118,7 +122,7 @@ class MetricsService:
         if platform == "facebook":
             return self._facebook_video(external_id)
         if platform == "tiktok":
-            return self._tiktok_video(external_id)
+            return self._tiktok_video(external_id, video_asset_id)
         return None
 
     def _youtube_video(self, video_id: str) -> dict | None:
@@ -181,11 +185,77 @@ class MetricsService:
             "comments": comments,
         }
 
-    def _tiktok_video(self, publish_id: str) -> dict | None:
-        # A metrica por video no TikTok requer o video_id final (apos o
-        # processamento) e o escopo video.list. Deixado como ponto de
-        # extensao; retorna None ate o fluxo de status ser implementado.
-        return None
+    def _tiktok_video(
+        self, publish_id: str, video_asset_id: int | None = None
+    ) -> dict | None:
+        # Metrica por video no TikTok:
+        #   1) publish_id -> post_id via /post/publish/status/fetch/
+        #      (so retorna post_id depois que o video vira publico no perfil).
+        #   2) post_id -> estatisticas via /video/query/ (escopo video.list).
+        # Videos ainda em rascunho/inbox nao tem post_id -> retornam None.
+        if not publish_id:
+            return None
+        from app.services import tiktok_oauth_service
+
+        market = self._tiktok_market_for_asset(video_asset_id)
+        token = tiktok_oauth_service.get_access_token(market)
+        if not token:
+            return None
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json; charset=UTF-8",
+        }
+        status = requests.post(
+            "https://open.tiktokapis.com/v2/post/publish/status/fetch/",
+            headers=headers,
+            json={"publish_id": publish_id},
+            timeout=30,
+        ).json()
+        data = status.get("data") or {}
+        post_ids = data.get("publicaly_available_post_id") or []
+        if not post_ids:
+            return None
+
+        query = requests.post(
+            "https://open.tiktokapis.com/v2/video/query/",
+            headers=headers,
+            params={"fields": "id,view_count,like_count,comment_count,share_count"},
+            json={"filters": {"video_ids": [str(x) for x in post_ids]}},
+            timeout=30,
+        ).json()
+        videos = (query.get("data") or {}).get("videos") or []
+        if not videos:
+            return None
+
+        views = likes = comments = shares = 0
+        for v in videos:
+            views += int(v.get("view_count", 0) or 0)
+            likes += int(v.get("like_count", 0) or 0)
+            comments += int(v.get("comment_count", 0) or 0)
+            shares += int(v.get("share_count", 0) or 0)
+        return {
+            "views": views,
+            "likes": likes,
+            "comments": comments,
+            "shares": shares,
+        }
+
+    def _tiktok_market_for_asset(self, video_asset_id: int | None) -> str:
+        """Descobre o mercado (BR/US) do video para escolher a conta/token."""
+        if not video_asset_id:
+            return "BR"
+        from app.models.dashboard import VideoAsset
+        from app.publishing.base import market_code
+
+        asset = (
+            self.db.query(VideoAsset)
+            .filter(VideoAsset.id == video_asset_id)
+            .first()
+        )
+        if not asset:
+            return "BR"
+        return market_code(asset.country_code or "", asset.language or "")
 
     # ----------------------------------------------------------------
     # COLETORES POR CONTA
@@ -200,7 +270,38 @@ class MetricsService:
             return self._instagram_account(ext)
         if platform == "facebook":
             return self._facebook_page(ext)
+        if platform == "tiktok":
+            return self._tiktok_account(account)
         return None
+
+    def _tiktok_account(self, account: dict) -> dict | None:
+        # Estatisticas da conta do TikTok (seguidores, curtidas totais)
+        # via /v2/user/info/. Requer o escopo user.info.stats.
+        from app.services import tiktok_oauth_service
+
+        market = (account.get("market") or "BR").strip().upper()
+        token = tiktok_oauth_service.get_access_token(market)
+        if not token:
+            return None
+        resp = requests.get(
+            "https://open.tiktokapis.com/v2/user/info/",
+            headers={"Authorization": f"Bearer {token}"},
+            params={
+                "fields": "follower_count,following_count,likes_count,video_count"
+            },
+            timeout=30,
+        ).json()
+        if (resp.get("error") or {}).get("code") not in (None, "ok"):
+            return None
+        user = (resp.get("data") or {}).get("user") or {}
+        if not user:
+            return None
+        return {
+            "account": account.get("external_id") or market,
+            "followers": user.get("follower_count", 0),
+            "following": user.get("following_count", 0),
+            "total_likes": user.get("likes_count", 0),
+        }
 
     def _youtube_channel(self, channel_id: str | None = None) -> dict | None:
         api_key = os.getenv("YOUTUBE_API_KEY")
