@@ -1,0 +1,118 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: atlas_postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - atlas_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: atlas_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - atlas_net
+
+  api:
+    image: atlas-os-runtime:latest
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile
+    container_name: atlas_api
+    restart: unless-stopped
+    gpus: all
+    env_file:
+      - .env
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,video,utility
+      ATLAS_USE_NVENC: "1"
+      ATLAS_ENGINE_ENABLED: "false"
+      FFMPEG_BINARY: /usr/bin/ffmpeg
+      IMAGEIO_FFMPEG_EXE: /usr/bin/ffmpeg
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/atlas
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+    networks:
+      - atlas_net
+
+  worker:
+    profiles:
+      - worker
+    image: atlas-os-runtime:latest
+    container_name: atlas_worker
+    restart: "no"
+    gpus: all
+    env_file:
+      - .env
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,video,utility
+      ATLAS_USE_NVENC: "1"
+      ATLAS_WORKER_RUN_ENABLED: "${ATLAS_WORKER_RUN_ENABLED:-false}"
+      FFMPEG_BINARY: /usr/bin/ffmpeg
+      IMAGEIO_FFMPEG_EXE: /usr/bin/ffmpeg
+    volumes:
+      - .:/atlas
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command:
+      - python
+      - -m
+      - app.workers.worker_entrypoint
+    networks:
+      - atlas_net
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  atlas_net:
+    driver: bridge

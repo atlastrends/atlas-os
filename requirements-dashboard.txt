@@ -1,0 +1,53 @@
+# ============================================================
+# ATLAS OS - requirements-dashboard.txt
+# Conjunto MINIMO para rodar a API + Painel localmente (sem Docker),
+# usando SQLite. NAO inclui a stack pesada de renderizacao de video
+# (moviepy/ffmpeg/GPU), que so e necessaria para GERAR os videos.
+# ============================================================
+
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+pydantic-settings
+python-dotenv
+sqlalchemy
+passlib[bcrypt]
+bcrypt
+PyJWT
+requests
+httpx
+
+# Agendador de tarefas automaticas (coleta de metricas por hora)
+apscheduler
+
+# Descoberta de tendencias / scraping leve
+yt-dlp
+feedparser
+beautifulsoup4
+lxml
+orjson
+structlog
+tenacity
+qrcode[pil]
+Pillow
+
+# Clientes de IA / TTS usados por servicos importados na inicializacao
+openai
+groq
+google-genai
+edge-tts
+pydub
+
+# Upload real para o YouTube (conector ativado)
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+
+# Renderizacao de video (necessario para GERAR reels/afiliados).
+# O texto das legendas usa Pillow (nao precisa de ImageMagick no Windows).
+# imageio-ffmpeg ja traz o ffmpeg embutido.
+moviepy==1.0.3
+imageio-ffmpeg
+numpy

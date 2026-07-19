@@ -1,0 +1,105 @@
+# ============================================================
+# ATLAS OS - requirements.txt
+# Fase 1: Infraestrutura base (API + DB + Cache + Workers)
+# Python alvo (container): 3.11
+# ============================================================
+
+# --- Web framework / API ---
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+
+# --- ConfiguraÃ§Ã£o / validaÃ§Ã£o ---
+pydantic==2.7.4
+pydantic-settings==2.3.4
+python-dotenv==1.0.1
+
+# --- Banco de dados (PostgreSQL) ---
+sqlalchemy==2.0.31
+alembic==1.13.2
+psycopg2-binary==2.9.9
+asyncpg==0.29.0
+
+# --- Cache / fila (Redis) ---
+redis==5.0.7
+
+# --- Fila de tarefas / agendamento (Core Engine) ---
+celery==5.4.0
+apscheduler==3.10.4
+
+# --- Cliente HTTP (integraÃ§Ãµes externas) ---
+httpx==0.27.0
+requests==2.32.3
+
+# --- Logging estruturado ---
+structlog==24.2.0
+
+# --- UtilitÃ¡rios ---
+tenacity==8.4.2
+orjson==3.10.5
+
+# --- Testes ---
+pytest==8.2.2
+pytest-asyncio==0.23.7
+
+# --- SeguranÃ§a e AutenticaÃ§Ã£o ---
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
+PyJWT==2.8.0
+yt-dlp[default]
+openai
+
+# ============================================================
+# ATLAS OS - Runtime dependencies
+# ============================================================
+
+# API / Server
+fastapi
+uvicorn[standard]
+python-dotenv
+python-multipart
+
+# Database / Cache / Workers
+sqlalchemy
+asyncpg
+psycopg2-binary
+alembic
+redis
+celery
+
+# HTTP / Parsing / Trends
+requests
+httpx
+aiohttp
+feedparser
+beautifulsoup4
+lxml
+
+# AI Providers
+openai
+groq
+
+# Media / Video / Audio
+moviepy==1.0.3
+imageio
+imageio-ffmpeg
+Pillow
+numpy
+edge-tts
+pydub
+
+# YouTube / Video discovery
+yt-dlp[default]
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+
+google-genai
+
+
+
+
+
+
+qrcode[pil]

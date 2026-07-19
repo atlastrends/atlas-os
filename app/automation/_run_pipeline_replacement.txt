@@ -1,0 +1,164 @@
+def run_pipeline(maximum_videos: int = 10) -> dict[str, Any]:
+    ensure_directories()
+    started_at = utc_now()
+    target = max(1, maximum_videos)
+
+    log_event(
+        "PIPELINE_STARTED",
+        maximum_videos=target,
+        strategy="SEARCH_UNTIL_SUCCESS",
+        minimum_duration_seconds=30,
+        maximum_duration_seconds=60,
+        static_image_fallback=False,
+    )
+
+    products = discover_products()
+
+    if not products:
+        state = {
+            "status": "WAITING_FOR_REAL_PRODUCT_SOURCE",
+            "products_found": 0,
+            "products_attempted": 0,
+            "videos_created": 0,
+            "target_videos": target,
+        }
+        write_json(STATE_PATH, state)
+        return state
+
+    already_processed = pending_product_keys()
+    unique: dict[tuple[str, str], Product] = {}
+
+    for product in products:
+        key = (
+            product.marketplace_code,
+            product.asin,
+        )
+        if key not in unique:
+            unique[key] = product
+
+    eligible = [
+        product
+        for product in unique.values()
+        if (
+            product.marketplace_code,
+            product.asin,
+        ) not in already_processed
+        and product.title
+        and product.detail_url
+    ]
+
+    for product in eligible:
+        score_product(product)
+
+    priority_terms = (
+        "fire tv",
+        "echo",
+        "alexa",
+        "amazon",
+        "samsung",
+        "galaxy",
+        "jbl",
+        "logitech",
+        "motorola",
+        "xiaomi",
+        "sony",
+        "apple",
+        "dell",
+        "intelbras",
+        "philco",
+        "mondial",
+        "oster",
+    )
+
+    eligible.sort(
+        key=lambda product: (
+            any(
+                term in product.title.lower()
+                for term in priority_terms
+            ),
+            product.score,
+            product.review_count or 0,
+        ),
+        reverse=True,
+    )
+
+    completed: list[dict[str, Any]] = []
+    failures: list[dict[str, str]] = []
+    attempted = 0
+
+    for product in eligible:
+        if len(completed) >= target:
+            break
+
+        attempted += 1
+
+        try:
+            completed.append(
+                create_video_for_product(product)
+            )
+        except Exception as error:
+            failures.append(
+                {
+                    "marketplace_code": product.marketplace_code,
+                    "asin": product.asin,
+                    "title": product.title,
+                    "error": str(error),
+                }
+            )
+
+            log_event(
+                "PRODUCT_SKIPPED",
+                market=product.marketplace_code,
+                asin=product.asin,
+                title=product.title,
+                reason=str(error),
+            )
+
+    if completed:
+        status = "AWAITING_APPROVAL"
+    elif eligible:
+        status = "FAILED_NO_VALID_AUTHORIZED_BROLL"
+    else:
+        status = "NO_NEW_PRODUCTS"
+
+    state = {
+        "status": status,
+        "started_at": started_at,
+        "completed_at": utc_now(),
+        "products_found": len(products),
+        "products_unique": len(unique),
+        "products_eligible": len(eligible),
+        "products_attempted": attempted,
+        "target_videos": target,
+        "videos_created": len(completed),
+        "failed_attempts": len(failures),
+        "failures": failures,
+        "publication_executed": False,
+        "static_image_fallback": False,
+        "pending_approval": [
+            {
+                "marketplace_code": record["marketplace_code"],
+                "asin": record["asin"],
+                "title": record["title"],
+                "video_path": record["video_path"],
+                "affiliate_url": record["affiliate_url"],
+                "broll": record.get("broll", {}),
+            }
+            for record in completed
+        ],
+    }
+
+    write_json(STATE_PATH, state)
+
+    log_event(
+        "PIPELINE_COMPLETED",
+        status=status,
+        products_attempted=attempted,
+        target_videos=target,
+        videos_created=len(completed),
+        failed_attempts=len(failures),
+        static_image_fallback=False,
+    )
+
+    return state
+

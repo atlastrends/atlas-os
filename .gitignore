@@ -1,0 +1,127 @@
+# ============================================================
+# ATLAS OS - .gitignore
+# ============================================================
+
+# --- Segredos / ambiente (NUNCA versionar) ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials/
+secrets/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+ENV/
+.venv-dash/
+
+# --- Testes / cobertura ---
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# --- Banco de dados local / dumps ---
+*.sqlite3
+*.db
+data/postgres/
+data/redis/
+
+# --- Logs ---
+logs/*.log
+*.log
+
+# --- Mídia gerada (vídeos, áudios, imagens pesadas) ---
+data/media/
+data/output/
+*.mp4
+*.mp3
+*.wav
+*.mov
+
+# --- IDE / editor ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+*.pid
+
+# ============================================================
+# BLINDAGEM PARA REPOSITÓRIO PÚBLICO
+# (segredos, dados do usuário e lixo NUNCA vão para a nuvem)
+# ============================================================
+
+# --- Segredos / contas / credenciais por nome ---
+dados das contas.txt
+dados*.txt
+*conta*.txt
+*senha*.txt
+*password*.txt
+*token*.txt
+*secret*.txt
+*.env.bak*
+tts_context.txt
+affiliate_test.json
+storage/**/*.json
+storage/**/token*
+storage/**/*credential*
+
+# --- Banco de dados local ---
+atlas_local.db
+
+# --- Node / frontend ---
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# --- Ambiente Python local (nome específico) ---
+.venv-dash/
+
+# --- Mídia e saídas geradas (pesado + pode ter dados) ---
+storage/
+output_videos/
+output_metadata/
+outputs/
+temp_media/
+data/
+inventory_parts/
+
+# --- Backups e bundles de revisão (lixo, não é código) ---
+backups/
+_amazon_pipeline_backup_*/
+_atlas_review_extracted/
+_atlas_source_review_bundle/
+atlas_source_review_bundle.zip
+atlas_*.txt
+step*_state*.txt
+step*.txt
+release_readiness.txt
+
+# --- Binários externos ---
+cloudflared.exe
+cloudflared.log
+
+# --- Docker compose de backup ---
+docker-compose.*.yml
+!docker-compose.yml
+
+# --- Backups de codigo / arquivos temporarios de edicao (lixo) ---
+*.bak
+*.before_*
+*.before-*
+*.backup_*
+*.backup
+app/**/*.backup*

@@ -1,0 +1,4 @@
+def find_database_products() -> list[Product]:
+    # Esta instalacao utiliza as importacoes JSON.
+    return []
+
