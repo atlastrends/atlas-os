@@ -135,12 +135,24 @@ class TikTokPublisher(BasePublisher):
         # maior, dividimos em varios pedacos; o ultimo pedaco leva o resto.
         chunk_size, total_chunk_count = _plan_chunks(video_size)
 
-        # Descobre se temos permissao de Direct Post (video.publish) ou apenas
-        # de upload para rascunho (video.upload). No Sandbox normalmente so temos
-        # video.upload, entao enviamos o video como rascunho para o TikTok e o
-        # usuario finaliza a postagem no app.
+        # Decide entre "Direct Post" (video.publish, publica direto no perfil)
+        # e upload para rascunho/caixa de entrada (video.upload, o usuario
+        # finaliza no app do TikTok).
+        #
+        # IMPORTANTE: enquanto o app estiver EM REVISAO/nao auditado, o Direct
+        # Post so funciona para contas privadas e retorna o erro
+        # "unaudited_client_can_only_post_to_private_accounts". Por isso o
+        # padrao e o modo rascunho (que funciona no sandbox). So ligue o Direct
+        # Post depois que o app for APROVADO, definindo TIKTOK_DIRECT_POST=true
+        # no .env.
         scopes = (os.getenv("TIKTOK_SCOPES") or "user.info.basic,video.upload").lower()
-        direct_post = "video.publish" in scopes
+        direct_enabled = (os.getenv("TIKTOK_DIRECT_POST") or "").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        )
+        direct_post = direct_enabled and "video.publish" in scopes
 
         try:
             if direct_post:
