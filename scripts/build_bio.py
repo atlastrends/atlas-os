@@ -38,7 +38,7 @@ BRANDS = {
 SOCIALS = {
     "BR": {
         "tiktok": "https://www.tiktok.com/@achadosatlasbr",
-        "instagram": "https://www.instagram.com/achadosatlas",
+        "instagram": "https://www.instagram.com/achadosaltas",
         "facebook": "https://www.facebook.com/achadosatlas",
     },
     "US": {

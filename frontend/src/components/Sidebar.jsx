@@ -100,6 +100,15 @@ export default function Sidebar() {
             ))}
           </React.Fragment>
         ))}
+        <div className="nav-group">Bio</div>
+        <a
+          href="https://atlastrends.github.io/atlas-os/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span className="ico">🔗</span>
+          Ver minha Bio
+        </a>
       </nav>
       <div className="sidebar-update">
         <div className="su-title">🔄 Atualizações</div>

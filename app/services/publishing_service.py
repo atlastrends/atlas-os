@@ -211,6 +211,20 @@ class PublishingService:
         self.db.commit()
         self.db.refresh(asset)
 
+        # Atualiza a bio (link na bio) automaticamente quando um AFILIADO e
+        # publicado: regenera a pagina e publica no GitHub Pages em segundo plano.
+        if (
+            any_published
+            and asset.kind == VideoKindEnum.AFFILIATE
+            and getattr(asset, "affiliate_url", None)
+        ):
+            try:
+                from app.services.bio_updater import trigger_bio_update
+
+                trigger_bio_update()
+            except Exception:  # nunca bloqueia a publicacao por causa da bio
+                pass
+
         return {
             "asset_id": asset.id,
             "status": asset.status.value if hasattr(asset.status, "value") else str(asset.status),
