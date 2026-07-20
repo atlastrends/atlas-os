@@ -33,20 +33,18 @@ BRANDS = {
     "US": {"name": "Atlas Finds", "handle": "@atlasfindsus", "flag": "🇺🇸"},
 }
 
-# Links das redes sociais por mercado.
-# Facebook usa o ID da Pagina do .env (FB_PAGE_AFFILIATE_BR/US) -> link garantido.
-# TikTok confirmado pelo .env (ATLAS_TIKTOK_REDIRECT_URI). Instagram: o .env so guarda
-# o ID da conta (IG_AFFILIATE_*), nao o @ publico; ajuste o @ abaixo se estiver diferente.
+# Links das redes sociais por mercado (@ confirmados com o usuario).
+# TikTok confirmado pelo .env; Instagram/Facebook usam o @ publico da conta.
 SOCIALS = {
     "BR": {
         "tiktok": "https://www.tiktok.com/@achadosatlasbr",
-        "instagram": "https://www.instagram.com/achadosatlasbr",
-        "facebook": "https://www.facebook.com/1256289617564282",
+        "instagram": "https://www.instagram.com/achadosatlas",
+        "facebook": "https://www.facebook.com/achadosatlas",
     },
     "US": {
         "tiktok": "https://www.tiktok.com/@atlasfindsus",
         "instagram": "https://www.instagram.com/atlasfindsus",
-        "facebook": "https://www.facebook.com/1244342868757443",
+        "facebook": "https://www.facebook.com/atlasfindsus",
     },
 }
 
@@ -77,6 +75,25 @@ SOCIAL_ICONS = {
 }
 
 ASIN_RE = re.compile(r"/dp/([A-Z0-9]{10})", re.IGNORECASE)
+
+# Bandeiras desenhadas em SVG (aparecem igual em qualquer aparelho).
+FLAG_SVG = {
+    "BR": (
+        '<svg viewBox="0 0 28 20" preserveAspectRatio="none">'
+        '<rect width="28" height="20" fill="#009c3b"/>'
+        '<path d="M14 2.4 25.4 10 14 17.6 2.6 10z" fill="#ffdf00"/>'
+        '<circle cx="14" cy="10" r="4" fill="#002776"/></svg>'
+    ),
+    "US": (
+        '<svg viewBox="0 0 28 20" preserveAspectRatio="none">'
+        '<rect width="28" height="20" fill="#fff"/>'
+        '<rect width="28" height="2.86" y="0" fill="#b22234"/>'
+        '<rect width="28" height="2.86" y="5.72" fill="#b22234"/>'
+        '<rect width="28" height="2.86" y="11.44" fill="#b22234"/>'
+        '<rect width="28" height="2.86" y="17.14" fill="#b22234"/>'
+        '<rect width="12" height="11.44" fill="#3c3b6e"/></svg>'
+    ),
+}
 
 # Categorias detectadas por palavras-chave no titulo (ordem = prioridade).
 # (chave, emoji, nome_pt, nome_en, [palavras-chave])
@@ -261,6 +278,8 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     us_socials = _socials_html("US", active=False)
     br_cats = _catlist_html("BR", br)
     us_cats = _catlist_html("US", us)
+    br_flag = FLAG_SVG["BR"]
+    us_flag = FLAG_SVG["US"]
 
     return f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -323,10 +342,18 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
   }}
   .tabs {{ display:flex; gap:8px; }}
   .tab {{
-    flex:1; padding:11px 10px; border:none; border-radius:12px; cursor:pointer;
+    flex:1; display:flex; align-items:center; justify-content:space-between; gap:6px;
+    padding:9px 12px; border:none; border-radius:12px; cursor:pointer;
     background:#fff; color:#5b6472; font-family:"Inter"; font-size:14px; font-weight:600;
     box-shadow:0 2px 6px rgba(15,23,42,.05); transition:all .15s ease;
   }}
+  .tab .tlabel {{ flex:1; text-align:center; }}
+  .tab .tflag {{
+    flex:0 0 auto; width:22px; height:15px; border-radius:3px; overflow:hidden;
+    display:inline-flex; box-shadow:0 0 0 1px rgba(0,0,0,.12); opacity:.7;
+  }}
+  .tab .tflag svg {{ width:100%; height:100%; display:block; }}
+  .tab.active .tflag {{ opacity:1; box-shadow:0 0 0 1px rgba(255,255,255,.55); }}
   .tab.active {{ color:#fff; box-shadow:0 6px 16px rgba(0,0,0,.2); }}
   .tab[data-market="BR"].active {{ background:linear-gradient(135deg,#009c3b 0%,#00701f 100%); box-shadow:0 6px 16px rgba(0,130,45,.34); }}
   .tab[data-market="US"].active {{ background:linear-gradient(135deg,#3c3b6e 0%,#b22234 100%); box-shadow:0 6px 16px rgba(60,59,110,.34); }}
@@ -449,8 +476,12 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
 
     <nav class="topbar">
       <div class="tabs">
-        <button class="tab active" data-market="BR" onclick="showMarket('BR')">🇧🇷 Brasil</button>
-        <button class="tab" data-market="US" onclick="showMarket('US')">🇺🇸 USA</button>
+        <button class="tab active" data-market="BR" onclick="showMarket('BR')">
+          <span class="tflag">{br_flag}</span><span class="tlabel">Brasil</span><span class="tflag">{br_flag}</span>
+        </button>
+        <button class="tab" data-market="US" onclick="showMarket('US')">
+          <span class="tflag">{us_flag}</span><span class="tlabel">USA</span><span class="tflag">{us_flag}</span>
+        </button>
       </div>
       <div class="searchrow">
         <div class="searchbar">
