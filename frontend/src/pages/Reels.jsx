@@ -177,21 +177,21 @@ export default function Reels() {
 
   async function clearReels() {
     const ok = window.confirm(
-      "Apagar TODOS os reels de assuntos em alta? Os vídeos e metadados serão removidos. Os vídeos de afiliados NÃO são afetados."
+      "Liberar espaço apagando SÓ os arquivos de vídeo (.mp4) dos reels JÁ PUBLICADOS?\n\nOs dados de envio, os metadados e as estatísticas (views, curtidas) NÃO são apagados — continuam no painel. Os vídeos seguem publicados nas redes."
     );
     if (!ok) return;
-    setNotice({ type: "info", busy: true, msg: "🗑️ Apagando reels…" });
+    setNotice({ type: "info", busy: true, msg: "🧹 Liberando espaço…" });
     try {
-      const res = await Api.clearReels();
+      const res = await Api.clearPublished("reel");
       setNotice({
         type: "success",
-        msg: `✅ Reels apagados: ${res.removed_assets} registro(s) e ${res.removed_files} arquivo(s).`,
+        msg: `✅ Espaço liberado: ${res.removed_files} arquivo(s), ${res.freed_mb} MB. Os dados e as estatísticas foram mantidos.`,
       });
       setRefreshSignal((n) => n + 1);
     } catch (e) {
       setNotice({
         type: "error",
-        msg: "❌ Falha ao apagar os reels: " + (e?.message || e),
+        msg: "❌ Falha ao liberar espaço: " + (e?.message || e),
       });
     }
   }
@@ -254,9 +254,9 @@ export default function Reels() {
           <button
             className="btn"
             onClick={clearReels}
-            title="Apagar todos os reels de assuntos em alta"
+            title="Liberar espaço: apaga só os arquivos de vídeo dos reels já publicados. Mantém os dados, metadados e estatísticas."
           >
-            🗑️ Limpar reels
+            🧹 Liberar espaço
           </button>
         </>
       }

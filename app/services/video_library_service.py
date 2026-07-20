@@ -237,78 +237,18 @@ class VideoLibraryService:
 
     def clear_reels(self) -> dict:
         """
-        Apaga TODOS os reels de assuntos em alta (kind=reel):
-        - remove os registros no banco (e suas publicacoes);
-        - apaga os arquivos .mp4 em output_videos/ (nivel raiz, sem tocar
-          na subpasta affiliate/);
-        - apaga os metadados em output_metadata/;
-        - zera a memoria de assuntos usados para permitir nova busca.
-        NAO afeta os videos de afiliados.
+        Libera espaco dos reels: apaga SO o arquivo de video (.mp4) e a
+        miniatura dos reels JA PUBLICADOS.
+
+        NAO apaga os registros do banco, os metadados, nem as ESTATISTICAS
+        (views, curtidas, comentarios) — todos os dados de envio ficam
+        preservados e o video continua publicado nas redes.
+
+        (Antes esta funcao apagava tudo, inclusive banco e metricas; foi
+        corrigida para nunca mais perder dados. Agora so libera espaco em
+        disco, igual ao botao de afiliados.)
         """
-        from app.models.dashboard import Publication
-
-        removed_assets = 0
-        removed_files = 0
-
-        # 1) Banco: apaga publicacoes e assets do tipo reel.
-        reel_assets = (
-            self.db.query(VideoAsset)
-            .filter(VideoAsset.kind == VideoKindEnum.REEL)
-            .all()
-        )
-        reel_ids = [a.id for a in reel_assets]
-
-        if reel_ids:
-            (
-                self.db.query(Publication)
-                .filter(Publication.video_asset_id.in_(reel_ids))
-                .delete(synchronize_session=False)
-            )
-            (
-                self.db.query(VideoAsset)
-                .filter(VideoAsset.id.in_(reel_ids))
-                .delete(synchronize_session=False)
-            )
-            removed_assets = len(reel_ids)
-            self.db.commit()
-
-        # 2) Arquivos de video no nivel raiz de output_videos (nao afiliados).
-        if os.path.isdir(OUTPUT_VIDEOS_DIR):
-            for name in os.listdir(OUTPUT_VIDEOS_DIR):
-                full = os.path.join(OUTPUT_VIDEOS_DIR, name)
-                if os.path.isfile(full) and name.lower().endswith(
-                    (".mp4", ".mov", ".webm")
-                ):
-                    try:
-                        os.remove(full)
-                        removed_files += 1
-                    except Exception:
-                        pass
-
-        # 3) Metadados dos reels.
-        if os.path.isdir(OUTPUT_METADATA_DIR):
-            for name in os.listdir(OUTPUT_METADATA_DIR):
-                full = os.path.join(OUTPUT_METADATA_DIR, name)
-                if not os.path.isfile(full):
-                    continue
-                if name.startswith("metadata_") and name.endswith(".json"):
-                    try:
-                        os.remove(full)
-                        removed_files += 1
-                    except Exception:
-                        pass
-                elif name == "used_topics_memory.json":
-                    # Zera a memoria para liberar novos assuntos.
-                    try:
-                        with open(full, "w", encoding="utf-8") as fh:
-                            fh.write("{}")
-                    except Exception:
-                        pass
-
-        return {
-            "removed_assets": removed_assets,
-            "removed_files": removed_files,
-        }
+        return self.delete_published_files(kind="reel")
 
     def clear_rejected(self, kind: Optional[str] = None) -> dict:
         """
