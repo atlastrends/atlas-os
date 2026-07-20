@@ -3,16 +3,19 @@ import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-# Carrega as variaveis do arquivo .env (na raiz do projeto) para o ambiente,
-# para que os publicadores (YouTube/TikTok/Instagram/Facebook) e os coletores
-# de metricas encontrem as credenciais via os.getenv.
-load_dotenv()
+# Carrega as variaveis do .env para o ambiente, para que os publicadores
+# (YouTube/TikTok/Instagram/Facebook) e os coletores de metricas encontrem as
+# credenciais via os.getenv. Alem do .env do projeto, tambem carrega um .env
+# COMPARTILHADO (ex.: %OneDrive%\ATLAS-OS-SECRETS\.env) quando existir, para
+# funcionar em varias maquinas sem copiar segredos e sem coloca-los no Git.
+from app.core.env_loader import load_env
+
+load_env()
 
 from app.routers import (
     affiliate,

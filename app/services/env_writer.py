@@ -19,9 +19,15 @@ _LOCK = threading.Lock()
 
 
 def _env_path() -> str:
-    """Caminho do .env (na raiz do projeto)."""
-    root = os.path.abspath(os.getenv("ATLAS_ROOT", os.getcwd()))
-    return os.path.join(root, ".env")
+    """Caminho do .env que o app usa para LER/ESCREVER.
+
+    Quando ha um .env compartilhado ativo (ex.: no OneDrive), grava nele,
+    para que os tokens renovados sincronizem para os outros computadores.
+    Senao, usa o .env da raiz do projeto (comportamento padrao).
+    """
+    from app.core.env_loader import active_env_path
+
+    return active_env_path()
 
 
 def set_env_vars(values: dict[str, str]) -> None:
