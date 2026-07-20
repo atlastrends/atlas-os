@@ -75,6 +75,53 @@ SOCIAL_ICONS = {
 
 ASIN_RE = re.compile(r"/dp/([A-Z0-9]{10})", re.IGNORECASE)
 
+# Categorias detectadas por palavras-chave no titulo (ordem = prioridade).
+# (chave, emoji, nome_pt, nome_en, [palavras-chave])
+CATEGORY_RULES = [
+    ("games", "🎮", "Games", "Games",
+     ["playstation", "dualsense", "ps5", "ps4", "xbox", "nintendo",
+      "gift card", "joystick", "gamepad"]),
+    ("beleza", "💄", "Beleza & Cuidados", "Beauty & Care",
+     ["shampoo", "condicionador", "sabonete", "hidratante", "creme",
+      "cerave", "nivea", "neutrogena", "makeup", "maquiagem", "skincare",
+      "loção", "locao", "perfume", "íntimo", "intimo", "barbear", "depila",
+      "facial", "corporal", "cabelo"]),
+    ("cozinha", "🍳", "Cozinha", "Kitchen",
+     ["fritadeira", "air fryer", "liquidificador", "cafeteira", "panela",
+      "mixer", "batedeira", "forno", "grill", "cozinha", " faca", "knife",
+      "thermometer", "termômetro", "termometro"]),
+    ("audio", "🎧", "Áudio", "Audio",
+     ["fone", "headphone", "earbud", "airpod", "caixa de som", "soundbar",
+      "jbl", "headset"]),
+    ("smart", "🏠", "Casa Inteligente", "Smart Home",
+     ["alexa", "echo", "fire tv", "chromecast", "google home",
+      "lâmpada intelig", "lampada intelig", "smart color", "smart bulb"]),
+    ("wearables", "⌚", "Relógios & Wearables", "Watches & Wearables",
+     ["smartwatch", "galaxy fit", "apple watch", "relógio", "relogio",
+      "pulseira", "smart band", "mi band"]),
+    ("fitness", "💪", "Saúde & Fitness", "Health & Fitness",
+     ["fitness", "yoga", "pilates", "faixa elástic", "faixa elastic",
+      "elástic", "elastic", "massage", "massagem", "academia", "whey",
+      "suplement", "oura ring"]),
+    ("eletronicos", "📱", "Eletrônicos", "Electronics",
+     [" tv", "monitor", "notebook", "tablet", "carregador", " cabo",
+      "mouse", "teclado", " ssd", "pen drive", "câmera", "camera",
+      "celular", "smartphone", "power bank"]),
+]
+FALLBACK_CAT = ("outros", "📦", "Outros", "Others")
+
+CAT_DISPLAY = {r[0]: (r[1], r[2], r[3]) for r in CATEGORY_RULES}
+CAT_DISPLAY[FALLBACK_CAT[0]] = (FALLBACK_CAT[1], FALLBACK_CAT[2], FALLBACK_CAT[3])
+CAT_ORDER = [r[0] for r in CATEGORY_RULES] + [FALLBACK_CAT[0]]
+
+
+def _category(title: str) -> str:
+    text = f" {(title or '').lower()} "
+    for key, _emoji, _pt, _en, keywords in CATEGORY_RULES:
+        if any(kw in text for kw in keywords):
+            return key
+    return FALLBACK_CAT[0]
+
 
 def _asin_from_url(url: str) -> str | None:
     match = ASIN_RE.search(url or "")
@@ -120,6 +167,7 @@ def fetch_products() -> dict[str, list[dict]]:
                     "url": url.strip(),
                     "asin": asin,
                     "image": _image_url(asin),
+                    "cat": _category(title),
                 }
             )
     return grouped
@@ -128,6 +176,7 @@ def fetch_products() -> dict[str, list[dict]]:
 def _card_html(product: dict, cta: str) -> str:
     title = html.escape(product["title"])
     title_attr = html.escape(product["title"].lower(), quote=True)
+    cat = html.escape(product.get("cat", FALLBACK_CAT[0]), quote=True)
     url = html.escape(product["url"], quote=True)
     image = html.escape(product["image"], quote=True)
     img_tag = (
@@ -137,7 +186,7 @@ def _card_html(product: dict, cta: str) -> str:
         else ""
     )
     return f"""
-      <a class="card" data-title="{title_attr}" href="{url}" target="_blank" rel="nofollow noopener sponsored">
+      <a class="card" data-title="{title_attr}" data-cat="{cat}" href="{url}" target="_blank" rel="nofollow noopener sponsored">
         <div class="card-media">{img_tag}<span class="card-fallback">{title}</span></div>
         <div class="card-info">
           <span class="card-title">{title}</span>
@@ -163,6 +212,32 @@ def _socials_html(market: str, active: bool) -> str:
     return f'<div class="{cls}" id="soc-{market}">{"".join(parts)}</div>'
 
 
+def _catlist_html(market: str, products: list[dict]) -> str:
+    counts: dict[str, int] = {}
+    for prod in products:
+        key = prod.get("cat", FALLBACK_CAT[0])
+        counts[key] = counts.get(key, 0) + 1
+    all_label = "Todos" if market == "BR" else "All"
+    items = [
+        f'<button class="cat-item active" data-cat="all" '
+        f"onclick=\"selectCat('{market}','all',this)\">"
+        f"\U0001f5c2\ufe0f {all_label} <span>{len(products)}</span></button>"
+    ]
+    for key in CAT_ORDER:
+        n = counts.get(key, 0)
+        if not n:
+            continue
+        emoji, name_pt, name_en = CAT_DISPLAY[key]
+        name = html.escape(name_pt if market == "BR" else name_en)
+        items.append(
+            f'<button class="cat-item" data-cat="{key}" '
+            f"onclick=\"selectCat('{market}','{key}',this)\">"
+            f"{emoji} {name} <span>{n}</span></button>"
+        )
+    cls = "catlist active" if market == "BR" else "catlist"
+    return f'<div class="{cls}" id="cats-{market}">{"".join(items)}</div>'
+
+
 def build_html(grouped: dict[str, list[dict]]) -> str:
     br = grouped["BR"]
     us = grouped["US"]
@@ -172,6 +247,8 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     us_cards = "\n".join(_card_html(p, "View on Amazon") for p in us)
     br_socials = _socials_html("BR", active=True)
     us_socials = _socials_html("US", active=False)
+    br_cats = _catlist_html("BR", br)
+    us_cats = _catlist_html("US", us)
 
     return f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -239,9 +316,16 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     box-shadow:0 2px 6px rgba(15,23,42,.05); transition:all .15s ease;
   }}
   .tab.active {{ background:var(--grad); color:#fff; box-shadow:0 6px 16px rgba(0,0,0,.2); }}
-  /* BUSCA */
+  /* BUSCA + CATEGORIAS */
+  .searchrow {{ margin-top:10px; display:flex; gap:8px; align-items:stretch; }}
+  .cat-toggle {{
+    flex:0 0 auto; border:1px solid var(--line); background:#fff; border-radius:12px;
+    padding:0 15px; font-size:17px; cursor:pointer; color:var(--ink);
+    box-shadow:0 2px 6px rgba(15,23,42,.05);
+  }}
+  .cat-toggle:hover {{ background:#f2f2f4; }}
   .searchbar {{
-    margin-top:10px; display:flex; align-items:center; gap:9px; background:#fff;
+    flex:1; display:flex; align-items:center; gap:9px; background:#fff;
     border:1px solid var(--line); border-radius:12px; padding:11px 13px;
     box-shadow:0 2px 6px rgba(15,23,42,.05);
   }}
@@ -250,6 +334,36 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     border:none; outline:none; width:100%; background:transparent;
     font-family:"Inter"; font-size:14px; color:var(--ink);
   }}
+  /* DRAWER LATERAL DE CATEGORIAS */
+  .backdrop {{
+    position:fixed; inset:0; background:rgba(0,0,0,.42); z-index:40;
+    opacity:0; visibility:hidden; transition:opacity .2s ease, visibility .2s ease;
+  }}
+  .backdrop.open {{ opacity:1; visibility:visible; }}
+  .drawer {{
+    position:fixed; top:0; left:0; bottom:0; width:284px; max-width:85vw; z-index:50;
+    background:#fff; transform:translateX(-102%); transition:transform .26s ease;
+    padding:18px 14px; overflow-y:auto; box-shadow:2px 0 28px rgba(0,0,0,.2);
+  }}
+  .drawer.open {{ transform:none; }}
+  .drawer-head {{
+    display:flex; align-items:center; justify-content:space-between; margin:2px 6px 14px;
+    font-family:"Poppins"; font-weight:700; font-size:17px;
+  }}
+  .drawer-head button {{
+    border:none; background:transparent; font-size:20px; cursor:pointer;
+    color:var(--muted); line-height:1;
+  }}
+  .catlist {{ display:none; flex-direction:column; gap:5px; }}
+  .catlist.active {{ display:flex; }}
+  .cat-item {{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
+    text-align:left; border:none; background:transparent; padding:11px 12px; border-radius:10px;
+    cursor:pointer; font-family:"Inter"; font-size:14px; font-weight:600; color:var(--ink);
+  }}
+  .cat-item:hover {{ background:#f2f2f4; }}
+  .cat-item.active {{ background:var(--grad); color:#fff; }}
+  .cat-item span {{ font-size:12px; font-weight:600; opacity:.75; }}
   /* SOCIALS (no hero) */
   .hero-socials {{ position:relative; z-index:1; margin-top:16px; min-height:44px; }}
   .hero-soc {{ display:none; gap:10px; justify-content:center; }}
@@ -326,9 +440,12 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
         <button class="tab active" data-market="BR" onclick="showMarket('BR')">🇧🇷 Brasil</button>
         <button class="tab" data-market="US" onclick="showMarket('US')">🇺🇸 USA</button>
       </div>
-      <div class="searchbar">
-        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
-        <input id="q" type="search" placeholder="Buscar produto..." autocomplete="off" oninput="filterProducts(this.value)">
+      <div class="searchrow">
+        <button class="cat-toggle" onclick="openDrawer()" aria-label="Categorias">☰</button>
+        <div class="searchbar">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+          <input id="q" type="search" placeholder="Buscar produto..." autocomplete="off" oninput="applyFilter()">
+        </div>
       </div>
     </nav>
 
@@ -356,6 +473,13 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
       </section>
     </main>
 
+    <div class="backdrop" id="backdrop" onclick="closeDrawer()"></div>
+    <aside class="drawer" id="drawer">
+      <div class="drawer-head"><span>Categorias</span><button onclick="closeDrawer()" aria-label="Fechar">✕</button></div>
+      {br_cats}
+      {us_cats}
+    </aside>
+
     <footer class="foot">
       <strong>Como afiliado da Amazon, ganhamos com compras qualificadas.</strong><br>
       As an Amazon Associate we earn from qualifying purchases.<br>
@@ -364,6 +488,7 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
   </div>
 
   <script>
+    var catState = {{ BR: 'all', US: 'all' }};
     function showMarket(m) {{
       document.querySelectorAll('.market').forEach(function (el) {{
         el.classList.toggle('active', el.id === 'market-' + m);
@@ -374,22 +499,45 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
       document.querySelectorAll('.hero-soc').forEach(function (el) {{
         el.classList.toggle('active', el.id === 'soc-' + m);
       }});
-      var qi = document.getElementById('q');
-      if (qi) filterProducts(qi.value);
+      document.querySelectorAll('.catlist').forEach(function (el) {{
+        el.classList.toggle('active', el.id === 'cats-' + m);
+      }});
+      applyFilter();
       if (history.replaceState) history.replaceState(null, '', '#' + m);
     }}
-    function filterProducts(q) {{
-      q = (q || '').trim().toLowerCase();
+    function applyFilter() {{
+      var q = (document.getElementById('q').value || '').trim().toLowerCase();
       document.querySelectorAll('.market').forEach(function (mk) {{
+        var m = mk.id.replace('market-', '');
+        var cat = catState[m] || 'all';
         var shown = 0;
         mk.querySelectorAll('.card').forEach(function (c) {{
-          var hit = !q || (c.dataset.title || '').indexOf(q) > -1;
+          var okCat = (cat === 'all') || (c.dataset.cat === cat);
+          var okTxt = !q || (c.dataset.title || '').indexOf(q) > -1;
+          var hit = okCat && okTxt;
           c.style.display = hit ? '' : 'none';
           if (hit) shown++;
         }});
         var nr = mk.querySelector('.noresult');
-        if (nr) nr.style.display = (q && shown === 0) ? 'block' : 'none';
+        if (nr) nr.style.display = (shown === 0) ? 'block' : 'none';
       }});
+    }}
+    function selectCat(m, cat, el) {{
+      catState[m] = cat;
+      var side = document.getElementById('cats-' + m);
+      if (side) side.querySelectorAll('.cat-item').forEach(function (b) {{
+        b.classList.toggle('active', b === el);
+      }});
+      applyFilter();
+      closeDrawer();
+    }}
+    function openDrawer() {{
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('backdrop').classList.add('open');
+    }}
+    function closeDrawer() {{
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('backdrop').classList.remove('open');
     }}
     // Abre direto na aba certa se a URL terminar com #US ou #BR.
     (function () {{
