@@ -71,10 +71,14 @@ def active_env_path() -> str:
 def load_env() -> None:
     """Carrega as variaveis de ambiente para o processo atual.
 
-    Primeiro o .env do projeto (base) e depois o compartilhado (que
-    vence), para que os segredos sincronizados sejam a fonte da verdade.
+    Regras:
+      - NUNCA sobrescreve variaveis ja definidas no ambiente (ex.: o
+        start script define DATABASE_URL=sqlite; isso deve vencer sempre).
+      - O .env COMPARTILHADO e a fonte da verdade dos segredos, entao e
+        carregado ANTES do .env do projeto (com override=False, o primeiro
+        a definir a chave vence).
     """
-    load_dotenv(_project_env_path(), override=False)
     shared = shared_env_path()
     if shared:
-        load_dotenv(shared, override=True)
+        load_dotenv(shared, override=False)
+    load_dotenv(_project_env_path(), override=False)
