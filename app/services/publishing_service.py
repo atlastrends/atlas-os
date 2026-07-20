@@ -408,19 +408,35 @@ class PublishingService:
             market = (asset.country_code or "").strip().upper()
             is_en = market == "US" or (asset.language or "").lower().startswith("en")
             buy_label = "Buy it here:" if is_en else "Compre aqui:"
-
-            # URL SOZINHA em uma linha vira clicavel automaticamente no YouTube
-            # (nao precisa copiar e colar). Mantemos o link limpo, sem texto
-            # grudado depois dele.
             link_block = f"{buy_label}\n{affiliate_link}"
+
+            # Palavra-gatilho do robo de direct (Instagram/Facebook).
+            trigger = os.getenv(
+                "META_TRIGGER_WORD_US" if is_en else "META_TRIGGER_WORD_BR",
+                "WANT" if is_en else "QUERO",
+            ).strip().upper()
 
             if platform == "youtube":
                 # No YouTube o link vai no TOPO (aparece antes do "mostrar mais")
                 # e tambem no fim, sempre em linha propria = clicavel.
                 description = f"{link_block}\n\n{description}\n\n{link_block}"
                 caption = description
+            elif platform == "tiktok":
+                # TikTok NAO deixa link clicavel na legenda: manda para a BIO,
+                # que tem todos os produtos com o link direto da Amazon.
+                if is_en:
+                    cta = "\n\n\U0001f517 Full link in our BIO \u2014 tap our profile \u2b06\ufe0f"
+                else:
+                    cta = "\n\n\U0001f517 Link completo na nossa BIO \u2014 toca no nosso perfil \u2b06\ufe0f"
+                caption = f"{caption}{cta}"
+                description = f"{description}{cta}"
             else:
-                cta = f"\n\n{link_block}"
+                # Instagram/Facebook: comentar a palavra -> recebe o link no direct
+                # (o robo de mensagens responde no privado com o link do produto).
+                if is_en:
+                    cta = f"\n\n\U0001f4e9 Comment \u201c{trigger}\u201d and I'll send the link straight to your DM!"
+                else:
+                    cta = f"\n\n\U0001f4e9 Comenta \u201c{trigger}\u201d que eu te mando o link no seu direct!"
                 caption = f"{caption}{cta}"
                 description = f"{description}{cta}"
 
