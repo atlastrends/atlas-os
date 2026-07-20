@@ -109,19 +109,17 @@ export default function AmazonSales() {
         </div>
       </div>
 
-      {/* Como baixar o relatório */}
-      <div
-        className="card"
-        style={{ padding: 16, marginBottom: 16, borderLeft: "3px solid #f59e0b" }}
+      {/* Aviso discreto: a Amazon exige baixar o relatorio uma vez */}
+      <p
+        style={{
+          color: "var(--text-faint)",
+          fontSize: 13,
+          margin: "0 0 16px",
+        }}
       >
-        <b>Tudo automático:</b> baixe o relatório uma vez no{" "}
-        <i>Amazon Associates</i> → <b>Relatórios</b> → <b>Baixar relatório</b>{" "}
-        (Ganhos / Pedidos / Cliques). O ATLAS procura o arquivo sozinho na sua
-        pasta <b>Downloads</b> e importa automaticamente — os números aparecem
-        aqui sem você precisar clicar em nada. Os <b>cliques</b> do próprio
-        ATLAS também são contados sozinhos. (A Amazon não libera as vendas por
-        API; por isso o único passo é aquele download.)
-      </div>
+        Dica: no <i>Amazon Associates</i> → Relatórios → Baixar relatório. O
+        arquivo cai na pasta Downloads e o ATLAS importa sozinho.
+      </p>
 
       {/* Filtros */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
