@@ -61,6 +61,13 @@ class MetricsService:
                 metrics = None
 
             if metrics:
+                # Se o coletor descobriu o link publico do video (ex.: TikTok
+                # depois que o rascunho vira post publico), grava/atualiza na
+                # publicacao para aparecer o botao "Abrir" no Analytics.
+                new_url = (metrics.get("external_url") or "").strip()
+                if new_url and pub.external_url != new_url:
+                    pub.external_url = new_url
+
                 self.db.add(
                     VideoMetric(
                         video_asset_id=pub.video_asset_id,
@@ -220,7 +227,9 @@ class MetricsService:
         query = requests.post(
             "https://open.tiktokapis.com/v2/video/query/",
             headers=headers,
-            params={"fields": "id,view_count,like_count,comment_count,share_count"},
+            params={
+                "fields": "id,view_count,like_count,comment_count,share_count,share_url"
+            },
             json={"filters": {"video_ids": [str(x) for x in post_ids]}},
             timeout=30,
         ).json()
@@ -229,16 +238,20 @@ class MetricsService:
             return None
 
         views = likes = comments = shares = 0
+        share_url = None
         for v in videos:
             views += int(v.get("view_count", 0) or 0)
             likes += int(v.get("like_count", 0) or 0)
             comments += int(v.get("comment_count", 0) or 0)
             shares += int(v.get("share_count", 0) or 0)
+            if not share_url and v.get("share_url"):
+                share_url = v.get("share_url")
         return {
             "views": views,
             "likes": likes,
             "comments": comments,
             "shares": shares,
+            "external_url": share_url,
         }
 
     def _tiktok_market_for_asset(self, video_asset_id: int | None) -> str:
