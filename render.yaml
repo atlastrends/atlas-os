@@ -1,0 +1,28 @@
+# Configuracao do robo de direct para o Render (https://render.com)
+# No Render: New + -> Blueprint -> aponte para este repositorio.
+# Depois cadastre as variaveis marcadas como sync:false na aba Environment.
+services:
+  - type: web
+    name: atlas-dm-bot
+    runtime: python
+    plan: free
+    buildCommand: pip install -r bot/requirements.txt
+    startCommand: uvicorn bot.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_ACCESS_TOKEN
+        sync: false
+      - key: META_VERIFY_TOKEN
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: META_GRAPH_VERSION
+        value: v21.0
+      - key: GROQ_MODEL
+        value: llama-3.1-8b-instant
+      - key: PRODUCTS_JSON_URL
+        value: https://atlastrends.github.io/atlas-os/produtos.json
+      - key: SUPPORT_EMAIL
+        value: atlastrendbr@gmail.com

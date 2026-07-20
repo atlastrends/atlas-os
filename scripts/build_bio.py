@@ -11,6 +11,7 @@ A página não muda a estrutura do Atlas: é só um arquivo HTML.
 from __future__ import annotations
 
 import html
+import json
 import re
 import sys
 from datetime import datetime, timezone
@@ -23,9 +24,11 @@ if str(PROJECT_ROOT) not in sys.path:
 from sqlalchemy import text  # noqa: E402
 
 from app.core.database import SessionLocal  # noqa: E402
+from app.services.product_keyword import product_keyword  # noqa: E402
 
 DOCS_DIR = PROJECT_ROOT / "docs"  # noqa: E402
 OUTPUT_FILE = DOCS_DIR / "index.html"
+PRODUCTS_JSON = DOCS_DIR / "produtos.json"  # lista que o robo de direct le
 
 # Marca de cada mercado (ajuste os nomes/@ como preferir)
 BRANDS = {
@@ -164,7 +167,7 @@ def fetch_products() -> dict[str, list[dict]]:
     """Retorna {'BR': [...], 'US': [...]} com os produtos publicados."""
     query = text(
         """
-        SELECT title, country_code, affiliate_url
+        SELECT id, title, country_code, affiliate_url
         FROM video_assets
         WHERE kind = 'AFFILIATE'
           AND affiliate_url IS NOT NULL
@@ -176,7 +179,7 @@ def fetch_products() -> dict[str, list[dict]]:
     grouped: dict[str, list[dict]] = {"BR": [], "US": []}
     seen: dict[str, set[str]] = {"BR": set(), "US": set()}
     with SessionLocal() as db:
-        for title, country, url in db.execute(query):
+        for asset_id, title, country, url in db.execute(query):
             cc = (country or "").upper()
             if cc not in grouped:
                 continue
@@ -189,6 +192,7 @@ def fetch_products() -> dict[str, list[dict]]:
             imgs = _image_urls(asin)
             grouped[cc].append(
                 {
+                    "asset_id": asset_id,
                     "title": (title or "").strip(),
                     "url": url.strip(),
                     "asin": asin,
@@ -198,6 +202,48 @@ def fetch_products() -> dict[str, list[dict]]:
                 }
             )
     return grouped
+
+
+def _media_ids_by_asset() -> dict[int, dict[str, str]]:
+    """{asset_id: {'instagram': post_id, 'facebook': post_id}} das publicacoes.
+
+    O robo usa isso para saber de qual produto e o comentario (pelo post).
+    """
+    query = text(
+        """
+        SELECT video_asset_id, platform, external_id
+        FROM publications
+        WHERE platform IN ('instagram', 'facebook')
+          AND external_id IS NOT NULL AND external_id <> ''
+        """
+    )
+    out: dict[int, dict[str, str]] = {}
+    with SessionLocal() as db:
+        for asset_id, platform, ext in db.execute(query):
+            if asset_id is None:
+                continue
+            out.setdefault(int(asset_id), {})[str(platform)] = str(ext)
+    return out
+
+
+def build_products_index(grouped: dict[str, list[dict]]) -> list[dict]:
+    """Lista simples que o robo de direct le (palavra -> link do produto)."""
+    media = _media_ids_by_asset()
+    items: list[dict] = []
+    for market, products in grouped.items():
+        for p in products:
+            ids = media.get(int(p["asset_id"]), {}) if p.get("asset_id") else {}
+            items.append(
+                {
+                    "keyword": product_keyword(p["title"], p.get("asin") or ""),
+                    "title": p["title"],
+                    "url": p["url"],
+                    "market": market,
+                    "instagram_media_id": ids.get("instagram", ""),
+                    "facebook_post_id": ids.get("facebook", ""),
+                }
+            )
+    return items
 
 
 def _card_html(product: dict, cta: str) -> str:
@@ -608,10 +654,24 @@ def main() -> None:
     grouped = fetch_products()
     DOCS_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_FILE.write_text(build_html(grouped), encoding="utf-8")
+    # Lista que o robo de direct le (palavra-gatilho -> link do produto).
+    index = build_products_index(grouped)
+    PRODUCTS_JSON.write_text(
+        json.dumps(
+            {
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "products": index,
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     print(
         f"Pagina de bio gerada: {OUTPUT_FILE}\n"
         f"  Brasil: {len(grouped['BR'])} produtos\n"
-        f"  USA:    {len(grouped['US'])} produtos"
+        f"  USA:    {len(grouped['US'])} produtos\n"
+        f"Lista do robo: {PRODUCTS_JSON} ({len(index)} produtos)"
     )
 
 

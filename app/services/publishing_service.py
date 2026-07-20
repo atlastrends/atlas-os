@@ -410,11 +410,17 @@ class PublishingService:
             buy_label = "Buy it here:" if is_en else "Compre aqui:"
             link_block = f"{buy_label}\n{affiliate_link}"
 
-            # Palavra-gatilho do robo de direct (Instagram/Facebook).
-            trigger = os.getenv(
-                "META_TRIGGER_WORD_US" if is_en else "META_TRIGGER_WORD_BR",
-                "WANT" if is_en else "QUERO",
-            ).strip().upper()
+            # Palavra-gatilho do robo de direct (Instagram/Facebook): UMA
+            # palavra propria de cada produto (ex.: FRITADEIRA, ECHO), gerada
+            # a partir do titulo. O robo escuta essa palavra nos comentarios
+            # e responde com o link no direct. Fica no mesmo helper usado pela
+            # bio, entao a palavra da legenda == a palavra que o robo espera.
+            import re as _re
+            from app.services.product_keyword import product_keyword
+
+            _asin_m = _re.search(r"/dp/([A-Z0-9]{10})", asset.affiliate_url or "")
+            _asin = _asin_m.group(1) if _asin_m else ""
+            trigger = product_keyword(asset.title or "", _asin)
 
             if platform == "youtube":
                 # No YouTube o link vai no TOPO (aparece antes do "mostrar mais")
