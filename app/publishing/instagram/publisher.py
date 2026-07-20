@@ -115,10 +115,26 @@ class InstagramPublisher(BasePublisher):
                     detail={"platform": self.platform},
                 )
 
+            # 4) Busca o link real (permalink) para conferir o Reels.
+            #    O ID numerico NAO forma uma URL valida; o permalink usa
+            #    um codigo curto que so a API do Instagram devolve.
+            permalink = f"https://www.instagram.com/reel/{media_id}"
+            try:
+                info = requests.get(
+                    f"{GRAPH_BASE}/{media_id}",
+                    params={"fields": "permalink", "access_token": token},
+                    timeout=30,
+                ).json()
+                real = (info or {}).get("permalink")
+                if real:
+                    permalink = real
+            except Exception:  # noqa: BLE001
+                pass
+
             return PublishResult(
                 status="published",
                 external_id=media_id,
-                external_url=f"https://www.instagram.com/reel/{media_id}",
+                external_url=permalink,
                 detail={"platform": self.platform},
             )
 

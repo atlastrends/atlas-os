@@ -163,12 +163,25 @@ class MetricsService:
         data = {d["name"]: (d.get("values", [{}])[0].get("value", 0)) for d in resp.get("data", [])}
         if not data:
             return None
-        return {
+        out = {
             "views": data.get("plays", 0),
             "likes": data.get("likes", 0),
             "comments": data.get("comments", 0),
             "shares": data.get("shares", 0),
         }
+        # Tambem confere o link real (permalink) e corrige se estiver errado.
+        try:
+            info = requests.get(
+                f"{GRAPH_BASE}/{media_id}",
+                params={"fields": "permalink", "access_token": token},
+                timeout=30,
+            ).json()
+            real = (info or {}).get("permalink")
+            if real:
+                out["external_url"] = real
+        except Exception:  # noqa: BLE001
+            pass
+        return out
 
     def _facebook_video(self, video_id: str) -> dict | None:
         token = os.getenv("META_ACCESS_TOKEN")
@@ -177,7 +190,7 @@ class MetricsService:
         resp = requests.get(
             f"{GRAPH_BASE}/{video_id}",
             params={
-                "fields": "views,likes.summary(true),comments.summary(true)",
+                "fields": "views,permalink_url,likes.summary(true),comments.summary(true)",
                 "access_token": token,
             },
             timeout=30,
@@ -186,11 +199,15 @@ class MetricsService:
             return None
         likes = (resp.get("likes", {}) or {}).get("summary", {}).get("total_count", 0)
         comments = (resp.get("comments", {}) or {}).get("summary", {}).get("total_count", 0)
-        return {
+        out = {
             "views": resp.get("views", 0),
             "likes": likes,
             "comments": comments,
         }
+        real = (resp.get("permalink_url") or "").strip()
+        if real:
+            out["external_url"] = real if real.startswith("http") else f"https://www.facebook.com{real}"
+        return out
 
     def _tiktok_video(
         self, publish_id: str, video_asset_id: int | None = None

@@ -108,10 +108,24 @@ class FacebookPublisher(BasePublisher):
             # Aguarda um instante para o post ficar disponivel.
             time.sleep(2)
 
+            # Busca o link real (permalink) do Reel para conferir.
+            permalink = f"https://www.facebook.com/reel/{video_id}"
+            try:
+                info = requests.get(
+                    f"{GRAPH_BASE}/{video_id}",
+                    params={"fields": "permalink_url", "access_token": token},
+                    timeout=30,
+                ).json()
+                real = (info or {}).get("permalink_url")
+                if real:
+                    permalink = real if real.startswith("http") else f"https://www.facebook.com{real}"
+            except Exception:  # noqa: BLE001
+                pass
+
             return PublishResult(
                 status="published",
                 external_id=str(video_id),
-                external_url=f"https://www.facebook.com/reel/{video_id}",
+                external_url=permalink,
                 detail={"platform": self.platform, "finish": finish},
             )
 
