@@ -126,7 +126,8 @@ release_readiness.txt
 
 # --- Binários externos ---
 cloudflared.exe
-cloudflared.log
+cloudflared*.log
+bin/cloudflared.exe
 
 # --- Docker compose de backup ---
 docker-compose.*.yml

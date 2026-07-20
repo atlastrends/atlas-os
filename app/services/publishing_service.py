@@ -387,8 +387,15 @@ class PublishingService:
             # So usa o link curto se existir um DOMINIO PUBLICO HTTPS de verdade.
             # Sem isso, o "localhost" nao abre para ninguem: entao usamos o
             # proprio link da Amazon (ja com a tag de afiliado, funciona e paga).
+            # ATENCAO: o tunel (trycloudflare.com) TROCA de endereco a cada vez
+            # que o painel abre. Ele serve para o IG/FB BAIXAREM o video na hora,
+            # mas NAO pode virar link de legenda (quebraria depois). Por isso,
+            # com tunel, o link clicavel continua sendo o da Amazon (permanente).
             public_base = (os.getenv("ATLAS_PUBLIC_BASE_URL") or "").strip()
-            has_public_domain = public_base.lower().startswith("https://")
+            has_public_domain = (
+                public_base.lower().startswith("https://")
+                and "trycloudflare.com" not in public_base.lower()
+            )
 
             if has_public_domain:
                 link = self.shortlinks.get_or_create(

@@ -36,9 +36,23 @@ def public_media_url(video_path: str) -> str:
 
     Necessaria para plataformas que baixam o video por URL
     (Instagram, Facebook, TikTok PULL_FROM_URL).
+
+    Se o armazenamento na nuvem (Supabase) estiver configurado, SOBE o video
+    para la e devolve a URL publica de la (funciona atras de firewall que
+    bloqueia o tunel). Senao, cai para ATLAS_PUBLIC_BASE_URL (tunel/localhost).
     """
     if not video_path:
         return ""
+    try:
+        from app.services.media_storage import get_or_upload_public_url, is_enabled
+
+        if is_enabled():
+            remote = get_or_upload_public_url(video_path)
+            if remote:
+                return remote
+    except Exception:
+        # Nunca quebra a publicacao por causa do armazenamento; cai no fallback.
+        pass
     base = (os.getenv("ATLAS_PUBLIC_BASE_URL") or "http://localhost:8000").rstrip("/")
     rel = str(video_path).replace("\\", "/").lstrip("/")
     return f"{base}/media/{rel}"
