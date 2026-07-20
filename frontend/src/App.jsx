@@ -9,6 +9,7 @@ import Reels from "./pages/Reels.jsx";
 import Publishing from "./pages/Publishing.jsx";
 import Marketing from "./pages/Marketing.jsx";
 import Analytics from "./pages/Analytics.jsx";
+import AmazonSales from "./pages/AmazonSales.jsx";
 import PlatformDetail from "./pages/PlatformDetail.jsx";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="/publicacoes" element={<Publishing />} />
             <Route path="/marketing" element={<Marketing />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/vendas-amazon" element={<AmazonSales />} />
             <Route path="/analytics/conta/:key" element={<PlatformDetail />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

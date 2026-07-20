@@ -37,6 +37,22 @@ export const Api = {
 
   publications: () => api.get("/publications").then((r) => r.data),
 
+  // ----- Vendas Amazon (afiliado) -----
+  amazonSalesStats: (params = {}) =>
+    api.get("/affiliate/amazon-sales/stats", { params }).then((r) => r.data),
+  amazonSalesImport: (formData) =>
+    api
+      .post("/affiliate/amazon-sales/import", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data),
+  amazonSalesClear: (market) =>
+    api
+      .delete("/affiliate/amazon-sales/clear", {
+        params: market ? { market } : {},
+      })
+      .then((r) => r.data),
+
   jobs: () => api.get("/jobs").then((r) => r.data),
   fetchAmazon: () => api.post("/jobs/fetch-amazon-products").then((r) => r.data),
   availableProducts: () => api.get("/products/available").then((r) => r.data),

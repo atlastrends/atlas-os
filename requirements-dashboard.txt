@@ -21,6 +21,9 @@ httpx
 # Agendador de tarefas automaticas (coleta de metricas por hora)
 apscheduler
 
+# Leitura de relatorios de afiliado da Amazon (CSV ja e nativo; XLSX via openpyxl)
+openpyxl
+
 # Descoberta de tendencias / scraping leve
 yt-dlp
 feedparser

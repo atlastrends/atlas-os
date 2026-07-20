@@ -21,6 +21,7 @@ const groups = [
       { to: "/publicacoes", icon: "🚀", label: "Publicações" },
       { to: "/marketing", icon: "📣", label: "Marketing" },
       { to: "/analytics", icon: "📈", label: "Analytics" },
+      { to: "/vendas-amazon", icon: "💰", label: "Vendas Amazon" },
     ],
   },
 ];

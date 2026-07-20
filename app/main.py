@@ -20,6 +20,7 @@ from app.routers import (
     affiliate_manual,
     affiliate_video,
     amazon_catalog,
+    amazon_sales,
     auth,
     dashboard_api,
     media,
@@ -68,6 +69,7 @@ async def lifespan(app: FastAPI):
     try:
         from app.core.database import Base, engine
         from app.models import dashboard as dashboard_models
+        from app.models.amazon_sales import AmazonSale
         from app.models.content import Content
 
         # Cria apenas as tabelas do painel. Isso evita depender de recursos
@@ -84,6 +86,8 @@ async def lifespan(app: FastAPI):
             # Tabela usada pelo motor de reels (loop_worker) para salvar o
             # roteiro gerado antes de renderizar o video.
             Content.__table__,
+            # Tabela das vendas de afiliado da Amazon (pagina "Vendas Amazon").
+            AmazonSale.__table__,
         ]
         Base.metadata.create_all(bind=engine, tables=dashboard_tables)
         print("[ATLAS OS] Tabelas do painel verificadas/criadas.")
@@ -167,6 +171,7 @@ app.include_router(affiliate_content_review.router)
 app.include_router(affiliate_manual.router)
 app.include_router(affiliate_video.router)
 app.include_router(amazon_catalog.router)
+app.include_router(amazon_sales.router)
 app.include_router(dashboard_api.router)
 app.include_router(shortlink.router)
 app.include_router(media.router)
