@@ -227,6 +227,27 @@ def get_video(asset_id: int, db: Session = Depends(get_db)):
     return _serialize_asset(asset, db)
 
 
+@router.get("/videos/{asset_id}/caption")
+def video_caption(
+    asset_id: int,
+    platform: str = Query(default="tiktok"),
+    db: Session = Depends(get_db),
+):
+    """Retorna a legenda + hashtags + link que seriam publicados, para o
+    usuario COPIAR e COLAR manualmente na rede (ex.: TikTok), depois que o
+    video sobe como rascunho."""
+    asset = VideoLibraryService(db).get(asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Video nao encontrado.")
+    req = PublishingService(db)._build_request(asset, platform)
+    return {
+        "platform": platform,
+        "title": req.title,
+        "caption": req.caption,
+        "hashtags": req.hashtags,
+    }
+
+
 @router.post("/videos/{asset_id}/approve")
 def approve_video(
     asset_id: int,

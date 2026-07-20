@@ -23,6 +23,10 @@ export const Api = {
   listVideos: (params = {}) =>
     api.get("/videos", { params }).then((r) => r.data),
   getVideo: (id) => api.get(`/videos/${id}`).then((r) => r.data),
+  videoCaption: (id, platform = "tiktok") =>
+    api
+      .get(`/videos/${id}/caption`, { params: { platform } })
+      .then((r) => r.data),
   syncVideos: () => api.post("/videos/sync").then((r) => r.data),
   clearReels: () => api.post("/videos/clear-reels").then((r) => r.data),
   clearRejected: (kind) =>

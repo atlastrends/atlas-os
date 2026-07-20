@@ -10,16 +10,44 @@ export default function VideoModal({ video, onClose, onChanged, notify }) {
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState(PLATFORMS);
   const [metrics, setMetrics] = useState(null);
+  const [caption, setCaption] = useState("");
+  const [copying, setCopying] = useState(false);
 
   useEffect(() => {
     if (!video) return;
     Api.videoMetrics(video.id).then(setMetrics).catch(() => setMetrics(null));
   }, [video]);
 
+  useEffect(() => {
+    if (!video) return;
+    setCaption("");
+    Api.videoCaption(video.id, "tiktok")
+      .then((d) => setCaption(d?.caption || ""))
+      .catch(() => setCaption(""));
+  }, [video]);
+
   if (!video) return null;
 
   const toggle = (p) =>
     setSelected((s) => (s.includes(p) ? s.filter((x) => x !== p) : [...s, p]));
+
+  const copyCaption = async () => {
+    setCopying(true);
+    try {
+      await navigator.clipboard.writeText(caption);
+      notify?.({
+        type: "ok",
+        msg: "Copiado! Agora e so colar (Ctrl+V) no TikTok.",
+      });
+    } catch {
+      notify?.({
+        type: "error",
+        msg: "Nao consegui copiar sozinho. Selecione o texto e use Ctrl+C.",
+      });
+    } finally {
+      setCopying(false);
+    }
+  };
 
   const approve = async () => {
     setBusy(true);
@@ -102,6 +130,27 @@ export default function VideoModal({ video, onClose, onChanged, notify }) {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {caption && (
+            <div className="kv" style={{ marginTop: 8 }}>
+              <b>Legenda para colar (TikTok / Instagram):</b>
+              <textarea
+                readOnly
+                value={caption}
+                onFocus={(e) => e.target.select()}
+                style={{ marginTop: 6, minHeight: 130, width: "100%" }}
+              />
+              <button
+                className="btn"
+                disabled={copying}
+                onClick={copyCaption}
+                style={{ marginTop: 6 }}
+                title="Copia legenda + hashtags + link do produto. Depois cole no TikTok."
+              >
+                {copying ? "Copiando…" : "📋 Copiar legenda + hashtags + link"}
+              </button>
             </div>
           )}
 
