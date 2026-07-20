@@ -245,6 +245,89 @@ class PublishingService:
             self.db.refresh(pub)
         return pub
 
+    def _affiliate_caption(self, asset: VideoAsset) -> tuple[str, str, list]:
+        """Cria legenda + hashtags para um video de afiliado.
+
+        Retorna (caption, description, hashtags). As hashtags tambem sao
+        embutidas no texto, porque Instagram e Facebook so mostram o que
+        estiver dentro da legenda/descricao.
+        """
+        import html
+        import re
+        import unicodedata
+
+        payload = asset.payload or {}
+
+        def deslug(text: str) -> str:
+            """Converte um 'slug' (br-m40..-Filtro-de-Linha-9dbf) em texto legivel."""
+            parts = [p for p in str(text or "").split("-") if p]
+            keep = []
+            for i, p in enumerate(parts):
+                low = p.lower()
+                # Descarta prefixo de mercado (2 letras) e ids/hex no comeco/fim.
+                if i == 0 and len(p) <= 3:
+                    continue
+                if re.fullmatch(r"[0-9a-f]{6,}", low) or re.fullmatch(r"m[0-9a-f]{6,}", low):
+                    continue
+                keep.append(p)
+            return " ".join(keep).strip()
+
+        # Prefere o nome real do produto (payload). A coluna title costuma ser slug.
+        raw = payload.get("title") or ""
+        if not raw:
+            raw = deslug(asset.title) or (asset.title or "")
+        title = html.unescape(str(raw).strip())
+
+        # Titulo da Amazon costuma ser bem longo: encurta para a legenda.
+        short = title
+        if len(short) > 90:
+            short = short[:90].rsplit(" ", 1)[0] + "\u2026"
+
+        market = (asset.country_code or payload.get("marketplace_code") or "").strip().upper()
+        lang = (asset.language or payload.get("language") or "").lower()
+        is_en = market == "US" or lang.startswith("en")
+
+        def slug(text: str) -> str:
+            s = unicodedata.normalize("NFKD", str(text or "")).encode("ascii", "ignore").decode()
+            return re.sub(r"[^A-Za-z0-9]+", "", s).lower()
+
+        if is_en:
+            base_tags = [
+                "#amazonfinds", "#amazondeals", "#founditonamazon",
+                "#tiktokmademebuyit", "#dealsoftheday", "#amazonmusthaves",
+                "#onlineshopping",
+            ]
+            caption_text = f"{short} \U0001f60d\nAmazon find you need \u2014 grab it before it's gone! \U0001f525\U0001f447"
+        else:
+            base_tags = [
+                "#achadosdaamazon", "#achadinhos", "#ofertas", "#promocao",
+                "#amazonbrasil", "#comprasonline", "#ofertadodia",
+            ]
+            caption_text = f"{short} \U0001f60d\nAchadinho que vale a pena \u2014 corre que o pre\u00e7o t\u00e1 bom! \U0001f525\U0001f447"
+
+        tags: list[str] = list(base_tags)
+
+        # Hashtag da categoria do produto.
+        cat = payload.get("category_label") or payload.get("category") or ""
+        cat_slug = slug(cat)
+        if len(cat_slug) >= 3:
+            tag = f"#{cat_slug}"
+            if tag not in tags:
+                tags.append(tag)
+
+        # Hashtag da marca (primeira palavra do titulo do produto).
+        first = title.split(" ")[0] if title else ""
+        brand_slug = slug(first)
+        if 3 <= len(brand_slug) <= 20 and not brand_slug.isdigit():
+            tag = f"#{brand_slug}"
+            if tag not in tags:
+                tags.append(tag)
+
+        tags = tags[:15]
+        tag_line = " ".join(tags)
+        caption_full = f"{caption_text}\n\n{tag_line}"
+        return caption_full, caption_full, tags
+
     def _build_request(
         self,
         asset: VideoAsset,
@@ -265,6 +348,17 @@ class PublishingService:
         )
         title = pdata.get("title") or asset.title or (asset.topic or "")
         description = pdata.get("description") or caption
+
+        # Videos de AFILIADO (produtos Amazon) nao passam pelo gerador de
+        # legenda/hashtags dos Reels de tendencia. Se vierem sem hashtags,
+        # criamos aqui uma legenda com chamada + hashtags, para o post ter
+        # alcance (senao sairia so com o titulo cru do produto e sem hashtag).
+        is_affiliate = asset.kind == VideoKindEnum.AFFILIATE or str(
+            getattr(asset, "kind", "")
+        ).lower().endswith("affiliate")
+        if is_affiliate and not hashtags:
+            caption, description, hashtags = self._affiliate_caption(asset)
+            title = title or asset.title or ""
 
         # Limpa entidades HTML (ex.: "&amp;" -> "&") vindas do titulo da Amazon.
         title = html.unescape(str(title or ""))
