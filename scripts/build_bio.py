@@ -33,17 +33,20 @@ BRANDS = {
     "US": {"name": "Atlas Finds", "handle": "@atlasfindsus", "flag": "🇺🇸"},
 }
 
-# Links das redes sociais por mercado. AJUSTE aqui se algum estiver diferente.
+# Links das redes sociais por mercado.
+# Facebook usa o ID da Pagina do .env (FB_PAGE_AFFILIATE_BR/US) -> link garantido.
+# TikTok confirmado pelo .env (ATLAS_TIKTOK_REDIRECT_URI). Instagram: o .env so guarda
+# o ID da conta (IG_AFFILIATE_*), nao o @ publico; ajuste o @ abaixo se estiver diferente.
 SOCIALS = {
     "BR": {
         "tiktok": "https://www.tiktok.com/@achadosatlasbr",
         "instagram": "https://www.instagram.com/achadosatlasbr",
-        "facebook": "https://www.facebook.com/achadosatlasbr",
+        "facebook": "https://www.facebook.com/1256289617564282",
     },
     "US": {
         "tiktok": "https://www.tiktok.com/@atlasfindsus",
         "instagram": "https://www.instagram.com/atlasfindsus",
-        "facebook": "https://www.facebook.com/atlasfindsus",
+        "facebook": "https://www.facebook.com/1244342868757443",
     },
 }
 
@@ -128,11 +131,16 @@ def _asin_from_url(url: str) -> str | None:
     return match.group(1).upper() if match else None
 
 
-def _image_url(asin: str | None) -> str:
+def _image_urls(asin: str | None) -> list[str]:
+    """Varias URLs de imagem da Amazon pela ASIN (o HTML tenta uma por uma)."""
     if not asin:
-        return ""
-    # Imagem pública do produto pela ASIN (com fallback no HTML se falhar).
-    return f"https://m.media-amazon.com/images/P/{asin}.01._SCLZZZZZZZ_.jpg"
+        return []
+    return [
+        f"https://m.media-amazon.com/images/P/{asin}.01._SCLZZZZZZZ_.jpg",
+        f"https://images-na.ssl-images-amazon.com/images/P/{asin}.01._SCLZZZZZZZ_.jpg",
+        f"https://m.media-amazon.com/images/P/{asin}.01._SL500_.jpg",
+        f"https://images.amazon.com/images/P/{asin}.01._SCLZZZZZZZ_.jpg",
+    ]
 
 
 def fetch_products() -> dict[str, list[dict]]:
@@ -161,12 +169,14 @@ def fetch_products() -> dict[str, list[dict]]:
             if key in seen[cc]:
                 continue
             seen[cc].add(key)
+            imgs = _image_urls(asin)
             grouped[cc].append(
                 {
                     "title": (title or "").strip(),
                     "url": url.strip(),
                     "asin": asin,
-                    "image": _image_url(asin),
+                    "image": imgs[0] if imgs else "",
+                    "images": imgs,
                     "cat": _category(title),
                 }
             )
@@ -178,10 +188,12 @@ def _card_html(product: dict, cta: str) -> str:
     title_attr = html.escape(product["title"].lower(), quote=True)
     cat = html.escape(product.get("cat", FALLBACK_CAT[0]), quote=True)
     url = html.escape(product["url"], quote=True)
-    image = html.escape(product["image"], quote=True)
+    images = product.get("images") or ([product["image"]] if product.get("image") else [])
+    image = html.escape(images[0], quote=True) if images else ""
+    srcs = html.escape("|".join(images[1:]), quote=True) if len(images) > 1 else ""
     img_tag = (
         f'<img class="card-img" src="{image}" alt="{title}" loading="lazy" '
-        f"onerror=\"this.parentElement.classList.add('noimg');this.remove();\">"
+        f'data-srcs="{srcs}" onerror="imgFallback(this)">'
         if image
         else ""
     )
@@ -276,7 +288,7 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     -webkit-font-smoothing:antialiased;
   }}
   a {{ -webkit-tap-highlight-color:transparent; }}
-  .shell {{ max-width:760px; margin:0 auto; }}
+  .shell {{ max-width:880px; margin:0 auto; }}
   /* HERO */
   .hero {{
     position:relative; text-align:center; color:#fff; padding:44px 22px 30px;
@@ -315,15 +327,11 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     background:#fff; color:#5b6472; font-family:"Inter"; font-size:14px; font-weight:600;
     box-shadow:0 2px 6px rgba(15,23,42,.05); transition:all .15s ease;
   }}
-  .tab.active {{ background:var(--grad); color:#fff; box-shadow:0 6px 16px rgba(0,0,0,.2); }}
+  .tab.active {{ color:#fff; box-shadow:0 6px 16px rgba(0,0,0,.2); }}
+  .tab[data-market="BR"].active {{ background:linear-gradient(135deg,#009c3b 0%,#00701f 100%); box-shadow:0 6px 16px rgba(0,130,45,.34); }}
+  .tab[data-market="US"].active {{ background:linear-gradient(135deg,#3c3b6e 0%,#b22234 100%); box-shadow:0 6px 16px rgba(60,59,110,.34); }}
   /* BUSCA + CATEGORIAS */
   .searchrow {{ margin-top:10px; display:flex; gap:8px; align-items:stretch; }}
-  .cat-toggle {{
-    flex:0 0 auto; border:1px solid var(--line); background:#fff; border-radius:12px;
-    padding:0 15px; font-size:17px; cursor:pointer; color:var(--ink);
-    box-shadow:0 2px 6px rgba(15,23,42,.05);
-  }}
-  .cat-toggle:hover {{ background:#f2f2f4; }}
   .searchbar {{
     flex:1; display:flex; align-items:center; gap:9px; background:#fff;
     border:1px solid var(--line); border-radius:12px; padding:11px 13px;
@@ -334,36 +342,39 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     border:none; outline:none; width:100%; background:transparent;
     font-family:"Inter"; font-size:14px; color:var(--ink);
   }}
-  /* DRAWER LATERAL DE CATEGORIAS */
-  .backdrop {{
-    position:fixed; inset:0; background:rgba(0,0,0,.42); z-index:40;
-    opacity:0; visibility:hidden; transition:opacity .2s ease, visibility .2s ease;
+  /* BARRA LATERAL DE CATEGORIAS (sempre visivel) */
+  .layout {{ display:flex; gap:18px; align-items:flex-start; padding:20px 16px 10px; }}
+  .sidebar {{ flex:0 0 206px; position:sticky; top:calc(var(--topbarH,120px) + 14px); }}
+  .sidebar-title {{
+    font-family:"Poppins"; font-weight:700; font-size:12px; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.6px; margin:0 4px 10px;
   }}
-  .backdrop.open {{ opacity:1; visibility:visible; }}
-  .drawer {{
-    position:fixed; top:0; left:0; bottom:0; width:284px; max-width:85vw; z-index:50;
-    background:#fff; transform:translateX(-102%); transition:transform .26s ease;
-    padding:18px 14px; overflow-y:auto; box-shadow:2px 0 28px rgba(0,0,0,.2);
-  }}
-  .drawer.open {{ transform:none; }}
-  .drawer-head {{
-    display:flex; align-items:center; justify-content:space-between; margin:2px 6px 14px;
-    font-family:"Poppins"; font-weight:700; font-size:17px;
-  }}
-  .drawer-head button {{
-    border:none; background:transparent; font-size:20px; cursor:pointer;
-    color:var(--muted); line-height:1;
-  }}
-  .catlist {{ display:none; flex-direction:column; gap:5px; }}
+  .catlist {{ display:none; flex-direction:column; gap:6px; }}
   .catlist.active {{ display:flex; }}
   .cat-item {{
     display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
-    text-align:left; border:none; background:transparent; padding:11px 12px; border-radius:10px;
-    cursor:pointer; font-family:"Inter"; font-size:14px; font-weight:600; color:var(--ink);
+    text-align:left; border:1px solid var(--line); background:#fff; padding:10px 12px;
+    border-radius:11px; cursor:pointer; font-family:"Inter"; font-size:13.5px; font-weight:600;
+    color:var(--ink); white-space:nowrap; box-shadow:0 2px 6px rgba(15,23,42,.04);
   }}
   .cat-item:hover {{ background:#f2f2f4; }}
-  .cat-item.active {{ background:var(--grad); color:#fff; }}
+  .cat-item.active {{ background:var(--grad); color:#fff; border-color:transparent; }}
   .cat-item span {{ font-size:12px; font-weight:600; opacity:.75; }}
+  @media (max-width:719px) {{
+    .layout {{ flex-direction:column; gap:0; padding:0; }}
+    .sidebar {{
+      position:sticky; top:var(--topbarH,110px); z-index:15; flex:none; width:100%;
+      background:rgba(245,245,247,.94); backdrop-filter:blur(10px);
+      padding:9px 12px; border-bottom:1px solid var(--line);
+    }}
+    .sidebar-title {{ display:none; }}
+    .catlist.active {{
+      flex-direction:row; overflow-x:auto; gap:8px; padding-bottom:1px;
+      -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    }}
+    .catlist.active::-webkit-scrollbar {{ display:none; }}
+    .cat-item {{ width:auto; flex:0 0 auto; }}
+  }}
   /* SOCIALS (no hero) */
   .hero-socials {{ position:relative; z-index:1; margin-top:16px; min-height:44px; }}
   .hero-soc {{ display:none; gap:10px; justify-content:center; }}
@@ -376,7 +387,8 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
   .hero-soc a:hover {{ transform:translateY(-2px); background:rgba(255,255,255,.34); }}
   .hero-soc svg {{ width:21px; height:21px; fill:#fff; }}
   /* CONTENT */
-  .content {{ padding:20px 16px 10px; }}
+  .content {{ flex:1; min-width:0; }}
+  @media (max-width:719px) {{ .content {{ padding:16px 16px 10px; }} }}
   .sec-head {{ display:flex; align-items:baseline; justify-content:space-between; margin:2px 4px 16px; }}
   .sec-head h2 {{ font-family:"Poppins"; font-weight:700; font-size:16px; margin:0; }}
   .sec-head span {{ font-size:12.5px; color:var(--muted); }}
@@ -441,7 +453,6 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
         <button class="tab" data-market="US" onclick="showMarket('US')">🇺🇸 USA</button>
       </div>
       <div class="searchrow">
-        <button class="cat-toggle" onclick="openDrawer()" aria-label="Categorias">☰</button>
         <div class="searchbar">
           <svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
           <input id="q" type="search" placeholder="Buscar produto..." autocomplete="off" oninput="applyFilter()">
@@ -449,7 +460,13 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
       </div>
     </nav>
 
-    <main class="content">
+    <div class="layout">
+      <aside class="sidebar">
+        <p class="sidebar-title">Categorias</p>
+        {br_cats}
+        {us_cats}
+      </aside>
+      <main class="content">
       <section class="market active" id="market-BR">
         <div class="sec-head">
           <h2>Produtos em destaque</h2>
@@ -471,14 +488,8 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
           <div class="empty noresult" style="display:none">No products found 🔍</div>
         </div>
       </section>
-    </main>
-
-    <div class="backdrop" id="backdrop" onclick="closeDrawer()"></div>
-    <aside class="drawer" id="drawer">
-      <div class="drawer-head"><span>Categorias</span><button onclick="closeDrawer()" aria-label="Fechar">✕</button></div>
-      {br_cats}
-      {us_cats}
-    </aside>
+      </main>
+    </div>
 
     <footer class="foot">
       <strong>Como afiliado da Amazon, ganhamos com compras qualificadas.</strong><br>
@@ -502,6 +513,8 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
       document.querySelectorAll('.catlist').forEach(function (el) {{
         el.classList.toggle('active', el.id === 'cats-' + m);
       }});
+      var qEl = document.getElementById('q');
+      if (qEl) qEl.placeholder = (m === 'US') ? 'Search product...' : 'Buscar produto...';
       applyFilter();
       if (history.replaceState) history.replaceState(null, '', '#' + m);
     }}
@@ -529,16 +542,26 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
         b.classList.toggle('active', b === el);
       }});
       applyFilter();
-      closeDrawer();
     }}
-    function openDrawer() {{
-      document.getElementById('drawer').classList.add('open');
-      document.getElementById('backdrop').classList.add('open');
+    // Tenta a proxima URL de imagem da Amazon; se acabarem, mostra o card cinza.
+    function imgFallback(img) {{
+      var s = (img.getAttribute('data-srcs') || '').split('|').filter(Boolean);
+      if (s.length) {{
+        img.setAttribute('data-srcs', s.slice(1).join('|'));
+        img.src = s[0];
+      }} else {{
+        img.parentElement.classList.add('noimg');
+        img.remove();
+      }}
     }}
-    function closeDrawer() {{
-      document.getElementById('drawer').classList.remove('open');
-      document.getElementById('backdrop').classList.remove('open');
+    // Mede a altura da barra fixa para a lateral colar no lugar certo.
+    function fitBars() {{
+      var t = document.querySelector('.topbar');
+      if (t) document.documentElement.style.setProperty('--topbarH', t.offsetHeight + 'px');
     }}
+    window.addEventListener('load', fitBars);
+    window.addEventListener('resize', fitBars);
+    fitBars();
     // Abre direto na aba certa se a URL terminar com #US ou #BR.
     (function () {{
       var h = (location.hash || '').replace('#', '').toUpperCase();

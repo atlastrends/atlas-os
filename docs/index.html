@@ -24,7 +24,7 @@
     -webkit-font-smoothing:antialiased;
   }
   a { -webkit-tap-highlight-color:transparent; }
-  .shell { max-width:760px; margin:0 auto; }
+  .shell { max-width:880px; margin:0 auto; }
   /* HERO */
   .hero {
     position:relative; text-align:center; color:#fff; padding:44px 22px 30px;
@@ -63,15 +63,11 @@
     background:#fff; color:#5b6472; font-family:"Inter"; font-size:14px; font-weight:600;
     box-shadow:0 2px 6px rgba(15,23,42,.05); transition:all .15s ease;
   }
-  .tab.active { background:var(--grad); color:#fff; box-shadow:0 6px 16px rgba(0,0,0,.2); }
+  .tab.active { color:#fff; box-shadow:0 6px 16px rgba(0,0,0,.2); }
+  .tab[data-market="BR"].active { background:linear-gradient(135deg,#009c3b 0%,#00701f 100%); box-shadow:0 6px 16px rgba(0,130,45,.34); }
+  .tab[data-market="US"].active { background:linear-gradient(135deg,#3c3b6e 0%,#b22234 100%); box-shadow:0 6px 16px rgba(60,59,110,.34); }
   /* BUSCA + CATEGORIAS */
   .searchrow { margin-top:10px; display:flex; gap:8px; align-items:stretch; }
-  .cat-toggle {
-    flex:0 0 auto; border:1px solid var(--line); background:#fff; border-radius:12px;
-    padding:0 15px; font-size:17px; cursor:pointer; color:var(--ink);
-    box-shadow:0 2px 6px rgba(15,23,42,.05);
-  }
-  .cat-toggle:hover { background:#f2f2f4; }
   .searchbar {
     flex:1; display:flex; align-items:center; gap:9px; background:#fff;
     border:1px solid var(--line); border-radius:12px; padding:11px 13px;
@@ -82,36 +78,39 @@
     border:none; outline:none; width:100%; background:transparent;
     font-family:"Inter"; font-size:14px; color:var(--ink);
   }
-  /* DRAWER LATERAL DE CATEGORIAS */
-  .backdrop {
-    position:fixed; inset:0; background:rgba(0,0,0,.42); z-index:40;
-    opacity:0; visibility:hidden; transition:opacity .2s ease, visibility .2s ease;
+  /* BARRA LATERAL DE CATEGORIAS (sempre visivel) */
+  .layout { display:flex; gap:18px; align-items:flex-start; padding:20px 16px 10px; }
+  .sidebar { flex:0 0 206px; position:sticky; top:calc(var(--topbarH,120px) + 14px); }
+  .sidebar-title {
+    font-family:"Poppins"; font-weight:700; font-size:12px; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.6px; margin:0 4px 10px;
   }
-  .backdrop.open { opacity:1; visibility:visible; }
-  .drawer {
-    position:fixed; top:0; left:0; bottom:0; width:284px; max-width:85vw; z-index:50;
-    background:#fff; transform:translateX(-102%); transition:transform .26s ease;
-    padding:18px 14px; overflow-y:auto; box-shadow:2px 0 28px rgba(0,0,0,.2);
-  }
-  .drawer.open { transform:none; }
-  .drawer-head {
-    display:flex; align-items:center; justify-content:space-between; margin:2px 6px 14px;
-    font-family:"Poppins"; font-weight:700; font-size:17px;
-  }
-  .drawer-head button {
-    border:none; background:transparent; font-size:20px; cursor:pointer;
-    color:var(--muted); line-height:1;
-  }
-  .catlist { display:none; flex-direction:column; gap:5px; }
+  .catlist { display:none; flex-direction:column; gap:6px; }
   .catlist.active { display:flex; }
   .cat-item {
     display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
-    text-align:left; border:none; background:transparent; padding:11px 12px; border-radius:10px;
-    cursor:pointer; font-family:"Inter"; font-size:14px; font-weight:600; color:var(--ink);
+    text-align:left; border:1px solid var(--line); background:#fff; padding:10px 12px;
+    border-radius:11px; cursor:pointer; font-family:"Inter"; font-size:13.5px; font-weight:600;
+    color:var(--ink); white-space:nowrap; box-shadow:0 2px 6px rgba(15,23,42,.04);
   }
   .cat-item:hover { background:#f2f2f4; }
-  .cat-item.active { background:var(--grad); color:#fff; }
+  .cat-item.active { background:var(--grad); color:#fff; border-color:transparent; }
   .cat-item span { font-size:12px; font-weight:600; opacity:.75; }
+  @media (max-width:719px) {
+    .layout { flex-direction:column; gap:0; padding:0; }
+    .sidebar {
+      position:sticky; top:var(--topbarH,110px); z-index:15; flex:none; width:100%;
+      background:rgba(245,245,247,.94); backdrop-filter:blur(10px);
+      padding:9px 12px; border-bottom:1px solid var(--line);
+    }
+    .sidebar-title { display:none; }
+    .catlist.active {
+      flex-direction:row; overflow-x:auto; gap:8px; padding-bottom:1px;
+      -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    }
+    .catlist.active::-webkit-scrollbar { display:none; }
+    .cat-item { width:auto; flex:0 0 auto; }
+  }
   /* SOCIALS (no hero) */
   .hero-socials { position:relative; z-index:1; margin-top:16px; min-height:44px; }
   .hero-soc { display:none; gap:10px; justify-content:center; }
@@ -124,7 +123,8 @@
   .hero-soc a:hover { transform:translateY(-2px); background:rgba(255,255,255,.34); }
   .hero-soc svg { width:21px; height:21px; fill:#fff; }
   /* CONTENT */
-  .content { padding:20px 16px 10px; }
+  .content { flex:1; min-width:0; }
+  @media (max-width:719px) { .content { padding:16px 16px 10px; } }
   .sec-head { display:flex; align-items:baseline; justify-content:space-between; margin:2px 4px 16px; }
   .sec-head h2 { font-family:"Poppins"; font-weight:700; font-size:16px; margin:0; }
   .sec-head span { font-size:12.5px; color:var(--muted); }
@@ -178,8 +178,8 @@
       <p class="tag">Curadoria dos produtos que aparecem nos nossos vídeos 🎬</p>
       <span class="badge">✨ 42 produtos selecionados</span>
       <div class="hero-socials">
-        <div class="hero-soc active" id="soc-BR"><a href="https://www.tiktok.com/@achadosatlasbr" target="_blank" rel="noopener" aria-label="tiktok"><svg viewBox="0 0 24 24"><path d="M16.5 3c.3 2.1 1.5 3.6 3.5 3.9v2.5c-1.3.1-2.5-.3-3.6-1v5.9c0 3.3-2.4 5.7-5.6 5.7-3 0-5.3-2.2-5.3-5.1 0-3 2.4-5.2 5.6-5 .3 0 .5 0 .8.1v2.7c-.2-.1-.5-.1-.8-.1-1.4 0-2.6 1-2.6 2.4 0 1.4 1.1 2.4 2.5 2.4 1.5 0 2.6-1.1 2.6-2.9V3h2.5z"/></svg></a><a href="https://www.instagram.com/achadosatlasbr" target="_blank" rel="noopener" aria-label="instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.4.6.2 1 .4 1.4.9.5.5.7.9.9 1.4.1.4.3 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.4 2.2-.2.6-.4 1-.9 1.4-.5.5-.9.7-1.4.9-.4.1-1 .3-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.4-.6-.2-1-.4-1.4-.9-.5-.5-.7-.9-.9-1.4-.1-.4-.3-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.8.4-2.2.2-.6.4-1 .9-1.4.5-.5.9-.7 1.4-.9.4-.1 1-.3 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1 0 12 18.6 6.6 6.6 0 0 0 12 5.4zm0 10.9A4.3 4.3 0 1 1 12 7.7a4.3 4.3 0 0 1 0 8.6zm6.8-11.2a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/></svg></a><a href="https://www.facebook.com/achadosatlasbr" target="_blank" rel="noopener" aria-label="facebook"><svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg></a></div>
-        <div class="hero-soc" id="soc-US"><a href="https://www.tiktok.com/@atlasfindsus" target="_blank" rel="noopener" aria-label="tiktok"><svg viewBox="0 0 24 24"><path d="M16.5 3c.3 2.1 1.5 3.6 3.5 3.9v2.5c-1.3.1-2.5-.3-3.6-1v5.9c0 3.3-2.4 5.7-5.6 5.7-3 0-5.3-2.2-5.3-5.1 0-3 2.4-5.2 5.6-5 .3 0 .5 0 .8.1v2.7c-.2-.1-.5-.1-.8-.1-1.4 0-2.6 1-2.6 2.4 0 1.4 1.1 2.4 2.5 2.4 1.5 0 2.6-1.1 2.6-2.9V3h2.5z"/></svg></a><a href="https://www.instagram.com/atlasfindsus" target="_blank" rel="noopener" aria-label="instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.4.6.2 1 .4 1.4.9.5.5.7.9.9 1.4.1.4.3 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.4 2.2-.2.6-.4 1-.9 1.4-.5.5-.9.7-1.4.9-.4.1-1 .3-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.4-.6-.2-1-.4-1.4-.9-.5-.5-.7-.9-.9-1.4-.1-.4-.3-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.8.4-2.2.2-.6.4-1 .9-1.4.5-.5.9-.7 1.4-.9.4-.1 1-.3 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1 0 12 18.6 6.6 6.6 0 0 0 12 5.4zm0 10.9A4.3 4.3 0 1 1 12 7.7a4.3 4.3 0 0 1 0 8.6zm6.8-11.2a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/></svg></a><a href="https://www.facebook.com/atlasfindsus" target="_blank" rel="noopener" aria-label="facebook"><svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg></a></div>
+        <div class="hero-soc active" id="soc-BR"><a href="https://www.tiktok.com/@achadosatlasbr" target="_blank" rel="noopener" aria-label="tiktok"><svg viewBox="0 0 24 24"><path d="M16.5 3c.3 2.1 1.5 3.6 3.5 3.9v2.5c-1.3.1-2.5-.3-3.6-1v5.9c0 3.3-2.4 5.7-5.6 5.7-3 0-5.3-2.2-5.3-5.1 0-3 2.4-5.2 5.6-5 .3 0 .5 0 .8.1v2.7c-.2-.1-.5-.1-.8-.1-1.4 0-2.6 1-2.6 2.4 0 1.4 1.1 2.4 2.5 2.4 1.5 0 2.6-1.1 2.6-2.9V3h2.5z"/></svg></a><a href="https://www.instagram.com/achadosatlasbr" target="_blank" rel="noopener" aria-label="instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.4.6.2 1 .4 1.4.9.5.5.7.9.9 1.4.1.4.3 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.4 2.2-.2.6-.4 1-.9 1.4-.5.5-.9.7-1.4.9-.4.1-1 .3-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.4-.6-.2-1-.4-1.4-.9-.5-.5-.7-.9-.9-1.4-.1-.4-.3-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.8.4-2.2.2-.6.4-1 .9-1.4.5-.5.9-.7 1.4-.9.4-.1 1-.3 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1 0 12 18.6 6.6 6.6 0 0 0 12 5.4zm0 10.9A4.3 4.3 0 1 1 12 7.7a4.3 4.3 0 0 1 0 8.6zm6.8-11.2a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/></svg></a><a href="https://www.facebook.com/1256289617564282" target="_blank" rel="noopener" aria-label="facebook"><svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg></a></div>
+        <div class="hero-soc" id="soc-US"><a href="https://www.tiktok.com/@atlasfindsus" target="_blank" rel="noopener" aria-label="tiktok"><svg viewBox="0 0 24 24"><path d="M16.5 3c.3 2.1 1.5 3.6 3.5 3.9v2.5c-1.3.1-2.5-.3-3.6-1v5.9c0 3.3-2.4 5.7-5.6 5.7-3 0-5.3-2.2-5.3-5.1 0-3 2.4-5.2 5.6-5 .3 0 .5 0 .8.1v2.7c-.2-.1-.5-.1-.8-.1-1.4 0-2.6 1-2.6 2.4 0 1.4 1.1 2.4 2.5 2.4 1.5 0 2.6-1.1 2.6-2.9V3h2.5z"/></svg></a><a href="https://www.instagram.com/atlasfindsus" target="_blank" rel="noopener" aria-label="instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.4.6.2 1 .4 1.4.9.5.5.7.9.9 1.4.1.4.3 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.4 2.2-.2.6-.4 1-.9 1.4-.5.5-.9.7-1.4.9-.4.1-1 .3-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.4-.6-.2-1-.4-1.4-.9-.5-.5-.7-.9-.9-1.4-.1-.4-.3-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.8.4-2.2.2-.6.4-1 .9-1.4.5-.5.9-.7 1.4-.9.4-.1 1-.3 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1 0 12 18.6 6.6 6.6 0 0 0 12 5.4zm0 10.9A4.3 4.3 0 1 1 12 7.7a4.3 4.3 0 0 1 0 8.6zm6.8-11.2a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/></svg></a><a href="https://www.facebook.com/1244342868757443" target="_blank" rel="noopener" aria-label="facebook"><svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg></a></div>
       </div>
     </header>
 
@@ -189,7 +189,6 @@
         <button class="tab" data-market="US" onclick="showMarket('US')">🇺🇸 USA</button>
       </div>
       <div class="searchrow">
-        <button class="cat-toggle" onclick="openDrawer()" aria-label="Categorias">☰</button>
         <div class="searchbar">
           <svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
           <input id="q" type="search" placeholder="Buscar produto..." autocomplete="off" oninput="applyFilter()">
@@ -197,7 +196,13 @@
       </div>
     </nav>
 
-    <main class="content">
+    <div class="layout">
+      <aside class="sidebar">
+        <p class="sidebar-title">Categorias</p>
+        <div class="catlist active" id="cats-BR"><button class="cat-item active" data-cat="all" onclick="selectCat('BR','all',this)">🗂️ Todos <span>22</span></button><button class="cat-item" data-cat="games" onclick="selectCat('BR','games',this)">🎮 Games <span>2</span></button><button class="cat-item" data-cat="beleza" onclick="selectCat('BR','beleza',this)">💄 Beleza &amp; Cuidados <span>3</span></button><button class="cat-item" data-cat="cozinha" onclick="selectCat('BR','cozinha',this)">🍳 Cozinha <span>2</span></button><button class="cat-item" data-cat="smart" onclick="selectCat('BR','smart',this)">🏠 Casa Inteligente <span>4</span></button><button class="cat-item" data-cat="wearables" onclick="selectCat('BR','wearables',this)">⌚ Relógios &amp; Wearables <span>1</span></button><button class="cat-item" data-cat="fitness" onclick="selectCat('BR','fitness',this)">💪 Saúde &amp; Fitness <span>1</span></button><button class="cat-item" data-cat="eletronicos" onclick="selectCat('BR','eletronicos',this)">📱 Eletrônicos <span>1</span></button><button class="cat-item" data-cat="outros" onclick="selectCat('BR','outros',this)">📦 Outros <span>8</span></button></div>
+        <div class="catlist" id="cats-US"><button class="cat-item active" data-cat="all" onclick="selectCat('US','all',this)">🗂️ All <span>20</span></button><button class="cat-item" data-cat="games" onclick="selectCat('US','games',this)">🎮 Games <span>2</span></button><button class="cat-item" data-cat="beleza" onclick="selectCat('US','beleza',this)">💄 Beauty &amp; Care <span>2</span></button><button class="cat-item" data-cat="cozinha" onclick="selectCat('US','cozinha',this)">🍳 Kitchen <span>1</span></button><button class="cat-item" data-cat="audio" onclick="selectCat('US','audio',this)">🎧 Audio <span>2</span></button><button class="cat-item" data-cat="smart" onclick="selectCat('US','smart',this)">🏠 Smart Home <span>2</span></button><button class="cat-item" data-cat="fitness" onclick="selectCat('US','fitness',this)">💪 Health &amp; Fitness <span>1</span></button><button class="cat-item" data-cat="eletronicos" onclick="selectCat('US','eletronicos',this)">📱 Electronics <span>1</span></button><button class="cat-item" data-cat="outros" onclick="selectCat('US','outros',this)">📦 Others <span>9</span></button></div>
+      </aside>
+      <main class="content">
       <section class="market active" id="market-BR">
         <div class="sec-head">
           <h2>Produtos em destaque</h2>
@@ -206,7 +211,7 @@
         <div class="grid">
           
       <a class="card" data-title="base de carregamento do dualsense - playstation 5" data-cat="games" href="https://www.amazon.com.br/dp/B09JH4PD8Q?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B09JH4PD8Q.01._SCLZZZZZZZ_.jpg" alt="Base De Carregamento Do Dualsense - PlayStation 5" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Base De Carregamento Do Dualsense - PlayStation 5</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B09JH4PD8Q.01._SCLZZZZZZZ_.jpg" alt="Base De Carregamento Do Dualsense - PlayStation 5" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B09JH4PD8Q.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B09JH4PD8Q.01._SL500_.jpg|https://images.amazon.com/images/P/B09JH4PD8Q.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Base De Carregamento Do Dualsense - PlayStation 5</span></div>
         <div class="card-info">
           <span class="card-title">Base De Carregamento Do Dualsense - PlayStation 5</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -214,7 +219,7 @@
       </a>
 
       <a class="card" data-title="nivea sabonete líquido íntimo suave 250ml, limpeza delicada, mantém ph natural, extrato de camomila, cuidado calmante, uso di" data-cat="beleza" href="https://www.amazon.com.br/dp/B07F3DK2CK?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07F3DK2CK.01._SCLZZZZZZZ_.jpg" alt="NIVEA Sabonete Líquido Íntimo Suave 250ml, Limpeza Delicada, Mantém pH Natural, Extrato de Camomila, Cuidado Calmante, Uso Di" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">NIVEA Sabonete Líquido Íntimo Suave 250ml, Limpeza Delicada, Mantém pH Natural, Extrato de Camomila, Cuidado Calmante, Uso Di</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07F3DK2CK.01._SCLZZZZZZZ_.jpg" alt="NIVEA Sabonete Líquido Íntimo Suave 250ml, Limpeza Delicada, Mantém pH Natural, Extrato de Camomila, Cuidado Calmante, Uso Di" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B07F3DK2CK.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B07F3DK2CK.01._SL500_.jpg|https://images.amazon.com/images/P/B07F3DK2CK.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">NIVEA Sabonete Líquido Íntimo Suave 250ml, Limpeza Delicada, Mantém pH Natural, Extrato de Camomila, Cuidado Calmante, Uso Di</span></div>
         <div class="card-info">
           <span class="card-title">NIVEA Sabonete Líquido Íntimo Suave 250ml, Limpeza Delicada, Mantém pH Natural, Extrato de Camomila, Cuidado Calmante, Uso Di</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -222,7 +227,7 @@
       </a>
 
       <a class="card" data-title="amazon fire tv stick hd (modelo mais recente), controle remoto por voz com alexa, alimentado pela tv, com configuração simple" data-cat="smart" href="https://www.amazon.com.br/dp/B0DVK166SV?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0DVK166SV.01._SCLZZZZZZZ_.jpg" alt="Amazon Fire TV Stick HD (modelo mais recente), Controle Remoto por Voz com Alexa, alimentado pela TV, com configuração simple" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Fire TV Stick HD (modelo mais recente), Controle Remoto por Voz com Alexa, alimentado pela TV, com configuração simple</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0DVK166SV.01._SCLZZZZZZZ_.jpg" alt="Amazon Fire TV Stick HD (modelo mais recente), Controle Remoto por Voz com Alexa, alimentado pela TV, com configuração simple" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0DVK166SV.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0DVK166SV.01._SL500_.jpg|https://images.amazon.com/images/P/B0DVK166SV.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Fire TV Stick HD (modelo mais recente), Controle Remoto por Voz com Alexa, alimentado pela TV, com configuração simple</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Fire TV Stick HD (modelo mais recente), Controle Remoto por Voz com Alexa, alimentado pela TV, com configuração simple</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -230,7 +235,7 @@
       </a>
 
       <a class="card" data-title="lysoform original, desinfetante líquido, limpeza casa, 5l" data-cat="outros" href="https://www.amazon.com.br/dp/B07N4FX3TC?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07N4FX3TC.01._SCLZZZZZZZ_.jpg" alt="Lysoform Original, Desinfetante Líquido, Limpeza Casa, 5L" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Lysoform Original, Desinfetante Líquido, Limpeza Casa, 5L</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07N4FX3TC.01._SCLZZZZZZZ_.jpg" alt="Lysoform Original, Desinfetante Líquido, Limpeza Casa, 5L" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B07N4FX3TC.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B07N4FX3TC.01._SL500_.jpg|https://images.amazon.com/images/P/B07N4FX3TC.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Lysoform Original, Desinfetante Líquido, Limpeza Casa, 5L</span></div>
         <div class="card-info">
           <span class="card-title">Lysoform Original, Desinfetante Líquido, Limpeza Casa, 5L</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -238,7 +243,7 @@
       </a>
 
       <a class="card" data-title="uno original" data-cat="outros" href="https://www.amazon.com.br/dp/B00CTH0A1Q?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00CTH0A1Q.01._SCLZZZZZZZ_.jpg" alt="UNO Original" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">UNO Original</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00CTH0A1Q.01._SCLZZZZZZZ_.jpg" alt="UNO Original" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B00CTH0A1Q.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B00CTH0A1Q.01._SL500_.jpg|https://images.amazon.com/images/P/B00CTH0A1Q.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">UNO Original</span></div>
         <div class="card-info">
           <span class="card-title">UNO Original</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -246,7 +251,7 @@
       </a>
 
       <a class="card" data-title="downy amaciante concentrado brisa de verão 3l rende 12l" data-cat="outros" href="https://www.amazon.com.br/dp/B07MBXDB51?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07MBXDB51.01._SCLZZZZZZZ_.jpg" alt="Downy Amaciante Concentrado Brisa de Verão 3L Rende 12L" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Downy Amaciante Concentrado Brisa de Verão 3L Rende 12L</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07MBXDB51.01._SCLZZZZZZZ_.jpg" alt="Downy Amaciante Concentrado Brisa de Verão 3L Rende 12L" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B07MBXDB51.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B07MBXDB51.01._SL500_.jpg|https://images.amazon.com/images/P/B07MBXDB51.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Downy Amaciante Concentrado Brisa de Verão 3L Rende 12L</span></div>
         <div class="card-info">
           <span class="card-title">Downy Amaciante Concentrado Brisa de Verão 3L Rende 12L</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -254,7 +259,7 @@
       </a>
 
       <a class="card" data-title="electrolux kit 12 potes herméticos de plástico retangulares, multiuso, vedação silicone, bpa free, porta mantimentos" data-cat="outros" href="https://www.amazon.com.br/dp/B09XJL4B9H?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B09XJL4B9H.01._SCLZZZZZZZ_.jpg" alt="Electrolux Kit 12 Potes Herméticos de Plástico Retangulares, Multiuso, Vedação Silicone, BPA Free, Porta Mantimentos" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Electrolux Kit 12 Potes Herméticos de Plástico Retangulares, Multiuso, Vedação Silicone, BPA Free, Porta Mantimentos</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B09XJL4B9H.01._SCLZZZZZZZ_.jpg" alt="Electrolux Kit 12 Potes Herméticos de Plástico Retangulares, Multiuso, Vedação Silicone, BPA Free, Porta Mantimentos" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B09XJL4B9H.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B09XJL4B9H.01._SL500_.jpg|https://images.amazon.com/images/P/B09XJL4B9H.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Electrolux Kit 12 Potes Herméticos de Plástico Retangulares, Multiuso, Vedação Silicone, BPA Free, Porta Mantimentos</span></div>
         <div class="card-info">
           <span class="card-title">Electrolux Kit 12 Potes Herméticos de Plástico Retangulares, Multiuso, Vedação Silicone, BPA Free, Porta Mantimentos</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -262,7 +267,7 @@
       </a>
 
       <a class="card" data-title="celular samsung galaxy a17, 128gb, 4gb, 50mp tela 6.7&quot;, ip54 - preto" data-cat="eletronicos" href="https://www.amazon.com.br/dp/B0FPYV6K68?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0FPYV6K68.01._SCLZZZZZZZ_.jpg" alt="Celular Samsung Galaxy A17, 128GB, 4GB, 50MP Tela 6.7&quot;, IP54 - Preto" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Celular Samsung Galaxy A17, 128GB, 4GB, 50MP Tela 6.7&quot;, IP54 - Preto</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0FPYV6K68.01._SCLZZZZZZZ_.jpg" alt="Celular Samsung Galaxy A17, 128GB, 4GB, 50MP Tela 6.7&quot;, IP54 - Preto" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0FPYV6K68.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0FPYV6K68.01._SL500_.jpg|https://images.amazon.com/images/P/B0FPYV6K68.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Celular Samsung Galaxy A17, 128GB, 4GB, 50MP Tela 6.7&quot;, IP54 - Preto</span></div>
         <div class="card-info">
           <span class="card-title">Celular Samsung Galaxy A17, 128GB, 4GB, 50MP Tela 6.7&quot;, IP54 - Preto</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -270,7 +275,7 @@
       </a>
 
       <a class="card" data-title="sony control inalámbrico ps5 dualsense midnight black" data-cat="games" href="https://www.amazon.com.br/dp/B0956PFTDK?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0956PFTDK.01._SCLZZZZZZZ_.jpg" alt="Sony Control Inalámbrico PS5 DualSense Midnight Black" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Sony Control Inalámbrico PS5 DualSense Midnight Black</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0956PFTDK.01._SCLZZZZZZZ_.jpg" alt="Sony Control Inalámbrico PS5 DualSense Midnight Black" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0956PFTDK.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0956PFTDK.01._SL500_.jpg|https://images.amazon.com/images/P/B0956PFTDK.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Sony Control Inalámbrico PS5 DualSense Midnight Black</span></div>
         <div class="card-info">
           <span class="card-title">Sony Control Inalámbrico PS5 DualSense Midnight Black</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -278,7 +283,7 @@
       </a>
 
       <a class="card" data-title="lâmpada inteligente mais potente 15w smart color rgb wifi elgin compatível com alexa e google home" data-cat="smart" href="https://www.amazon.com.br/dp/B0BDZXLS77?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0BDZXLS77.01._SCLZZZZZZZ_.jpg" alt="Lâmpada Inteligente Mais Potente 15W Smart Color RGB Wifi Elgin compatível com Alexa e Google Home" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Lâmpada Inteligente Mais Potente 15W Smart Color RGB Wifi Elgin compatível com Alexa e Google Home</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0BDZXLS77.01._SCLZZZZZZZ_.jpg" alt="Lâmpada Inteligente Mais Potente 15W Smart Color RGB Wifi Elgin compatível com Alexa e Google Home" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0BDZXLS77.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0BDZXLS77.01._SL500_.jpg|https://images.amazon.com/images/P/B0BDZXLS77.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Lâmpada Inteligente Mais Potente 15W Smart Color RGB Wifi Elgin compatível com Alexa e Google Home</span></div>
         <div class="card-info">
           <span class="card-title">Lâmpada Inteligente Mais Potente 15W Smart Color RGB Wifi Elgin compatível com Alexa e Google Home</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -286,7 +291,7 @@
       </a>
 
       <a class="card" data-title="mondial fritadeira air fryer forno oven 12l, preto/inox, 2000w, 110v - afon-12l-bi" data-cat="cozinha" href="https://www.amazon.com.br/dp/B0BZJDLT6Z?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0BZJDLT6Z.01._SCLZZZZZZZ_.jpg" alt="MONDIAL Fritadeira Air Fryer Forno Oven 12L, Preto/Inox, 2000W, 110V - AFON-12L-BI" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">MONDIAL Fritadeira Air Fryer Forno Oven 12L, Preto/Inox, 2000W, 110V - AFON-12L-BI</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0BZJDLT6Z.01._SCLZZZZZZZ_.jpg" alt="MONDIAL Fritadeira Air Fryer Forno Oven 12L, Preto/Inox, 2000W, 110V - AFON-12L-BI" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0BZJDLT6Z.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0BZJDLT6Z.01._SL500_.jpg|https://images.amazon.com/images/P/B0BZJDLT6Z.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">MONDIAL Fritadeira Air Fryer Forno Oven 12L, Preto/Inox, 2000W, 110V - AFON-12L-BI</span></div>
         <div class="card-info">
           <span class="card-title">MONDIAL Fritadeira Air Fryer Forno Oven 12L, Preto/Inox, 2000W, 110V - AFON-12L-BI</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -294,7 +299,7 @@
       </a>
 
       <a class="card" data-title="smartwatch samsung galaxy fit3 display 1.6&quot; grafite" data-cat="wearables" href="https://www.amazon.com.br/dp/B0CVCLGV1W?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0CVCLGV1W.01._SCLZZZZZZZ_.jpg" alt="Smartwatch Samsung Galaxy Fit3 Display 1.6&quot; Grafite" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Smartwatch Samsung Galaxy Fit3 Display 1.6&quot; Grafite</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0CVCLGV1W.01._SCLZZZZZZZ_.jpg" alt="Smartwatch Samsung Galaxy Fit3 Display 1.6&quot; Grafite" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0CVCLGV1W.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0CVCLGV1W.01._SL500_.jpg|https://images.amazon.com/images/P/B0CVCLGV1W.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Smartwatch Samsung Galaxy Fit3 Display 1.6&quot; Grafite</span></div>
         <div class="card-info">
           <span class="card-title">Smartwatch Samsung Galaxy Fit3 Display 1.6&quot; Grafite</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -302,7 +307,7 @@
       </a>
 
       <a class="card" data-title="mondial liquidificador turbo power, preto, 550w, 220v - l-99 fb" data-cat="cozinha" href="https://www.amazon.com.br/dp/B07QK91PTZ?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07QK91PTZ.01._SCLZZZZZZZ_.jpg" alt="MONDIAL Liquidificador Turbo Power, Preto, 550W, 220V - L-99 FB" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">MONDIAL Liquidificador Turbo Power, Preto, 550W, 220V - L-99 FB</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07QK91PTZ.01._SCLZZZZZZZ_.jpg" alt="MONDIAL Liquidificador Turbo Power, Preto, 550W, 220V - L-99 FB" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B07QK91PTZ.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B07QK91PTZ.01._SL500_.jpg|https://images.amazon.com/images/P/B07QK91PTZ.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">MONDIAL Liquidificador Turbo Power, Preto, 550W, 220V - L-99 FB</span></div>
         <div class="card-info">
           <span class="card-title">MONDIAL Liquidificador Turbo Power, Preto, 550W, 220V - L-99 FB</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -310,7 +315,7 @@
       </a>
 
       <a class="card" data-title="echo dot (geração mais recente) | smart speaker com alexa, som vibrante e potente, wi-fi e bluetooth | cor preta, com acesso" data-cat="smart" href="https://www.amazon.com.br/dp/B09B8VGCR8?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B09B8VGCR8.01._SCLZZZZZZZ_.jpg" alt="Echo Dot (Geração mais recente) | Smart speaker com Alexa, som vibrante e potente, Wi-Fi e Bluetooth | Cor Preta, com Acesso" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Echo Dot (Geração mais recente) | Smart speaker com Alexa, som vibrante e potente, Wi-Fi e Bluetooth | Cor Preta, com Acesso</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B09B8VGCR8.01._SCLZZZZZZZ_.jpg" alt="Echo Dot (Geração mais recente) | Smart speaker com Alexa, som vibrante e potente, Wi-Fi e Bluetooth | Cor Preta, com Acesso" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B09B8VGCR8.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B09B8VGCR8.01._SL500_.jpg|https://images.amazon.com/images/P/B09B8VGCR8.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Echo Dot (Geração mais recente) | Smart speaker com Alexa, som vibrante e potente, Wi-Fi e Bluetooth | Cor Preta, com Acesso</span></div>
         <div class="card-info">
           <span class="card-title">Echo Dot (Geração mais recente) | Smart speaker com Alexa, som vibrante e potente, Wi-Fi e Bluetooth | Cor Preta, com Acesso</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -318,7 +323,7 @@
       </a>
 
       <a class="card" data-title="cerave, loção hidratante corporal, com textura fluida e ácido hialurônico" data-cat="beleza" href="https://www.amazon.com.br/dp/B07RK4HST7?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07RK4HST7.01._SCLZZZZZZZ_.jpg" alt="CeraVe, Loção Hidratante Corporal, com textura Fluida e Ácido Hialurônico" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">CeraVe, Loção Hidratante Corporal, com textura Fluida e Ácido Hialurônico</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07RK4HST7.01._SCLZZZZZZZ_.jpg" alt="CeraVe, Loção Hidratante Corporal, com textura Fluida e Ácido Hialurônico" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B07RK4HST7.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B07RK4HST7.01._SL500_.jpg|https://images.amazon.com/images/P/B07RK4HST7.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">CeraVe, Loção Hidratante Corporal, com textura Fluida e Ácido Hialurônico</span></div>
         <div class="card-info">
           <span class="card-title">CeraVe, Loção Hidratante Corporal, com textura Fluida e Ácido Hialurônico</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -326,7 +331,7 @@
       </a>
 
       <a class="card" data-title="argan óleo reparador 50ml , lola cosmetics" data-cat="outros" href="https://www.amazon.com.br/dp/B07SBXMSGB?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07SBXMSGB.01._SCLZZZZZZZ_.jpg" alt="Argan Óleo Reparador 50ml , Lola Cosmetics" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Argan Óleo Reparador 50ml , Lola Cosmetics</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07SBXMSGB.01._SCLZZZZZZZ_.jpg" alt="Argan Óleo Reparador 50ml , Lola Cosmetics" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B07SBXMSGB.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B07SBXMSGB.01._SL500_.jpg|https://images.amazon.com/images/P/B07SBXMSGB.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Argan Óleo Reparador 50ml , Lola Cosmetics</span></div>
         <div class="card-info">
           <span class="card-title">Argan Óleo Reparador 50ml , Lola Cosmetics</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -334,7 +339,7 @@
       </a>
 
       <a class="card" data-title="l&amp;#x27;oréal paris elseve óleo extraordinário finalizador capilar, nutrição profunda com 6 óleos preciosos, anti-frizz, proteção t" data-cat="outros" href="https://www.amazon.com.br/dp/B07H113TPQ?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07H113TPQ.01._SCLZZZZZZZ_.jpg" alt="L&amp;#x27;Oréal Paris Elseve Óleo Extraordinário Finalizador Capilar, Nutrição Profunda com 6 Óleos Preciosos, Anti-Frizz, Proteção T" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">L&amp;#x27;Oréal Paris Elseve Óleo Extraordinário Finalizador Capilar, Nutrição Profunda com 6 Óleos Preciosos, Anti-Frizz, Proteção T</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07H113TPQ.01._SCLZZZZZZZ_.jpg" alt="L&amp;#x27;Oréal Paris Elseve Óleo Extraordinário Finalizador Capilar, Nutrição Profunda com 6 Óleos Preciosos, Anti-Frizz, Proteção T" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B07H113TPQ.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B07H113TPQ.01._SL500_.jpg|https://images.amazon.com/images/P/B07H113TPQ.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">L&amp;#x27;Oréal Paris Elseve Óleo Extraordinário Finalizador Capilar, Nutrição Profunda com 6 Óleos Preciosos, Anti-Frizz, Proteção T</span></div>
         <div class="card-info">
           <span class="card-title">L&amp;#x27;Oréal Paris Elseve Óleo Extraordinário Finalizador Capilar, Nutrição Profunda com 6 Óleos Preciosos, Anti-Frizz, Proteção T</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -342,7 +347,7 @@
       </a>
 
       <a class="card" data-title="kit shampoo v-floc cera tok final revitalizador intense 240ml vonixx pretinho vintex" data-cat="beleza" href="https://www.amazon.com.br/dp/B0F9Z3D8TZ?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0F9Z3D8TZ.01._SCLZZZZZZZ_.jpg" alt="KIT SHAMPOO V-FLOC CERA TOK FINAL REVITALIZADOR INTENSE 240ML VONIXX PRETINHO VINTEX" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">KIT SHAMPOO V-FLOC CERA TOK FINAL REVITALIZADOR INTENSE 240ML VONIXX PRETINHO VINTEX</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0F9Z3D8TZ.01._SCLZZZZZZZ_.jpg" alt="KIT SHAMPOO V-FLOC CERA TOK FINAL REVITALIZADOR INTENSE 240ML VONIXX PRETINHO VINTEX" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0F9Z3D8TZ.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0F9Z3D8TZ.01._SL500_.jpg|https://images.amazon.com/images/P/B0F9Z3D8TZ.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">KIT SHAMPOO V-FLOC CERA TOK FINAL REVITALIZADOR INTENSE 240ML VONIXX PRETINHO VINTEX</span></div>
         <div class="card-info">
           <span class="card-title">KIT SHAMPOO V-FLOC CERA TOK FINAL REVITALIZADOR INTENSE 240ML VONIXX PRETINHO VINTEX</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -350,7 +355,7 @@
       </a>
 
       <a class="card" data-title="roku streaming stick hd 2025 | dispositivo de streaming para tv hd/fhd com controle remoto por comando de voz compatível com alexa, siri e google" data-cat="smart" href="https://www.amazon.com.br/dp/B0FH7LY3R4?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0FH7LY3R4.01._SCLZZZZZZZ_.jpg" alt="Roku Streaming Stick HD 2025 | Dispositivo de streaming para TV HD/FHD com controle remoto por comando de voz compatível com Alexa, Siri e Google" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Roku Streaming Stick HD 2025 | Dispositivo de streaming para TV HD/FHD com controle remoto por comando de voz compatível com Alexa, Siri e Google</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0FH7LY3R4.01._SCLZZZZZZZ_.jpg" alt="Roku Streaming Stick HD 2025 | Dispositivo de streaming para TV HD/FHD com controle remoto por comando de voz compatível com Alexa, Siri e Google" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0FH7LY3R4.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0FH7LY3R4.01._SL500_.jpg|https://images.amazon.com/images/P/B0FH7LY3R4.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Roku Streaming Stick HD 2025 | Dispositivo de streaming para TV HD/FHD com controle remoto por comando de voz compatível com Alexa, Siri e Google</span></div>
         <div class="card-info">
           <span class="card-title">Roku Streaming Stick HD 2025 | Dispositivo de streaming para TV HD/FHD com controle remoto por comando de voz compatível com Alexa, Siri e Google</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -358,7 +363,7 @@
       </a>
 
       <a class="card" data-title="kit 5 faixas elásticas elásticos alongamento pilates yoga exercícios condicionamento físico yoga saúde relaxamento academia músculos personal trainer thera band fitness mini bands" data-cat="fitness" href="https://www.amazon.com.br/dp/B07KQMVYKL?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07KQMVYKL.01._SCLZZZZZZZ_.jpg" alt="Kit 5 Faixas Elásticas Elásticos Alongamento Pilates Yoga Exercícios Condicionamento Físico Yoga Saúde Relaxamento Academia Músculos Personal Trainer Thera Band Fitness Mini Bands" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Kit 5 Faixas Elásticas Elásticos Alongamento Pilates Yoga Exercícios Condicionamento Físico Yoga Saúde Relaxamento Academia Músculos Personal Trainer Thera Band Fitness Mini Bands</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07KQMVYKL.01._SCLZZZZZZZ_.jpg" alt="Kit 5 Faixas Elásticas Elásticos Alongamento Pilates Yoga Exercícios Condicionamento Físico Yoga Saúde Relaxamento Academia Músculos Personal Trainer Thera Band Fitness Mini Bands" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B07KQMVYKL.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B07KQMVYKL.01._SL500_.jpg|https://images.amazon.com/images/P/B07KQMVYKL.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Kit 5 Faixas Elásticas Elásticos Alongamento Pilates Yoga Exercícios Condicionamento Físico Yoga Saúde Relaxamento Academia Músculos Personal Trainer Thera Band Fitness Mini Bands</span></div>
         <div class="card-info">
           <span class="card-title">Kit 5 Faixas Elásticas Elásticos Alongamento Pilates Yoga Exercícios Condicionamento Físico Yoga Saúde Relaxamento Academia Músculos Personal Trainer Thera Band Fitness Mini Bands</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -366,7 +371,7 @@
       </a>
 
       <a class="card" data-title="vonixx v-mol, 1.5l" data-cat="outros" href="https://www.amazon.com.br/dp/B0BW4NDV3N?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0BW4NDV3N.01._SCLZZZZZZZ_.jpg" alt="VONIXX V-MOL, 1.5L" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">VONIXX V-MOL, 1.5L</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0BW4NDV3N.01._SCLZZZZZZZ_.jpg" alt="VONIXX V-MOL, 1.5L" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0BW4NDV3N.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0BW4NDV3N.01._SL500_.jpg|https://images.amazon.com/images/P/B0BW4NDV3N.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">VONIXX V-MOL, 1.5L</span></div>
         <div class="card-info">
           <span class="card-title">VONIXX V-MOL, 1.5L</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -374,7 +379,7 @@
       </a>
 
       <a class="card" data-title="capacete aberto pro tork new liberty 3 solid preto fosco tam. 60" data-cat="outros" href="https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07WZQC1NJ.01._SCLZZZZZZZ_.jpg" alt="CAPACETE ABERTO PRO TORK NEW LIBERTY 3 SOLID PRETO FOSCO TAM. 60" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">CAPACETE ABERTO PRO TORK NEW LIBERTY 3 SOLID PRETO FOSCO TAM. 60</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07WZQC1NJ.01._SCLZZZZZZZ_.jpg" alt="CAPACETE ABERTO PRO TORK NEW LIBERTY 3 SOLID PRETO FOSCO TAM. 60" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B07WZQC1NJ.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B07WZQC1NJ.01._SL500_.jpg|https://images.amazon.com/images/P/B07WZQC1NJ.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">CAPACETE ABERTO PRO TORK NEW LIBERTY 3 SOLID PRETO FOSCO TAM. 60</span></div>
         <div class="card-info">
           <span class="card-title">CAPACETE ABERTO PRO TORK NEW LIBERTY 3 SOLID PRETO FOSCO TAM. 60</span>
           <span class="card-btn">Ver na Amazon</span>
@@ -392,7 +397,7 @@
         <div class="grid">
           
       <a class="card" data-title="$10 -playstation store gift card [digital code]" data-cat="games" href="https://www.amazon.com/dp/B00GAC1D2G?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00GAC1D2G.01._SCLZZZZZZZ_.jpg" alt="$10 -PlayStation Store Gift Card [Digital Code]" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">$10 -PlayStation Store Gift Card [Digital Code]</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00GAC1D2G.01._SCLZZZZZZZ_.jpg" alt="$10 -PlayStation Store Gift Card [Digital Code]" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B00GAC1D2G.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B00GAC1D2G.01._SL500_.jpg|https://images.amazon.com/images/P/B00GAC1D2G.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">$10 -PlayStation Store Gift Card [Digital Code]</span></div>
         <div class="card-info">
           <span class="card-title">$10 -PlayStation Store Gift Card [Digital Code]</span>
           <span class="card-btn">View on Amazon</span>
@@ -400,7 +405,7 @@
       </a>
 
       <a class="card" data-title="alpha grillers meat thermometer digital – instant read food thermometer for cooking &amp; grilling – professional kitchen birthda" data-cat="cozinha" href="https://www.amazon.com/dp/B00S93EQUK?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00S93EQUK.01._SCLZZZZZZZ_.jpg" alt="Alpha Grillers Meat Thermometer Digital – Instant Read Food Thermometer for Cooking &amp; Grilling – Professional Kitchen Birthda" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Alpha Grillers Meat Thermometer Digital – Instant Read Food Thermometer for Cooking &amp; Grilling – Professional Kitchen Birthda</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00S93EQUK.01._SCLZZZZZZZ_.jpg" alt="Alpha Grillers Meat Thermometer Digital – Instant Read Food Thermometer for Cooking &amp; Grilling – Professional Kitchen Birthda" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B00S93EQUK.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B00S93EQUK.01._SL500_.jpg|https://images.amazon.com/images/P/B00S93EQUK.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Alpha Grillers Meat Thermometer Digital – Instant Read Food Thermometer for Cooking &amp; Grilling – Professional Kitchen Birthda</span></div>
         <div class="card-info">
           <span class="card-title">Alpha Grillers Meat Thermometer Digital – Instant Read Food Thermometer for Cooking &amp; Grilling – Professional Kitchen Birthda</span>
           <span class="card-btn">View on Amazon</span>
@@ -408,7 +413,7 @@
       </a>
 
       <a class="card" data-title="neutrogena makeup remover micellar wipes for face daily gently removes oil dirt and waterproof makeup in a simple fully plant" data-cat="beleza" href="https://www.amazon.com/dp/B00U2VQZDS?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00U2VQZDS.01._SCLZZZZZZZ_.jpg" alt="Neutrogena Makeup Remover Micellar Wipes for Face Daily Gently Removes Oil Dirt and Waterproof Makeup in a Simple Fully Plant" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Neutrogena Makeup Remover Micellar Wipes for Face Daily Gently Removes Oil Dirt and Waterproof Makeup in a Simple Fully Plant</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00U2VQZDS.01._SCLZZZZZZZ_.jpg" alt="Neutrogena Makeup Remover Micellar Wipes for Face Daily Gently Removes Oil Dirt and Waterproof Makeup in a Simple Fully Plant" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B00U2VQZDS.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B00U2VQZDS.01._SL500_.jpg|https://images.amazon.com/images/P/B00U2VQZDS.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Neutrogena Makeup Remover Micellar Wipes for Face Daily Gently Removes Oil Dirt and Waterproof Makeup in a Simple Fully Plant</span></div>
         <div class="card-info">
           <span class="card-title">Neutrogena Makeup Remover Micellar Wipes for Face Daily Gently Removes Oil Dirt and Waterproof Makeup in a Simple Fully Plant</span>
           <span class="card-btn">View on Amazon</span>
@@ -416,7 +421,7 @@
       </a>
 
       <a class="card" data-title="$10 nintendo eshop gift card [digital code]" data-cat="games" href="https://www.amazon.com/dp/B01LZNGPY3?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B01LZNGPY3.01._SCLZZZZZZZ_.jpg" alt="$10 Nintendo eShop Gift Card [Digital Code]" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">$10 Nintendo eShop Gift Card [Digital Code]</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B01LZNGPY3.01._SCLZZZZZZZ_.jpg" alt="$10 Nintendo eShop Gift Card [Digital Code]" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B01LZNGPY3.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B01LZNGPY3.01._SL500_.jpg|https://images.amazon.com/images/P/B01LZNGPY3.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">$10 Nintendo eShop Gift Card [Digital Code]</span></div>
         <div class="card-info">
           <span class="card-title">$10 Nintendo eShop Gift Card [Digital Code]</span>
           <span class="card-btn">View on Amazon</span>
@@ -424,7 +429,7 @@
       </a>
 
       <a class="card" data-title="oura ring 5 sizing kit - size before you buy oura ring 5 - unique sizing, not standard ring sizing - receive amazon credit fo" data-cat="fitness" href="https://www.amazon.com/dp/B0GRKC9NJP?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0GRKC9NJP.01._SCLZZZZZZZ_.jpg" alt="Oura Ring 5 Sizing Kit - Size Before You Buy Oura Ring 5 - Unique Sizing, Not Standard Ring Sizing - Receive Amazon Credit fo" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Oura Ring 5 Sizing Kit - Size Before You Buy Oura Ring 5 - Unique Sizing, Not Standard Ring Sizing - Receive Amazon Credit fo</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0GRKC9NJP.01._SCLZZZZZZZ_.jpg" alt="Oura Ring 5 Sizing Kit - Size Before You Buy Oura Ring 5 - Unique Sizing, Not Standard Ring Sizing - Receive Amazon Credit fo" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0GRKC9NJP.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0GRKC9NJP.01._SL500_.jpg|https://images.amazon.com/images/P/B0GRKC9NJP.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Oura Ring 5 Sizing Kit - Size Before You Buy Oura Ring 5 - Unique Sizing, Not Standard Ring Sizing - Receive Amazon Credit fo</span></div>
         <div class="card-info">
           <span class="card-title">Oura Ring 5 Sizing Kit - Size Before You Buy Oura Ring 5 - Unique Sizing, Not Standard Ring Sizing - Receive Amazon Credit fo</span>
           <span class="card-btn">View on Amazon</span>
@@ -432,7 +437,7 @@
       </a>
 
       <a class="card" data-title="apple airpods 4 wireless earbuds, bluetooth headphones, personalized spatial audio, sweat and water resistant, usb-c charging" data-cat="audio" href="https://www.amazon.com/dp/B0DGHMNQ5Z?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0DGHMNQ5Z.01._SCLZZZZZZZ_.jpg" alt="Apple AirPods 4 Wireless Earbuds, Bluetooth Headphones, Personalized Spatial Audio, Sweat and Water Resistant, USB-C Charging" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Apple AirPods 4 Wireless Earbuds, Bluetooth Headphones, Personalized Spatial Audio, Sweat and Water Resistant, USB-C Charging</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0DGHMNQ5Z.01._SCLZZZZZZZ_.jpg" alt="Apple AirPods 4 Wireless Earbuds, Bluetooth Headphones, Personalized Spatial Audio, Sweat and Water Resistant, USB-C Charging" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0DGHMNQ5Z.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0DGHMNQ5Z.01._SL500_.jpg|https://images.amazon.com/images/P/B0DGHMNQ5Z.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Apple AirPods 4 Wireless Earbuds, Bluetooth Headphones, Personalized Spatial Audio, Sweat and Water Resistant, USB-C Charging</span></div>
         <div class="card-info">
           <span class="card-title">Apple AirPods 4 Wireless Earbuds, Bluetooth Headphones, Personalized Spatial Audio, Sweat and Water Resistant, USB-C Charging</span>
           <span class="card-btn">View on Amazon</span>
@@ -440,7 +445,7 @@
       </a>
 
       <a class="card" data-title="apple earpods headphones with usb-c plug, wired ear buds with built-in remote to control music, phone calls, and volume" data-cat="audio" href="https://www.amazon.com/dp/B0DCH8VDXF?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0DCH8VDXF.01._SCLZZZZZZZ_.jpg" alt="Apple EarPods Headphones with USB-C Plug, Wired Ear Buds with Built-in Remote to Control Music, Phone Calls, and Volume" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Apple EarPods Headphones with USB-C Plug, Wired Ear Buds with Built-in Remote to Control Music, Phone Calls, and Volume</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0DCH8VDXF.01._SCLZZZZZZZ_.jpg" alt="Apple EarPods Headphones with USB-C Plug, Wired Ear Buds with Built-in Remote to Control Music, Phone Calls, and Volume" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0DCH8VDXF.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0DCH8VDXF.01._SL500_.jpg|https://images.amazon.com/images/P/B0DCH8VDXF.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Apple EarPods Headphones with USB-C Plug, Wired Ear Buds with Built-in Remote to Control Music, Phone Calls, and Volume</span></div>
         <div class="card-info">
           <span class="card-title">Apple EarPods Headphones with USB-C Plug, Wired Ear Buds with Built-in Remote to Control Music, Phone Calls, and Volume</span>
           <span class="card-btn">View on Amazon</span>
@@ -448,7 +453,7 @@
       </a>
 
       <a class="card" data-title="logitech g305 lightspeed wireless gaming mouse, hero sensor, 12,000 dpi, lightweight, 6 programmable buttons, 250h battery, o" data-cat="eletronicos" href="https://www.amazon.com/dp/B07CMS5Q6P?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07CMS5Q6P.01._SCLZZZZZZZ_.jpg" alt="Logitech G305 Lightspeed Wireless Gaming Mouse, Hero Sensor, 12,000 DPI, Lightweight, 6 Programmable Buttons, 250h Battery, O" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Logitech G305 Lightspeed Wireless Gaming Mouse, Hero Sensor, 12,000 DPI, Lightweight, 6 Programmable Buttons, 250h Battery, O</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07CMS5Q6P.01._SCLZZZZZZZ_.jpg" alt="Logitech G305 Lightspeed Wireless Gaming Mouse, Hero Sensor, 12,000 DPI, Lightweight, 6 Programmable Buttons, 250h Battery, O" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B07CMS5Q6P.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B07CMS5Q6P.01._SL500_.jpg|https://images.amazon.com/images/P/B07CMS5Q6P.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Logitech G305 Lightspeed Wireless Gaming Mouse, Hero Sensor, 12,000 DPI, Lightweight, 6 Programmable Buttons, 250h Battery, O</span></div>
         <div class="card-info">
           <span class="card-title">Logitech G305 Lightspeed Wireless Gaming Mouse, Hero Sensor, 12,000 DPI, Lightweight, 6 Programmable Buttons, 250h Battery, O</span>
           <span class="card-btn">View on Amazon</span>
@@ -456,7 +461,7 @@
       </a>
 
       <a class="card" data-title="amazon fire tv stick 4k plus (newest model) with ai-powered fire tv search, wi-fi 6, stream hundreds of thousands of movies a" data-cat="smart" href="https://www.amazon.com/dp/B0F7Z4QZTT?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0F7Z4QZTT.01._SCLZZZZZZZ_.jpg" alt="Amazon Fire TV Stick 4K Plus (newest model) with AI-powered Fire TV Search, Wi-Fi 6, stream hundreds of thousands of movies a" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Fire TV Stick 4K Plus (newest model) with AI-powered Fire TV Search, Wi-Fi 6, stream hundreds of thousands of movies a</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0F7Z4QZTT.01._SCLZZZZZZZ_.jpg" alt="Amazon Fire TV Stick 4K Plus (newest model) with AI-powered Fire TV Search, Wi-Fi 6, stream hundreds of thousands of movies a" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0F7Z4QZTT.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0F7Z4QZTT.01._SL500_.jpg|https://images.amazon.com/images/P/B0F7Z4QZTT.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Fire TV Stick 4K Plus (newest model) with AI-powered Fire TV Search, Wi-Fi 6, stream hundreds of thousands of movies a</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Fire TV Stick 4K Plus (newest model) with AI-powered Fire TV Search, Wi-Fi 6, stream hundreds of thousands of movies a</span>
           <span class="card-btn">View on Amazon</span>
@@ -464,7 +469,7 @@
       </a>
 
       <a class="card" data-title="amazon basics hypoallergenic cotton rounds for makeup removal and skincare, 100 count, 1 pack" data-cat="beleza" href="https://www.amazon.com/dp/B09542G9ZN?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B09542G9ZN.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Hypoallergenic Cotton Rounds for Makeup Removal and Skincare, 100 Count, 1 Pack" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Basics Hypoallergenic Cotton Rounds for Makeup Removal and Skincare, 100 Count, 1 Pack</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B09542G9ZN.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Hypoallergenic Cotton Rounds for Makeup Removal and Skincare, 100 Count, 1 Pack" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B09542G9ZN.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B09542G9ZN.01._SL500_.jpg|https://images.amazon.com/images/P/B09542G9ZN.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Basics Hypoallergenic Cotton Rounds for Makeup Removal and Skincare, 100 Count, 1 Pack</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Basics Hypoallergenic Cotton Rounds for Makeup Removal and Skincare, 100 Count, 1 Pack</span>
           <span class="card-btn">View on Amazon</span>
@@ -472,7 +477,7 @@
       </a>
 
       <a class="card" data-title="amazon basics double-tipped cotton swabs for personal hygiene and baby care, cotton, versatile, baby safe, 500 count" data-cat="outros" href="https://www.amazon.com/dp/B09541P9WH?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B09541P9WH.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Double-Tipped Cotton Swabs for Personal Hygiene and Baby Care, Cotton, Versatile, Baby Safe, 500 Count" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Basics Double-Tipped Cotton Swabs for Personal Hygiene and Baby Care, Cotton, Versatile, Baby Safe, 500 Count</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B09541P9WH.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Double-Tipped Cotton Swabs for Personal Hygiene and Baby Care, Cotton, Versatile, Baby Safe, 500 Count" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B09541P9WH.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B09541P9WH.01._SL500_.jpg|https://images.amazon.com/images/P/B09541P9WH.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Basics Double-Tipped Cotton Swabs for Personal Hygiene and Baby Care, Cotton, Versatile, Baby Safe, 500 Count</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Basics Double-Tipped Cotton Swabs for Personal Hygiene and Baby Care, Cotton, Versatile, Baby Safe, 500 Count</span>
           <span class="card-btn">View on Amazon</span>
@@ -480,7 +485,7 @@
       </a>
 
       <a class="card" data-title="amazon basics sheet protectors for 3 ring binder, lightweight, acid-free, clear plastic sleeves, letter size, 8.5 x 11 inch," data-cat="outros" href="https://www.amazon.com/dp/B07R8D1RHS?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07R8D1RHS.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Sheet Protectors for 3 Ring Binder, Lightweight, Acid-Free, Clear Plastic Sleeves, Letter Size, 8.5 x 11 Inch," loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Basics Sheet Protectors for 3 Ring Binder, Lightweight, Acid-Free, Clear Plastic Sleeves, Letter Size, 8.5 x 11 Inch,</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B07R8D1RHS.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Sheet Protectors for 3 Ring Binder, Lightweight, Acid-Free, Clear Plastic Sleeves, Letter Size, 8.5 x 11 Inch," loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B07R8D1RHS.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B07R8D1RHS.01._SL500_.jpg|https://images.amazon.com/images/P/B07R8D1RHS.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Basics Sheet Protectors for 3 Ring Binder, Lightweight, Acid-Free, Clear Plastic Sleeves, Letter Size, 8.5 x 11 Inch,</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Basics Sheet Protectors for 3 Ring Binder, Lightweight, Acid-Free, Clear Plastic Sleeves, Letter Size, 8.5 x 11 Inch,</span>
           <span class="card-btn">View on Amazon</span>
@@ -488,7 +493,7 @@
       </a>
 
       <a class="card" data-title="amazon basics wood-cased #2 hb school pencils with erasers for writing and drawing, pre-sharpened, soft strong lead, orange," data-cat="outros" href="https://www.amazon.com/dp/B071JM699B?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B071JM699B.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Wood-Cased #2 HB School Pencils with Erasers for Writing and Drawing, Pre-sharpened, Soft Strong Lead, Orange," loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Basics Wood-Cased #2 HB School Pencils with Erasers for Writing and Drawing, Pre-sharpened, Soft Strong Lead, Orange,</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B071JM699B.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Wood-Cased #2 HB School Pencils with Erasers for Writing and Drawing, Pre-sharpened, Soft Strong Lead, Orange," loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B071JM699B.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B071JM699B.01._SL500_.jpg|https://images.amazon.com/images/P/B071JM699B.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Basics Wood-Cased #2 HB School Pencils with Erasers for Writing and Drawing, Pre-sharpened, Soft Strong Lead, Orange,</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Basics Wood-Cased #2 HB School Pencils with Erasers for Writing and Drawing, Pre-sharpened, Soft Strong Lead, Orange,</span>
           <span class="card-btn">View on Amazon</span>
@@ -496,7 +501,7 @@
       </a>
 
       <a class="card" data-title="amazon basics multipurpose copy printer paper, 8.5 x 11 inches, 20 lb, 92 bright, white, 1 ream (500 sheets), jam-free" data-cat="outros" href="https://www.amazon.com/dp/B01FV0F8H8?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B01FV0F8H8.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Multipurpose Copy Printer Paper, 8.5 x 11 Inches, 20 lb, 92 Bright, White, 1 Ream (500 Sheets), Jam-Free" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Basics Multipurpose Copy Printer Paper, 8.5 x 11 Inches, 20 lb, 92 Bright, White, 1 Ream (500 Sheets), Jam-Free</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B01FV0F8H8.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Multipurpose Copy Printer Paper, 8.5 x 11 Inches, 20 lb, 92 Bright, White, 1 Ream (500 Sheets), Jam-Free" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B01FV0F8H8.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B01FV0F8H8.01._SL500_.jpg|https://images.amazon.com/images/P/B01FV0F8H8.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Basics Multipurpose Copy Printer Paper, 8.5 x 11 Inches, 20 lb, 92 Bright, White, 1 Ream (500 Sheets), Jam-Free</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Basics Multipurpose Copy Printer Paper, 8.5 x 11 Inches, 20 lb, 92 Bright, White, 1 Ream (500 Sheets), Jam-Free</span>
           <span class="card-btn">View on Amazon</span>
@@ -504,7 +509,7 @@
       </a>
 
       <a class="card" data-title="amazon basics 2-ply soft toilet paper, 30 rolls (5 packs of 6), 350 sheets per roll, septic safe, equivalent to 185 regular r" data-cat="outros" href="https://www.amazon.com/dp/B095CN96JS?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B095CN96JS.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics 2-Ply Soft Toilet Paper, 30 Rolls (5 Packs of 6), 350 Sheets per Roll, Septic Safe, Equivalent to 185 Regular R" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Basics 2-Ply Soft Toilet Paper, 30 Rolls (5 Packs of 6), 350 Sheets per Roll, Septic Safe, Equivalent to 185 Regular R</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B095CN96JS.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics 2-Ply Soft Toilet Paper, 30 Rolls (5 Packs of 6), 350 Sheets per Roll, Septic Safe, Equivalent to 185 Regular R" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B095CN96JS.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B095CN96JS.01._SL500_.jpg|https://images.amazon.com/images/P/B095CN96JS.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Basics 2-Ply Soft Toilet Paper, 30 Rolls (5 Packs of 6), 350 Sheets per Roll, Septic Safe, Equivalent to 185 Regular R</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Basics 2-Ply Soft Toilet Paper, 30 Rolls (5 Packs of 6), 350 Sheets per Roll, Septic Safe, Equivalent to 185 Regular R</span>
           <span class="card-btn">View on Amazon</span>
@@ -512,7 +517,7 @@
       </a>
 
       <a class="card" data-title="amazon basics 20-pack aa alkaline batteries, 1.5 volt, 10-year leak-free shelf life, for everyday and household devices" data-cat="outros" href="https://www.amazon.com/dp/B00NTCH52W?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00NTCH52W.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics 20-Pack AA Alkaline Batteries, 1.5 Volt, 10-Year Leak-Free Shelf Life, for Everyday and Household Devices" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Basics 20-Pack AA Alkaline Batteries, 1.5 Volt, 10-Year Leak-Free Shelf Life, for Everyday and Household Devices</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00NTCH52W.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics 20-Pack AA Alkaline Batteries, 1.5 Volt, 10-Year Leak-Free Shelf Life, for Everyday and Household Devices" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B00NTCH52W.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B00NTCH52W.01._SL500_.jpg|https://images.amazon.com/images/P/B00NTCH52W.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Basics 20-Pack AA Alkaline Batteries, 1.5 Volt, 10-Year Leak-Free Shelf Life, for Everyday and Household Devices</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Basics 20-Pack AA Alkaline Batteries, 1.5 Volt, 10-Year Leak-Free Shelf Life, for Everyday and Household Devices</span>
           <span class="card-btn">View on Amazon</span>
@@ -520,7 +525,7 @@
       </a>
 
       <a class="card" data-title="amazon basics everyday disposable paper plates, 8.62 inch, microwave-safe, cut resistant, soak-proof, 100 count, packaging ma" data-cat="outros" href="https://www.amazon.com/dp/B0C2CY22B8?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0C2CY22B8.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Everyday Disposable Paper Plates, 8.62 Inch, Microwave-Safe, Cut Resistant, Soak-Proof, 100 Count, Packaging Ma" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Basics Everyday Disposable Paper Plates, 8.62 Inch, Microwave-Safe, Cut Resistant, Soak-Proof, 100 Count, Packaging Ma</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0C2CY22B8.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Everyday Disposable Paper Plates, 8.62 Inch, Microwave-Safe, Cut Resistant, Soak-Proof, 100 Count, Packaging Ma" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0C2CY22B8.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0C2CY22B8.01._SL500_.jpg|https://images.amazon.com/images/P/B0C2CY22B8.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Basics Everyday Disposable Paper Plates, 8.62 Inch, Microwave-Safe, Cut Resistant, Soak-Proof, 100 Count, Packaging Ma</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Basics Everyday Disposable Paper Plates, 8.62 Inch, Microwave-Safe, Cut Resistant, Soak-Proof, 100 Count, Packaging Ma</span>
           <span class="card-btn">View on Amazon</span>
@@ -528,7 +533,7 @@
       </a>
 
       <a class="card" data-title="amazon basics dog poop leak proof bags with dispenser and leash clip, unscented, 13&amp;quot; x 9&amp;quot; large size, 300 count" data-cat="outros" href="https://www.amazon.com/dp/B00NABTC8M?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00NABTC8M.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Dog Poop Leak Proof Bags with Dispenser and Leash Clip, Unscented, 13&amp;quot; x 9&amp;quot; Large Size, 300 Count" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Basics Dog Poop Leak Proof Bags with Dispenser and Leash Clip, Unscented, 13&amp;quot; x 9&amp;quot; Large Size, 300 Count</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B00NABTC8M.01._SCLZZZZZZZ_.jpg" alt="Amazon Basics Dog Poop Leak Proof Bags with Dispenser and Leash Clip, Unscented, 13&amp;quot; x 9&amp;quot; Large Size, 300 Count" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B00NABTC8M.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B00NABTC8M.01._SL500_.jpg|https://images.amazon.com/images/P/B00NABTC8M.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Basics Dog Poop Leak Proof Bags with Dispenser and Leash Clip, Unscented, 13&amp;quot; x 9&amp;quot; Large Size, 300 Count</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Basics Dog Poop Leak Proof Bags with Dispenser and Leash Clip, Unscented, 13&amp;quot; x 9&amp;quot; Large Size, 300 Count</span>
           <span class="card-btn">View on Amazon</span>
@@ -536,7 +541,7 @@
       </a>
 
       <a class="card" data-title="splatoon™ raiders" data-cat="outros" href="https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0GY1S2VCQ.01._SCLZZZZZZZ_.jpg" alt="Splatoon™ Raiders" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Splatoon™ Raiders</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0GY1S2VCQ.01._SCLZZZZZZZ_.jpg" alt="Splatoon™ Raiders" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0GY1S2VCQ.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0GY1S2VCQ.01._SL500_.jpg|https://images.amazon.com/images/P/B0GY1S2VCQ.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Splatoon™ Raiders</span></div>
         <div class="card-info">
           <span class="card-title">Splatoon™ Raiders</span>
           <span class="card-btn">View on Amazon</span>
@@ -544,7 +549,7 @@
       </a>
 
       <a class="card" data-title="amazon fire tv stick 4k select (newest model), start streaming in 4k, ai-powered search, and free &amp;amp; live tv, find shows faster with alexa+" data-cat="smart" href="https://www.amazon.com/dp/B0C6W3D4RM?tag=atlasfindsus-20" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0C6W3D4RM.01._SCLZZZZZZZ_.jpg" alt="Amazon Fire TV Stick 4K Select (newest model), start streaming in 4K, AI-powered search, and free &amp;amp; live TV, find shows faster with Alexa+" loading="lazy" onerror="this.parentElement.classList.add('noimg');this.remove();"><span class="card-fallback">Amazon Fire TV Stick 4K Select (newest model), start streaming in 4K, AI-powered search, and free &amp;amp; live TV, find shows faster with Alexa+</span></div>
+        <div class="card-media"><img class="card-img" src="https://m.media-amazon.com/images/P/B0C6W3D4RM.01._SCLZZZZZZZ_.jpg" alt="Amazon Fire TV Stick 4K Select (newest model), start streaming in 4K, AI-powered search, and free &amp;amp; live TV, find shows faster with Alexa+" loading="lazy" data-srcs="https://images-na.ssl-images-amazon.com/images/P/B0C6W3D4RM.01._SCLZZZZZZZ_.jpg|https://m.media-amazon.com/images/P/B0C6W3D4RM.01._SL500_.jpg|https://images.amazon.com/images/P/B0C6W3D4RM.01._SCLZZZZZZZ_.jpg" onerror="imgFallback(this)"><span class="card-fallback">Amazon Fire TV Stick 4K Select (newest model), start streaming in 4K, AI-powered search, and free &amp;amp; live TV, find shows faster with Alexa+</span></div>
         <div class="card-info">
           <span class="card-title">Amazon Fire TV Stick 4K Select (newest model), start streaming in 4K, AI-powered search, and free &amp;amp; live TV, find shows faster with Alexa+</span>
           <span class="card-btn">View on Amazon</span>
@@ -553,19 +558,13 @@
           <div class="empty noresult" style="display:none">No products found 🔍</div>
         </div>
       </section>
-    </main>
-
-    <div class="backdrop" id="backdrop" onclick="closeDrawer()"></div>
-    <aside class="drawer" id="drawer">
-      <div class="drawer-head"><span>Categorias</span><button onclick="closeDrawer()" aria-label="Fechar">✕</button></div>
-      <div class="catlist active" id="cats-BR"><button class="cat-item active" data-cat="all" onclick="selectCat('BR','all',this)">🗂️ Todos <span>22</span></button><button class="cat-item" data-cat="games" onclick="selectCat('BR','games',this)">🎮 Games <span>2</span></button><button class="cat-item" data-cat="beleza" onclick="selectCat('BR','beleza',this)">💄 Beleza &amp; Cuidados <span>3</span></button><button class="cat-item" data-cat="cozinha" onclick="selectCat('BR','cozinha',this)">🍳 Cozinha <span>2</span></button><button class="cat-item" data-cat="smart" onclick="selectCat('BR','smart',this)">🏠 Casa Inteligente <span>4</span></button><button class="cat-item" data-cat="wearables" onclick="selectCat('BR','wearables',this)">⌚ Relógios &amp; Wearables <span>1</span></button><button class="cat-item" data-cat="fitness" onclick="selectCat('BR','fitness',this)">💪 Saúde &amp; Fitness <span>1</span></button><button class="cat-item" data-cat="eletronicos" onclick="selectCat('BR','eletronicos',this)">📱 Eletrônicos <span>1</span></button><button class="cat-item" data-cat="outros" onclick="selectCat('BR','outros',this)">📦 Outros <span>8</span></button></div>
-      <div class="catlist" id="cats-US"><button class="cat-item active" data-cat="all" onclick="selectCat('US','all',this)">🗂️ All <span>20</span></button><button class="cat-item" data-cat="games" onclick="selectCat('US','games',this)">🎮 Games <span>2</span></button><button class="cat-item" data-cat="beleza" onclick="selectCat('US','beleza',this)">💄 Beauty &amp; Care <span>2</span></button><button class="cat-item" data-cat="cozinha" onclick="selectCat('US','cozinha',this)">🍳 Kitchen <span>1</span></button><button class="cat-item" data-cat="audio" onclick="selectCat('US','audio',this)">🎧 Audio <span>2</span></button><button class="cat-item" data-cat="smart" onclick="selectCat('US','smart',this)">🏠 Smart Home <span>2</span></button><button class="cat-item" data-cat="fitness" onclick="selectCat('US','fitness',this)">💪 Health &amp; Fitness <span>1</span></button><button class="cat-item" data-cat="eletronicos" onclick="selectCat('US','eletronicos',this)">📱 Electronics <span>1</span></button><button class="cat-item" data-cat="outros" onclick="selectCat('US','outros',this)">📦 Others <span>9</span></button></div>
-    </aside>
+      </main>
+    </div>
 
     <footer class="foot">
       <strong>Como afiliado da Amazon, ganhamos com compras qualificadas.</strong><br>
       As an Amazon Associate we earn from qualifying purchases.<br>
-      Atualizado em 20/07/2026 20:57 UTC
+      Atualizado em 20/07/2026 21:05 UTC
     </footer>
   </div>
 
@@ -584,6 +583,8 @@
       document.querySelectorAll('.catlist').forEach(function (el) {
         el.classList.toggle('active', el.id === 'cats-' + m);
       });
+      var qEl = document.getElementById('q');
+      if (qEl) qEl.placeholder = (m === 'US') ? 'Search product...' : 'Buscar produto...';
       applyFilter();
       if (history.replaceState) history.replaceState(null, '', '#' + m);
     }
@@ -611,16 +612,26 @@
         b.classList.toggle('active', b === el);
       });
       applyFilter();
-      closeDrawer();
     }
-    function openDrawer() {
-      document.getElementById('drawer').classList.add('open');
-      document.getElementById('backdrop').classList.add('open');
+    // Tenta a proxima URL de imagem da Amazon; se acabarem, mostra o card cinza.
+    function imgFallback(img) {
+      var s = (img.getAttribute('data-srcs') || '').split('|').filter(Boolean);
+      if (s.length) {
+        img.setAttribute('data-srcs', s.slice(1).join('|'));
+        img.src = s[0];
+      } else {
+        img.parentElement.classList.add('noimg');
+        img.remove();
+      }
     }
-    function closeDrawer() {
-      document.getElementById('drawer').classList.remove('open');
-      document.getElementById('backdrop').classList.remove('open');
+    // Mede a altura da barra fixa para a lateral colar no lugar certo.
+    function fitBars() {
+      var t = document.querySelector('.topbar');
+      if (t) document.documentElement.style.setProperty('--topbarH', t.offsetHeight + 'px');
     }
+    window.addEventListener('load', fitBars);
+    window.addEventListener('resize', fitBars);
+    fitBars();
     // Abre direto na aba certa se a URL terminar com #US ou #BR.
     (function () {
       var h = (location.hash || '').replace('#', '').toUpperCase();
