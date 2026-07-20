@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -45,7 +45,6 @@ export default function AmazonSales() {
   const [days, setDays] = useState(30);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
-  const fileRef = useRef(null);
 
   const load = async (refresh = false) => {
     try {
@@ -79,47 +78,10 @@ export default function AmazonSales() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [market, days]);
 
-  const onPickFile = () => fileRef.current?.click();
-
-  const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // permite reimportar o mesmo arquivo depois
-    if (!file) return;
-    setBusy(true);
-    setToast({ type: "info", msg: `Importando ${file.name}…` });
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("market", market || "auto");
-      const r = await Api.amazonSalesImport(fd);
-      setToast({
-        type: "success",
-        msg: `Importado! ${r.imported} novas linhas, ${r.skipped} já existiam.`,
-      });
-      await load();
-    } catch (err) {
-      const detail =
-        err?.response?.data?.detail || "Não consegui ler esse arquivo.";
-      setToast({ type: "error", msg: detail });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const clearAll = async () => {
-    const ok = window.confirm(
-      "Isso apaga os dados de vendas importados" +
-        (market ? ` do mercado ${market}` : " (todos os mercados)") +
-        ".\nOs relatórios na Amazon NÃO são afetados. Continuar?"
-    );
-    if (!ok) return;
+  const doRefresh = async () => {
     setBusy(true);
     try {
-      await Api.amazonSalesClear(market || undefined);
-      setToast({ type: "success", msg: "Dados apagados." });
-      await load();
-    } catch {
-      setToast({ type: "error", msg: "Falha ao apagar." });
+      await load(true);
     } finally {
       setBusy(false);
     }
@@ -141,18 +103,8 @@ export default function AmazonSales() {
           <p>Ganhos e desempenho dos seus links de afiliado.</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".csv,.xlsx,.txt"
-            style={{ display: "none" }}
-            onChange={onFile}
-          />
-          <button className="btn ghost" onClick={() => load(true)} disabled={busy}>
-            ↻ Atualizar
-          </button>
-          <button className="btn" onClick={onPickFile} disabled={busy}>
-            {busy ? "Processando…" : "⬆️ Importar relatório"}
+          <button className="btn" onClick={doRefresh} disabled={busy}>
+            {busy ? "Atualizando…" : "↻ Atualizar"}
           </button>
         </div>
       </div>
@@ -201,20 +153,16 @@ export default function AmazonSales() {
         </div>
       </div>
 
-      {!hasData ? (
-        <div className="card" style={{ padding: 32, textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 8 }}>🧾</div>
-          <h3 style={{ margin: "0 0 6px" }}>Nenhuma venda importada ainda</h3>
-          <p style={{ color: "var(--text-faint)", marginTop: 0 }}>
-            Baixe o relatório no Amazon Associates (ele cai na sua pasta
-            Downloads) e o ATLAS importa sozinho. Se preferir, use{" "}
-            <b>Importar relatório</b> para escolher o arquivo na mão.
-          </p>
-          <button className="btn" onClick={onPickFile} disabled={busy}>
-            ⬆️ Importar relatório
-          </button>
+      {!hasData && stats && (
+        <div
+          className="card"
+          style={{ padding: 14, marginBottom: 16, color: "var(--text-faint)" }}
+        >
+          Ainda não há vendas registradas neste período. Assim que a Amazon
+          registrar vendas, os números abaixo se preenchem sozinhos.
         </div>
-      ) : (
+      )}
+      {stats && (
         <>
           {/* Ganhos por mercado (moedas diferentes, por isso separado) */}
           <div className="section-title" style={{ marginTop: 0 }}>
@@ -249,7 +197,7 @@ export default function AmazonSales() {
             />
             <StatCard
               label="Cliques rastreados pelo ATLAS"
-              value={num(stats.internal_clicks)}
+              value={num(stats?.internal_clicks)}
               foot="contados automaticamente"
               icon="🔗"
             />
@@ -278,13 +226,13 @@ export default function AmazonSales() {
           <div className="grid-2" style={{ marginTop: 16 }}>
             <RankTable
               title="🏆 Mais vendidos"
-              rows={stats.top_sold}
+              rows={stats?.top_sold}
               valueLabel="Itens"
               render={(r) => num(r.qty)}
             />
             <RankTable
               title="💰 Mais lucrativos"
-              rows={stats.top_earnings}
+              rows={stats?.top_earnings}
               valueLabel="Ganhos"
               render={(r) => money(r.commission, r.market)}
             />
@@ -292,23 +240,10 @@ export default function AmazonSales() {
           <div className="grid-2" style={{ marginTop: 16 }}>
             <RankTable
               title="👆 Mais clicados"
-              rows={stats.top_clicked}
+              rows={stats?.top_clicked}
               valueLabel="Cliques"
               render={(r) => num(r.clicks)}
             />
-            <div className="card" style={{ padding: 16 }}>
-              <div className="section-title" style={{ marginTop: 0 }}>
-                Gerenciar dados
-              </div>
-              <p style={{ color: "var(--text-faint)", fontSize: 14 }}>
-                {stats.last_import?.source_file
-                  ? `Último arquivo importado: ${stats.last_import.source_file}`
-                  : "Nenhum arquivo importado ainda."}
-              </p>
-              <button className="btn ghost" onClick={clearAll} disabled={busy}>
-                🗑️ Apagar dados importados
-              </button>
-            </div>
           </div>
         </>
       )}
