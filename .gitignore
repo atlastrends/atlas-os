@@ -59,6 +59,10 @@ Thumbs.db
 # --- Docker ---
 *.pid
 
+# --- Logs locais ---
+tunnel_log.txt
+*.log
+
 # --- Instalador gerado (CONTEM O .env / segredos: NUNCA versionar) ---
 dist-installer/
 ATLAS-Instalador.exe
