@@ -47,13 +47,21 @@ export default function AmazonSales() {
   const [toast, setToast] = useState(null);
   const fileRef = useRef(null);
 
-  const load = async () => {
+  const load = async (refresh = false) => {
     try {
       const s = await Api.amazonSalesStats({
         market: market || undefined,
         days: days || undefined,
+        refresh: refresh ? 1 : undefined,
       });
       setStats(s);
+      const novos = s?.auto_import?.imported_rows || 0;
+      if (novos > 0) {
+        setToast({
+          type: "success",
+          msg: `Encontrei e importei ${novos} venda(s) nova(s) automaticamente.`,
+        });
+      }
     } catch {
       setToast({ type: "error", msg: "Falha ao carregar as vendas." });
     }
@@ -61,6 +69,13 @@ export default function AmazonSales() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [market, days]);
+
+  // Atualiza sozinho a cada 60s enquanto a pagina estiver aberta.
+  useEffect(() => {
+    const id = setInterval(() => load(), 60000);
+    return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [market, days]);
 
@@ -133,7 +148,7 @@ export default function AmazonSales() {
             style={{ display: "none" }}
             onChange={onFile}
           />
-          <button className="btn ghost" onClick={load} disabled={busy}>
+          <button className="btn ghost" onClick={() => load(true)} disabled={busy}>
             ↻ Atualizar
           </button>
           <button className="btn" onClick={onPickFile} disabled={busy}>
@@ -147,11 +162,13 @@ export default function AmazonSales() {
         className="card"
         style={{ padding: 16, marginBottom: 16, borderLeft: "3px solid #f59e0b" }}
       >
-        <b>Como atualizar os números:</b> a Amazon não deixa puxar vendas
-        automaticamente. No <i>Amazon Associates</i> → <b>Relatórios</b> →{" "}
-        <b>Baixar relatório</b> (Ganhos / Pedidos / Cliques). Depois clique em{" "}
-        <b>Importar relatório</b> aqui e escolha o arquivo (.csv ou .xlsx). Os{" "}
-        <b>cliques</b> do próprio ATLAS são contados sozinhos.
+        <b>Tudo automático:</b> baixe o relatório uma vez no{" "}
+        <i>Amazon Associates</i> → <b>Relatórios</b> → <b>Baixar relatório</b>{" "}
+        (Ganhos / Pedidos / Cliques). O ATLAS procura o arquivo sozinho na sua
+        pasta <b>Downloads</b> e importa automaticamente — os números aparecem
+        aqui sem você precisar clicar em nada. Os <b>cliques</b> do próprio
+        ATLAS também são contados sozinhos. (A Amazon não libera as vendas por
+        API; por isso o único passo é aquele download.)
       </div>
 
       {/* Filtros */}
@@ -189,8 +206,9 @@ export default function AmazonSales() {
           <div style={{ fontSize: 40, marginBottom: 8 }}>🧾</div>
           <h3 style={{ margin: "0 0 6px" }}>Nenhuma venda importada ainda</h3>
           <p style={{ color: "var(--text-faint)", marginTop: 0 }}>
-            Baixe o relatório no Amazon Associates e clique em{" "}
-            <b>Importar relatório</b> acima.
+            Baixe o relatório no Amazon Associates (ele cai na sua pasta
+            Downloads) e o ATLAS importa sozinho. Se preferir, use{" "}
+            <b>Importar relatório</b> para escolher o arquivo na mão.
           </p>
           <button className="btn" onClick={onPickFile} disabled={busy}>
             ⬆️ Importar relatório

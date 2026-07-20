@@ -66,13 +66,22 @@ async def import_amazon_sales(
 def amazon_sales_stats(
     market: Optional[str] = Query(default=None),
     days: Optional[int] = Query(default=None),
+    refresh: bool = Query(default=False),
     db: Session = Depends(get_db),
 ):
-    """Estatisticas agregadas para a pagina."""
+    """Estatisticas agregadas para a pagina.
+
+    Antes de calcular, o ATLAS procura sozinho novos relatorios da Amazon
+    nas pastas monitoradas (Downloads etc.) e importa automaticamente. Assim
+    o usuario so precisa abrir a pagina para ver os numeros atualizados.
+    """
+    auto = amazon_report_service.auto_scan_and_import(db, force=bool(refresh))
     mkt = (market or "").strip().upper() or None
     if mkt not in (None, "BR", "US"):
         mkt = None
-    return amazon_report_service.compute_stats(db, market=mkt, days=days)
+    stats = amazon_report_service.compute_stats(db, market=mkt, days=days)
+    stats["auto_import"] = auto
+    return stats
 
 
 @router.delete("/clear")

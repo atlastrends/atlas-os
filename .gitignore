@@ -91,6 +91,11 @@ storage/**/*credential*
 # --- Banco de dados local ---
 atlas_local.db
 
+# --- Relatorios de vendas da Amazon (DADOS DO USUARIO: nunca versionar) ---
+# A pasta existe (via .gitkeep), mas os relatorios importados ficam so no PC.
+relatorios_amazon/*
+!relatorios_amazon/.gitkeep
+
 # --- Node / frontend ---
 node_modules/
 frontend/node_modules/

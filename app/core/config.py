@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     APP_NAME: str = "Atlas OS"
     APP_VERSION: str = "0.1.0"
 
+    # Vendas Amazon: pasta extra (opcional) onde o ATLAS procura os
+    # relatorios de afiliado baixados. Alem desta pasta, ele sempre olha
+    # a pasta Downloads do usuario e a pasta "relatorios_amazon" do projeto.
+    ATLAS_AMAZON_REPORTS_DIR: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

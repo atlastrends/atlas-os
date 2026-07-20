@@ -14,12 +14,16 @@ from __future__ import annotations
 import csv
 import hashlib
 import io
+import os
 import re
+import time
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any, Optional
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.amazon_sales import AmazonSale
 
 # Tags de afiliado por mercado (para deduzir BR/US pelo tracking id).
@@ -350,6 +354,145 @@ def import_report(
         "total_rows": len(parsed),
         "markets": markets,
     }
+
+
+# ----------------------------------------------------------------
+# Importacao AUTOMATICA: o ATLAS procura o relatorio sozinho
+# ----------------------------------------------------------------
+# A Amazon nao deixa puxar as vendas por API. Mas quando o usuario baixa
+# o relatorio no site, o arquivo cai na pasta Downloads. Aqui o ATLAS
+# vasculha as pastas monitoradas e importa sozinho os relatorios novos,
+# para que a pessoa so precise abrir a pagina e ver os numeros.
+
+_MAX_SCAN_BYTES = 15 * 1024 * 1024  # 15 MB
+_SCAN_MIN_INTERVAL = 45.0  # segundos entre buscas automaticas
+_RECENT_DAYS = 60  # so olha arquivos recentes
+
+# Dicas para reconhecer que um arquivo e mesmo um relatorio da Amazon,
+# evitando importar planilhas que nao tem nada a ver.
+_AMAZON_FILE_HINTS = (
+    "amazon", "associate", "associados", "afiliado", "affiliate",
+    "ganhos", "pedidos", "cliques", "earnings", "orders", "fee",
+    "tracking", "achadosatlasb", "atlasfindsus", "relatorio", "report",
+)
+_AMAZON_CONTENT_HINTS = (
+    "achadosatlasb", "atlasfindsus", "tracking id", "asin", "ad fees",
+    "ganhos", "comiss", "product sales", "items shipped", "product name",
+)
+
+_last_scan_ts = 0.0
+_seen_files: dict[str, tuple[float, int]] = {}
+
+
+def _scan_dirs() -> list[Path]:
+    """Pastas onde o ATLAS procura os relatorios."""
+    dirs: list[Path] = []
+    cfg = (getattr(settings, "ATLAS_AMAZON_REPORTS_DIR", "") or "").strip()
+    if cfg:
+        dirs.append(Path(cfg))
+    root = os.environ.get("ATLAS_ROOT") or os.getcwd()
+    dirs.append(Path(root) / "relatorios_amazon")
+    try:
+        dirs.append(Path.home() / "Downloads")
+    except Exception:
+        pass
+    # remove repetidas mantendo a ordem
+    out: list[Path] = []
+    seen: set[str] = set()
+    for d in dirs:
+        try:
+            key = str(d.resolve())
+        except Exception:
+            continue
+        if key not in seen:
+            seen.add(key)
+            out.append(d)
+    return out
+
+
+def _looks_like_amazon_file(filename: str, data: bytes) -> bool:
+    low = filename.lower()
+    if any(h in low for h in _AMAZON_FILE_HINTS):
+        return True
+    head = data[:8192]
+    text = ""
+    for enc in ("utf-8-sig", "utf-8", "latin-1", "cp1252"):
+        try:
+            text = head.decode(enc).lower()
+            break
+        except Exception:
+            continue
+    return any(h in text for h in _AMAZON_CONTENT_HINTS)
+
+
+def auto_scan_and_import(db: Session, force: bool = False) -> dict:
+    """Procura relatorios da Amazon nas pastas monitoradas e importa
+    automaticamente os novos. Seguro chamar sempre: nao duplica dados
+    (dedupe_key) e ignora arquivos que nao sejam relatorios da Amazon."""
+    global _last_scan_ts
+    now = time.time()
+    if not force and (now - _last_scan_ts) < _SCAN_MIN_INTERVAL:
+        return {"scanned": 0, "imported_files": 0, "imported_rows": 0, "skipped": True}
+    _last_scan_ts = now
+
+    # garante a pasta padrao do projeto
+    try:
+        root = os.environ.get("ATLAS_ROOT") or os.getcwd()
+        (Path(root) / "relatorios_amazon").mkdir(exist_ok=True)
+    except Exception:
+        pass
+
+    cutoff = now - _RECENT_DAYS * 86400
+    scanned = 0
+    imported_files = 0
+    imported_rows = 0
+
+    for d in _scan_dirs():
+        try:
+            if not d.exists():
+                continue
+            entries = list(d.iterdir())
+        except Exception:
+            continue
+        for f in entries:
+            try:
+                if not f.is_file():
+                    continue
+                low = f.name.lower()
+                if not (low.endswith(".csv") or low.endswith(".xlsx") or low.endswith(".txt")):
+                    continue
+                st = f.stat()
+                if st.st_mtime < cutoff:
+                    continue
+                if st.st_size <= 0 or st.st_size > _MAX_SCAN_BYTES:
+                    continue
+                key = str(f.resolve())
+                sig = (st.st_mtime, st.st_size)
+                if not force and _seen_files.get(key) == sig:
+                    continue  # ja lido, sem mudancas
+                scanned += 1
+                data = f.read_bytes()
+                if not _looks_like_amazon_file(f.name, data):
+                    _seen_files[key] = sig
+                    continue
+                try:
+                    res = import_report(db, f.name, data, default_market="BR")
+                except Exception:
+                    _seen_files[key] = sig
+                    continue
+                _seen_files[key] = sig
+                if res.get("imported"):
+                    imported_files += 1
+                    imported_rows += int(res["imported"])
+            except Exception:
+                continue
+
+    return {
+        "scanned": scanned,
+        "imported_files": imported_files,
+        "imported_rows": imported_rows,
+    }
+
 
 
 # ----------------------------------------------------------------
