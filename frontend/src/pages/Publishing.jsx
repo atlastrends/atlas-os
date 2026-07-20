@@ -137,13 +137,20 @@ export default function Publishing() {
                         <span style={{ color: "var(--amber)" }}>● Não conectado</span>
                       )}
                     </div>
-                    <button
-                      className="btn"
-                      style={{ marginTop: 12, width: "100%" }}
-                      onClick={() => connectTiktok(m)}
-                    >
-                      {info.connected ? "Reconectar" : "Conectar"} TikTok {m}
-                    </button>
+                    {info.connected ? (
+                      <div className="foot" style={{ marginTop: 12 }}>
+                        Conta conectada. A conexão é renovada automaticamente — não
+                        precisa reconectar.
+                      </div>
+                    ) : (
+                      <button
+                        className="btn"
+                        style={{ marginTop: 12, width: "100%" }}
+                        onClick={() => connectTiktok(m)}
+                      >
+                        Conectar TikTok {m}
+                      </button>
+                    )}
                   </div>
                 );
               })}
