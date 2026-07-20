@@ -127,6 +127,7 @@ def fetch_products() -> dict[str, list[dict]]:
 
 def _card_html(product: dict, cta: str) -> str:
     title = html.escape(product["title"])
+    title_attr = html.escape(product["title"].lower(), quote=True)
     url = html.escape(product["url"], quote=True)
     image = html.escape(product["image"], quote=True)
     img_tag = (
@@ -136,7 +137,7 @@ def _card_html(product: dict, cta: str) -> str:
         else ""
     )
     return f"""
-      <a class="card" href="{url}" target="_blank" rel="nofollow noopener sponsored">
+      <a class="card" data-title="{title_attr}" href="{url}" target="_blank" rel="nofollow noopener sponsored">
         <div class="card-media">{img_tag}<span class="card-fallback">{title}</span></div>
         <div class="card-info">
           <span class="card-title">{title}</span>
@@ -178,7 +179,7 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index,follow">
-<meta name="theme-color" content="#ff5e00">
+<meta name="theme-color" content="#0c0d10">
 <title>Achados Atlas · Atlas Finds — Produtos selecionados</title>
 <meta name="description" content="Os produtos que aparecem nos nossos vídeos, com link direto para a Amazon.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -186,9 +187,9 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {{
-    --ink:#12141a; --muted:#6b7280; --line:#eceef2; --bg:#f4f5f7;
-    --brand:#ff7a00; --brand2:#ff2d6f;
-    --grad:linear-gradient(135deg,#ff9d00 0%,#ff5e00 52%,#ff2d6f 100%);
+    --ink:#0d0d10; --muted:#6b7280; --line:#e7e8ec; --bg:#f5f5f7;
+    --brand:#111318; --brand2:#2a2d36;
+    --grad:linear-gradient(135deg,#26282f 0%,#0c0d10 100%);
   }}
   * {{ box-sizing:border-box; }}
   html {{ scroll-behavior:smooth; }}
@@ -210,7 +211,7 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
   }}
   .avatar {{
     position:relative; z-index:1; width:96px; height:96px; border-radius:50%;
-    margin:0 auto 16px; background:#fff; color:#ff5e00;
+    margin:0 auto 16px; background:#fff; color:#111318;
     display:flex; align-items:center; justify-content:center;
     font-family:"Poppins"; font-weight:800; font-size:42px;
     box-shadow:0 12px 30px rgba(0,0,0,.22); border:4px solid rgba(255,255,255,.65);
@@ -225,18 +226,30 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     margin-top:14px; padding:6px 14px; border-radius:999px; font-size:12.5px;
     font-weight:600; background:rgba(255,255,255,.2); backdrop-filter:blur(6px);
   }}
-  /* TABS */
-  .tabs {{
-    position:sticky; top:0; z-index:20; display:flex; gap:8px;
-    padding:12px 16px; background:rgba(244,245,247,.9); backdrop-filter:blur(10px);
+  /* TOPBAR (abas + busca fixas) */
+  .topbar {{
+    position:sticky; top:0; z-index:20; padding:12px 16px;
+    background:rgba(245,245,247,.92); backdrop-filter:blur(10px);
     border-bottom:1px solid var(--line);
   }}
+  .tabs {{ display:flex; gap:8px; }}
   .tab {{
     flex:1; padding:11px 10px; border:none; border-radius:12px; cursor:pointer;
     background:#fff; color:#5b6472; font-family:"Inter"; font-size:14px; font-weight:600;
     box-shadow:0 2px 6px rgba(15,23,42,.05); transition:all .15s ease;
   }}
-  .tab.active {{ background:var(--grad); color:#fff; box-shadow:0 6px 16px rgba(255,94,0,.32); }}
+  .tab.active {{ background:var(--grad); color:#fff; box-shadow:0 6px 16px rgba(0,0,0,.2); }}
+  /* BUSCA */
+  .searchbar {{
+    margin-top:10px; display:flex; align-items:center; gap:9px; background:#fff;
+    border:1px solid var(--line); border-radius:12px; padding:11px 13px;
+    box-shadow:0 2px 6px rgba(15,23,42,.05);
+  }}
+  .searchbar svg {{ width:18px; height:18px; fill:#9aa0ac; flex:0 0 18px; }}
+  .searchbar input {{
+    border:none; outline:none; width:100%; background:transparent;
+    font-family:"Inter"; font-size:14px; color:var(--ink);
+  }}
   /* SOCIALS (no hero) */
   .hero-socials {{ position:relative; z-index:1; margin-top:16px; min-height:44px; }}
   .hero-soc {{ display:none; gap:10px; justify-content:center; }}
@@ -281,7 +294,7 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
   .card-btn {{
     margin-top:auto; text-align:center; padding:9px 10px; border-radius:11px;
     background:var(--grad); color:#fff; font-size:12.5px; font-weight:700;
-    box-shadow:0 4px 12px rgba(255,94,0,.28);
+    box-shadow:0 4px 12px rgba(0,0,0,.2);
   }}
   .market {{ display:none; }}
   .market.active {{ display:block; animation:fade .25s ease; }}
@@ -308,9 +321,15 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
       </div>
     </header>
 
-    <nav class="tabs">
-      <button class="tab active" data-market="BR" onclick="showMarket('BR')">🇧🇷 Brasil</button>
-      <button class="tab" data-market="US" onclick="showMarket('US')">🇺🇸 USA</button>
+    <nav class="topbar">
+      <div class="tabs">
+        <button class="tab active" data-market="BR" onclick="showMarket('BR')">🇧🇷 Brasil</button>
+        <button class="tab" data-market="US" onclick="showMarket('US')">🇺🇸 USA</button>
+      </div>
+      <div class="searchbar">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+        <input id="q" type="search" placeholder="Buscar produto..." autocomplete="off" oninput="filterProducts(this.value)">
+      </div>
     </nav>
 
     <main class="content">
@@ -321,6 +340,7 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
         </div>
         <div class="grid">
           {br_cards or '<div class="empty">Em breve novos produtos aqui!</div>'}
+          <div class="empty noresult" style="display:none">Nenhum produto encontrado 🔍</div>
         </div>
       </section>
 
@@ -331,6 +351,7 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
         </div>
         <div class="grid">
           {us_cards or '<div class="empty">New products coming soon!</div>'}
+          <div class="empty noresult" style="display:none">No products found 🔍</div>
         </div>
       </section>
     </main>
@@ -353,7 +374,22 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
       document.querySelectorAll('.hero-soc').forEach(function (el) {{
         el.classList.toggle('active', el.id === 'soc-' + m);
       }});
+      var qi = document.getElementById('q');
+      if (qi) filterProducts(qi.value);
       if (history.replaceState) history.replaceState(null, '', '#' + m);
+    }}
+    function filterProducts(q) {{
+      q = (q || '').trim().toLowerCase();
+      document.querySelectorAll('.market').forEach(function (mk) {{
+        var shown = 0;
+        mk.querySelectorAll('.card').forEach(function (c) {{
+          var hit = !q || (c.dataset.title || '').indexOf(q) > -1;
+          c.style.display = hit ? '' : 'none';
+          if (hit) shown++;
+        }});
+        var nr = mk.querySelector('.noresult');
+        if (nr) nr.style.display = (q && shown === 0) ? 'block' : 'none';
+      }});
     }}
     // Abre direto na aba certa se a URL terminar com #US ou #BR.
     (function () {{
