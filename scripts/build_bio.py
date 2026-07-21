@@ -439,19 +439,22 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
   .shell {{ max-width:880px; margin:0 auto; }}
   /* HERO */
   .hero {{
-    position:relative; text-align:center; color:#fff; padding:0 0 26px;
-    background:var(--grad); overflow:hidden;
-  }}
-  .hero::after {{
-    content:""; position:absolute; inset:0; pointer-events:none;
-    background:radial-gradient(120% 90% at 50% -20%, rgba(255,255,255,.18), transparent 60%);
+    position:relative; text-align:center; color:#fff; overflow:hidden;
+    min-height:300px; display:flex; flex-direction:column; justify-content:flex-end;
+    background:var(--grad);
   }}
   .hero-banner {{
-    display:none; position:relative; z-index:1; width:100%; height:auto;
-    aspect-ratio:2120/351; object-fit:cover; margin:0 0 18px;
+    display:none; position:absolute; inset:0; z-index:0;
+    width:100%; height:100%; object-fit:cover; object-position:center;
   }}
   .hero-banner.active {{ display:block; }}
-  .hero .tag {{ position:relative; z-index:1; margin:0; font-size:14.5px; opacity:.95; padding:0 22px; }}
+  .hero::after {{
+    content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:linear-gradient(to top, rgba(8,9,12,.92) 0%, rgba(8,9,12,.55) 26%, rgba(8,9,12,.05) 52%, transparent 70%);
+  }}
+  .hero-content {{ position:relative; z-index:2; padding:0 22px 24px; }}
+  @media (max-width:719px) {{ .hero {{ min-height:210px; }} }}
+  .hero .tag {{ margin:0; font-size:14.5px; opacity:.96; text-shadow:0 2px 8px rgba(0,0,0,.6); }}
   .badge {{
     position:relative; z-index:1; display:inline-flex; align-items:center; gap:6px;
     margin-top:14px; padding:6px 14px; border-radius:999px; font-size:12.5px;
@@ -589,11 +592,13 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     <header class="hero">
       <img class="hero-banner active" id="banner-BR" src="banner-br.jpg" alt="Atlas Trends Brasil" fetchpriority="high">
       <img class="hero-banner" id="banner-US" src="banner-us.jpg" alt="Atlas Trends US">
-      <p class="tag">Curadoria dos produtos que aparecem nos nossos vídeos 🎬</p>
-      <span class="badge">✨ {len(br) + len(us)} produtos selecionados</span>
-      <div class="hero-socials">
-        {br_socials}
-        {us_socials}
+      <div class="hero-content">
+        <p class="tag">Curadoria dos produtos que aparecem nos nossos vídeos 🎬</p>
+        <span class="badge">✨ {len(br) + len(us)} produtos selecionados</span>
+        <div class="hero-socials">
+          {br_socials}
+          {us_socials}
+        </div>
       </div>
     </header>
 
