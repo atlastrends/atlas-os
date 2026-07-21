@@ -558,10 +558,10 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
   .card:hover {{ transform:translateY(-4px); box-shadow:0 16px 34px rgba(15,23,42,.14); }}
   .card:active {{ transform:translateY(-1px); }}
   .card-media {{
-    position:relative; aspect-ratio:1/1; background:#f7f8fa; padding:14px;
+    position:relative; height:190px; background:#f7f8fa; padding:16px;
     display:flex; align-items:center; justify-content:center;
   }}
-  .card-img {{ max-width:100%; max-height:100%; object-fit:contain; mix-blend-mode:multiply; }}
+  .card-img {{ width:100%; height:100%; object-fit:contain; mix-blend-mode:multiply; }}
   .card-fallback {{
     display:none; font-size:11px; color:#fff; font-weight:700; padding:8px;
     text-align:center; line-height:1.25;
