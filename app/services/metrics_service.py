@@ -155,16 +155,19 @@ class MetricsService:
         token = os.getenv("META_ACCESS_TOKEN")
         if not token:
             return None
+        # OBS.: para Reels o Instagram nao aceita mais a metrica "plays";
+        # o nome atual e "views". As demais (likes/comments/shares) seguem
+        # iguais. Exige a permissao instagram_manage_insights no token.
         resp = requests.get(
             f"{GRAPH_BASE}/{media_id}/insights",
-            params={"metric": "plays,likes,comments,shares", "access_token": token},
+            params={"metric": "views,likes,comments,shares", "access_token": token},
             timeout=30,
         ).json()
         data = {d["name"]: (d.get("values", [{}])[0].get("value", 0)) for d in resp.get("data", [])}
         if not data:
             return None
         out = {
-            "views": data.get("plays", 0),
+            "views": data.get("views", 0),
             "likes": data.get("likes", 0),
             "comments": data.get("comments", 0),
             "shares": data.get("shares", 0),
@@ -184,21 +187,35 @@ class MetricsService:
         return out
 
     def _facebook_video(self, video_id: str) -> dict | None:
+        # Cada campo e buscado numa chamada separada porque o Facebook
+        # bloqueia a resposta INTEIRA se qualquer campo pedido faltar
+        # permissao (ex.: "comments" pode exigir uma permissao que o
+        # token ainda nao tem). Assim, se "comments" falhar, "views" e
+        # "likes" continuam aparecendo normalmente.
         token = os.getenv("META_ACCESS_TOKEN")
         if not token:
             return None
-        resp = requests.get(
-            f"{GRAPH_BASE}/{video_id}",
-            params={
-                "fields": "views,permalink_url,likes.summary(true),comments.summary(true)",
-                "access_token": token,
-            },
-            timeout=30,
-        ).json()
-        if "error" in resp:
+
+        def _safe_get(fields: str) -> dict:
+            try:
+                resp = requests.get(
+                    f"{GRAPH_BASE}/{video_id}",
+                    params={"fields": fields, "access_token": token},
+                    timeout=30,
+                ).json()
+            except Exception:  # noqa: BLE001
+                return {}
+            return {} if "error" in resp else resp
+
+        base_resp = _safe_get("views,permalink_url")
+        if not base_resp:
             return None
-        likes = (resp.get("likes", {}) or {}).get("summary", {}).get("total_count", 0)
-        comments = (resp.get("comments", {}) or {}).get("summary", {}).get("total_count", 0)
+        likes_resp = _safe_get("likes.summary(true)")
+        comments_resp = _safe_get("comments.summary(true)")
+
+        likes = (likes_resp.get("likes", {}) or {}).get("summary", {}).get("total_count", 0)
+        comments = (comments_resp.get("comments", {}) or {}).get("summary", {}).get("total_count", 0)
+        resp = base_resp
         out = {
             "views": resp.get("views", 0),
             "likes": likes,
