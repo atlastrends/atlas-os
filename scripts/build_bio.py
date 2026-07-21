@@ -439,27 +439,21 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
   .shell {{ max-width:880px; margin:0 auto; }}
   /* HERO */
   .hero {{
-    position:relative; text-align:center; overflow:hidden; background:#0a0b0f;
-    line-height:0;
+    position:relative; text-align:center; color:#fff; overflow:hidden;
+    min-height:300px; display:flex; flex-direction:column; justify-content:flex-end;
+    background:var(--grad);
   }}
   .hero-banner {{
-    display:none; width:100%; height:auto; vertical-align:top;
+    display:none; position:absolute; inset:0; z-index:0;
+    width:100%; height:100%; object-fit:cover; object-position:center;
   }}
   .hero-banner.active {{ display:block; }}
-  /* faixa de info abaixo do banner (tagline + contador) */
-  .storeinfo {{
-    text-align:center; color:#fff; background:var(--grad); padding:16px 22px 20px;
+  .hero::after {{
+    content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:linear-gradient(to top, rgba(8,9,12,.92) 0%, rgba(8,9,12,.55) 26%, rgba(8,9,12,.05) 52%, transparent 70%);
   }}
-  .storeinfo .tag {{ margin:0 0 6px; font-size:14.5px; opacity:.96; line-height:1.4; }}
-  .mkonly {{ display:none; }}
-  .tag.mkonly.active {{ display:block; }}
-  .badge.mkonly.active {{ display:inline-flex; }}
-  .badge {{
-    position:relative; z-index:1; display:inline-flex; align-items:center; gap:6px;
-    margin-top:10px; padding:8px 18px; border-radius:999px; font-size:14px;
-    font-weight:700; background:rgba(255,255,255,.16); backdrop-filter:blur(6px);
-    border:1px solid rgba(255,255,255,.22);
-  }}
+  .hero-content {{ position:relative; z-index:2; padding:0 22px 24px; }}
+  @media (max-width:719px) {{ .hero {{ min-height:210px; }} }}
   /* TOPBAR (abas + busca fixas) */
   .topbar {{
     position:sticky; top:0; z-index:20; padding:12px 16px;
@@ -528,16 +522,16 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     .catlist.active::-webkit-scrollbar {{ display:none; }}
     .cat-item {{ width:auto; flex:0 0 auto; }}
   }}
-  /* SOCIALS (sobre o banner) */
-  .hero-socials {{ position:absolute; left:0; right:0; bottom:14px; z-index:2; }}
+  /* SOCIALS (no hero) */
+  .hero-socials {{ position:relative; z-index:1; min-height:44px; }}
   .hero-soc {{ display:none; gap:10px; justify-content:center; }}
   .hero-soc.active {{ display:flex; }}
   .hero-soc a {{
     width:44px; height:44px; border-radius:13px; display:flex; align-items:center;
-    justify-content:center; background:rgba(10,11,15,.55); backdrop-filter:blur(6px);
+    justify-content:center; background:rgba(255,255,255,.2); backdrop-filter:blur(6px);
     border:1px solid rgba(255,255,255,.28); transition:transform .15s ease, background .15s ease;
   }}
-  .hero-soc a:hover {{ transform:translateY(-2px); background:rgba(10,11,15,.78); }}
+  .hero-soc a:hover {{ transform:translateY(-2px); background:rgba(255,255,255,.34); }}
   .hero-soc svg {{ width:21px; height:21px; fill:#fff; }}
   /* CONTENT */
   .content {{ flex:1; min-width:0; }}
@@ -592,17 +586,13 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     <header class="hero">
       <img class="hero-banner active" id="banner-BR" src="banner-br.jpg" alt="Atlas Trends Brasil" fetchpriority="high">
       <img class="hero-banner" id="banner-US" src="banner-us.jpg" alt="Atlas Trends US">
-      <div class="hero-socials">
-        {br_socials}
-        {us_socials}
+      <div class="hero-content">
+        <div class="hero-socials">
+          {br_socials}
+          {us_socials}
+        </div>
       </div>
     </header>
-    <div class="storeinfo">
-      <p class="tag mkonly active" data-market="BR">Curadoria dos produtos que aparecem nos nossos vídeos 🎬</p>
-      <p class="tag mkonly" data-market="US">Handpicked products featured in our videos 🎬</p>
-      <span class="badge mkonly active" data-market="BR">✨ {len(br) + len(us)} produtos selecionados</span>
-      <span class="badge mkonly" data-market="US">✨ {len(br) + len(us)} products selected</span>
-    </div>
 
     <nav class="topbar">
       <div class="tabs">
@@ -670,9 +660,6 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
       }});
       document.querySelectorAll('.hero-banner').forEach(function (el) {{
         el.classList.toggle('active', el.id === 'banner-' + m);
-      }});
-      document.querySelectorAll('.mkonly').forEach(function (el) {{
-        el.classList.toggle('active', el.dataset.market === m);
       }});
       document.querySelectorAll('.hero-soc').forEach(function (el) {{
         el.classList.toggle('active', el.id === 'soc-' + m);
