@@ -1,6 +1,30 @@
 {
-  "updated_at": "2026-07-20T21:55:57.775910+00:00",
+  "updated_at": "2026-07-21T21:06:30.739792+00:00",
   "products": [
+    {
+      "keyword": "LAVAGEM",
+      "title": "OMO Lavagem Perfeita - Sabão Líquido 5L",
+      "url": "https://www.amazon.com.br/dp/B07DYHDXX8?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18183433276397582",
+      "facebook_post_id": "1787590429065811"
+    },
+    {
+      "keyword": "MASSA",
+      "title": "DAS, Massa para Modelar, Branco, 500g",
+      "url": "https://www.amazon.com.br/dp/B000J445XA?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18063537902731749",
+      "facebook_post_id": "971763599252544"
+    },
+    {
+      "keyword": "MORTE",
+      "title": "Morte Súbita Máscara Super Hidratante 450g , Lola Cosmetics",
+      "url": "https://www.amazon.com.br/dp/B074LTNQBP?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18142189459544405",
+      "facebook_post_id": "2278210539624087"
+    },
     {
       "keyword": "BASE",
       "title": "Base De Carregamento Do Dualsense - PlayStation 5",
@@ -178,17 +202,33 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "PLAYSTATION",
-      "title": "$10 -PlayStation Store Gift Card [Digital Code]",
-      "url": "https://www.amazon.com/dp/B00GAC1D2G?tag=atlasfindsus-20",
+      "keyword": "KITCHENAID",
+      "title": "KitchenAid All Purpose Kitchen Shears with Protective Sheath Durable Stainless Steel Scissors, Dishwasher Safe, Soft Grip Com",
+      "url": "https://www.amazon.com/dp/B07PZF3QS3?tag=atlasfindsus-20",
       "market": "US",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
+      "instagram_media_id": "17933219634346178",
+      "facebook_post_id": "1398308512204839"
+    },
+    {
+      "keyword": "FIRE",
+      "title": "Amazon Fire TV Stick 4K Select (newest model), start streaming in 4K, AI-powered search, and free & live TV, find shows faste",
+      "url": "https://www.amazon.com/dp/B0C6W3D4RM?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18086091302385454",
+      "facebook_post_id": "1006800752162863"
     },
     {
       "keyword": "ALPHA",
       "title": "Alpha Grillers Meat Thermometer Digital – Instant Read Food Thermometer for Cooking & Grilling – Professional Kitchen Birthda",
       "url": "https://www.amazon.com/dp/B00S93EQUK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18211303789345381",
+      "facebook_post_id": "1588272002916139"
+    },
+    {
+      "keyword": "PLAYSTATION",
+      "title": "$10 -PlayStation Store Gift Card [Digital Code]",
+      "url": "https://www.amazon.com/dp/B00GAC1D2G?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
@@ -325,14 +365,6 @@
       "keyword": "SPLATOONTM",
       "title": "Splatoon™ Raiders",
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "FIRE",
-      "title": "Amazon Fire TV Stick 4K Select (newest model), start streaming in 4K, AI-powered search, and free &amp; live TV, find shows faster with Alexa+",
-      "url": "https://www.amazon.com/dp/B0C6W3D4RM?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""

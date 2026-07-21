@@ -1697,8 +1697,8 @@ def render_authorized_video(
             "[composed]"
             "[qr]"
             "overlay="
-            "x=W-w-45:"
-            "y=H-h-55:"
+            "x=(W-w)/2:"
+            "y=185:"
             "format=auto"
             "[withqr];"
 

@@ -163,6 +163,78 @@ def _image_urls(asin: str | None) -> list[str]:
     ]
 
 
+# Cache em disco das imagens reais da Amazon (evita rebaixar a pagina toda vez).
+_IMG_CACHE_FILE = DOCS_DIR / "_img_cache.json"
+_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+)
+_IMG_OG_RE = re.compile(
+    r'<meta[^>]+property="og:image"[^>]+content="([^"]+)"',
+    re.IGNORECASE,
+)
+_IMG_HIRES_RE = re.compile(r'"hiRes":"(https://[^"]+)"')
+_IMG_OLDHIRES_RE = re.compile(r'data-old-hires="(https://[^"]+)"')
+_IMG_DYN_RE = re.compile(
+    r'data-a-dynamic-image="\{&quot;(https://[^&]+)&quot;'
+)
+_IMG_LARGE_RE = re.compile(r'"large":"(https://[^"]+)"')
+
+
+def _load_img_cache() -> dict[str, str]:
+    try:
+        return json.loads(_IMG_CACHE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _save_img_cache(cache: dict[str, str]) -> None:
+    try:
+        _IMG_CACHE_FILE.write_text(
+            json.dumps(cache, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+
+
+def _fetch_amazon_image(product_url: str) -> str | None:
+    """Busca a imagem REAL do produto direto na pagina da Amazon (og:image).
+
+    O padrao P/{asin} da Amazon devolve um pixel vazio para muitos produtos
+    (fora de livros/midia), deixando o card sem imagem mesmo com HTTP 200.
+    Aqui abrimos a pagina do produto e pegamos a imagem verdadeira, garantindo
+    que sempre haja uma imagem valida.
+    """
+    import urllib.request
+
+    headers = {
+        "User-Agent": _UA,
+        "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+    }
+    # A Amazon alterna entre layouts de pagina; tentamos 2 vezes para pegar
+    # um layout que contenha a imagem principal.
+    regexes = (
+        _IMG_OG_RE,
+        _IMG_HIRES_RE,
+        _IMG_OLDHIRES_RE,
+        _IMG_DYN_RE,
+        _IMG_LARGE_RE,
+    )
+    for _ in range(2):
+        try:
+            req = urllib.request.Request(product_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                page = resp.read().decode("utf-8", "ignore")
+        except Exception:
+            continue
+        for regex in regexes:
+            match = regex.search(page)
+            if match:
+                return match.group(1)
+    return None
+
+
 def fetch_products() -> dict[str, list[dict]]:
     """Retorna {'BR': [...], 'US': [...]} com os produtos publicados."""
     query = text(
@@ -178,6 +250,7 @@ def fetch_products() -> dict[str, list[dict]]:
     )
     grouped: dict[str, list[dict]] = {"BR": [], "US": []}
     seen: dict[str, set[str]] = {"BR": set(), "US": set()}
+    img_cache = _load_img_cache()
     with SessionLocal() as db:
         for asset_id, title, country, url in db.execute(query):
             cc = (country or "").upper()
@@ -190,6 +263,15 @@ def fetch_products() -> dict[str, list[dict]]:
                 continue
             seen[cc].add(key)
             imgs = _image_urls(asin)
+            # Imagem REAL da Amazon (og:image) como principal; padrao P/asin
+            # fica so como reserva. Usa cache pra nao rebaixar toda vez.
+            real = img_cache.get(key)
+            if not real:
+                real = _fetch_amazon_image(url.strip())
+                if real:
+                    img_cache[key] = real
+            if real:
+                imgs = [real] + [u for u in imgs if u != real]
             grouped[cc].append(
                 {
                     "asset_id": asset_id,
@@ -201,6 +283,7 @@ def fetch_products() -> dict[str, list[dict]]:
                     "cat": _category(title),
                 }
             )
+    _save_img_cache(img_cache)
     return grouped
 
 
