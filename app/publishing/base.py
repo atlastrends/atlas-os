@@ -13,8 +13,11 @@
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import dataclass, field
 from typing import Optional
+
+import requests
 
 
 def project_root() -> str:
@@ -244,6 +247,55 @@ def resolve_meta_targets(
     ).strip()
 
     return page_id, ig_id, role, market
+
+
+# Cache simples em memoria: {page_id: (page_access_token, obtido_em)}.
+# Evita chamar /me/accounts a cada publicacao (o token da Pagina nao muda
+# com frequencia). Renovado a cada 5 minutos.
+_PAGE_TOKEN_CACHE: dict[str, tuple[str, float]] = {}
+_PAGE_TOKEN_TTL_SECONDS = 300
+
+
+def get_page_access_token(page_id: str) -> str:
+    """Troca o token MESTRE do usuario (META_ACCESS_TOKEN) pelo token
+    ESPECIFICO da Pagina do Facebook (necessario para publicar Reels/posts
+    e para publicar no Instagram conectado aquela Pagina).
+
+    O Graph API exige o token da propria Pagina para acoes de escrita
+    (video_reels, media, media_publish) - o token de usuario sozinho,
+    mesmo com 'pages_manage_posts', recebe 403 nessas chamadas.
+
+    Se a Pagina nao for encontrada em /me/accounts (ou a chamada falhar),
+    cai de volta para o token de usuario, para nao quebrar o fluxo.
+    """
+    user_token = (os.getenv("META_ACCESS_TOKEN") or "").strip()
+    if not page_id or not user_token:
+        return user_token
+
+    cached = _PAGE_TOKEN_CACHE.get(page_id)
+    now = time.time()
+    if cached and (now - cached[1]) < _PAGE_TOKEN_TTL_SECONDS:
+        return cached[0]
+
+    graph_version = os.getenv("META_GRAPH_VERSION", "v21.0")
+    try:
+        resp = requests.get(
+            f"https://graph.facebook.com/{graph_version}/me/accounts",
+            params={"access_token": user_token, "fields": "id,access_token"},
+            timeout=30,
+        )
+        data = resp.json().get("data", [])
+        for item in data:
+            if item.get("id") == page_id and item.get("access_token"):
+                page_token = item["access_token"]
+                _PAGE_TOKEN_CACHE[page_id] = (page_token, now)
+                return page_token
+    except Exception:  # noqa: BLE001
+        pass
+
+    # Fallback: token de usuario (pode falhar em chamadas de escrita, mas
+    # nunca deve travar o fluxo de publicacao).
+    return user_token
 
 
 def resolve_tiktok_token(

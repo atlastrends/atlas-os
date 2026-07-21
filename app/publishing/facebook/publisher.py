@@ -10,6 +10,7 @@ from app.publishing.base import (
     BasePublisher,
     PublishRequest,
     PublishResult,
+    get_page_access_token,
     public_media_url,
     resolve_meta_targets,
 )
@@ -25,7 +26,6 @@ class FacebookPublisher(BasePublisher):
     )
 
     def _do_publish(self, request: PublishRequest) -> PublishResult:
-        token = os.getenv("META_ACCESS_TOKEN")
         page_id, _ig_id, role, market = resolve_meta_targets(
             request.kind,
             request.country_code,
@@ -41,6 +41,10 @@ class FacebookPublisher(BasePublisher):
                 ),
                 detail={"platform": self.platform, "role": role, "market": market},
             )
+
+        # O Graph API exige o token ESPECIFICO da Pagina para publicar
+        # (o token de usuario sozinho recebe 403, mesmo com as permissoes).
+        token = get_page_access_token(page_id)
 
         video_url = public_media_url(request.video_path)
         if not video_url or video_url.startswith("http://localhost"):

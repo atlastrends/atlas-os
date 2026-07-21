@@ -91,7 +91,7 @@ if (($env:ATLAS_USE_TUNNEL -eq "1") -and (Test-Path $cloudflared)) {
 }
 else {
     Write-Host "[ATLAS] Tunel desligado (usando armazenamento na nuvem). Para ligar o" -ForegroundColor DarkGray
-    Write-Host "        tunel, rode antes:  \$env:ATLAS_USE_TUNNEL = '1'" -ForegroundColor DarkGray
+    Write-Host '        tunel, rode antes:  $env:ATLAS_USE_TUNNEL = "1"' -ForegroundColor DarkGray
 }
 
 # 3) Sobe a API + painel em http://127.0.0.1:8000

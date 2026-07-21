@@ -10,6 +10,7 @@ from app.publishing.base import (
     BasePublisher,
     PublishRequest,
     PublishResult,
+    get_page_access_token,
     public_media_url,
     resolve_meta_targets,
 )
@@ -25,8 +26,7 @@ class InstagramPublisher(BasePublisher):
     )
 
     def _do_publish(self, request: PublishRequest) -> PublishResult:
-        token = os.getenv("META_ACCESS_TOKEN")
-        _page_id, ig_id, role, market = resolve_meta_targets(
+        page_id, ig_id, role, market = resolve_meta_targets(
             request.kind,
             request.country_code,
             request.language,
@@ -41,6 +41,10 @@ class InstagramPublisher(BasePublisher):
                 ),
                 detail={"platform": self.platform, "role": role, "market": market},
             )
+
+        # O Instagram Graph API tambem exige o token da Pagina do Facebook
+        # conectada aquela conta do Instagram (nao o token de usuario puro).
+        token = get_page_access_token(page_id)
 
         video_url = public_media_url(request.video_path)
         if not video_url or video_url.startswith("http://localhost"):
