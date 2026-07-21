@@ -417,18 +417,6 @@ class PublishingService:
             buy_label = "Buy it here:" if is_en else "Compre aqui:"
             link_block = f"{buy_label}\n{affiliate_link}"
 
-            # Palavra-gatilho do robo de direct (Instagram/Facebook): UMA
-            # palavra propria de cada produto (ex.: FRITADEIRA, ECHO), gerada
-            # a partir do titulo. O robo escuta essa palavra nos comentarios
-            # e responde com o link no direct. Fica no mesmo helper usado pela
-            # bio, entao a palavra da legenda == a palavra que o robo espera.
-            import re as _re
-            from app.services.product_keyword import product_keyword
-
-            _asin_m = _re.search(r"/dp/([A-Z0-9]{10})", asset.affiliate_url or "")
-            _asin = _asin_m.group(1) if _asin_m else ""
-            trigger = product_keyword(asset.title or "", _asin)
-
             if platform == "youtube":
                 # No YouTube o link vai no TOPO (aparece antes do "mostrar mais")
                 # e tambem no fim, sempre em linha propria = clicavel.
@@ -444,12 +432,12 @@ class PublishingService:
                 caption = f"{caption}{cta}"
                 description = f"{description}{cta}"
             else:
-                # Instagram/Facebook: comentar a palavra -> recebe o link no direct
-                # (o robo de mensagens responde no privado com o link do produto).
+                # Instagram/Facebook: o link completo fica na BIO do perfil
+                # (a bio tem todos os produtos com o link direto da Amazon).
                 if is_en:
-                    cta = f"\n\n\U0001f4e9 Comment \u201c{trigger}\u201d and I'll send the link straight to your DM!"
+                    cta = "\n\n\U0001f517 Full link in our BIO \u2014 tap our profile \u2b06\ufe0f"
                 else:
-                    cta = f"\n\n\U0001f4e9 Comenta \u201c{trigger}\u201d que eu te mando o link no seu direct!"
+                    cta = "\n\n\U0001f517 Link completo na nossa BIO \u2014 toca no nosso perfil \u2b06\ufe0f"
                 caption = f"{caption}{cta}"
                 description = f"{description}{cta}"
 
