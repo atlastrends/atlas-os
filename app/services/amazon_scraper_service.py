@@ -79,10 +79,17 @@ def _session_path(market: str) -> Path:
 
 
 def _page_has_block_hint(page) -> Optional[str]:
+    # Usa innerText (so texto VISIVEL) em vez de content()/HTML puro -
+    # paginas da Amazon tem templates de erro escondidos no HTML (ex:
+    # caixas de erro com class "hidden" que so aparecem via JS quando
+    # ha um erro de verdade) que davam falso positivo aqui.
     try:
-        text = page.content().lower()
+        text = page.locator("body").inner_text().lower()
     except Exception:
-        return None
+        try:
+            text = page.content().lower()
+        except Exception:
+            return None
     for hint in _BLOCKED_HINTS:
         if hint in text:
             return hint
@@ -189,21 +196,26 @@ def _download_earnings_report(page, market: str) -> tuple[str, bytes]:
     page.wait_for_timeout(2000)
 
     refresh_link = page.locator("#ac-report-download-refresh-link-osp")
-    download_link = page.locator('a[title="Fazer download"]').first
+    download_link = page.locator('a[title="Fazer download"], a[title="Download"]').first
 
     ready = False
-    for _ in range(20):  # ate ~60s de espera (3s por tentativa)
+    for _ in range(20):  # ate ~1min20 de espera (4s por tentativa)
         if download_link.count() > 0:
             ready = True
             break
-        if refresh_link.count() > 0:
+        # A Amazon as vezes marca o pedido como "THROTTLED" (limite de
+        # pedidos) mesmo sendo o primeiro pedido do dia - nesse caso o
+        # jeito e reenviar o mesmo pedido ate ela aceitar.
+        if "THROTTLED" in page.content():
+            generate_btn.click()
+        elif refresh_link.count() > 0:
             refresh_link.click()
-        page.wait_for_timeout(3000)
+        page.wait_for_timeout(4000)
 
     if not ready:
         raise RuntimeError(
-            "A Amazon nao terminou de gerar o relatorio a tempo (ou a "
-            "solicitacao foi limitada - 'THROTTLED'). Tente de novo em "
+            "A Amazon nao terminou de gerar o relatorio a tempo (fica "
+            "'THROTTLED' - solicitacao limitada). Tente de novo em "
             "alguns minutos."
         )
 
