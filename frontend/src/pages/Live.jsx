@@ -57,8 +57,14 @@ export default function Live() {
   const [presenterUrl, setPresenterUrl] = useState(
     () => localStorage.getItem("atlas_live_presenter") || ""
   );
+  const [presenterUploaded, setPresenterUploaded] = useState(false);
+  const [presenterVer, setPresenterVer] = useState(0); // cache-bust da foto enviada
+  const [uploading, setUploading] = useState(false);
+  const [videoOn, setVideoOn] = useState(false); // gerar video do apresentador?
+  const [videoUrl, setVideoUrl] = useState(""); // clipe atual tocando no palco
 
   const audioRef = useRef(null);
+  const videoRef = useRef(null);
   const chatBottomRef = useRef(null);
   const viewersTimer = useRef(null);
 
@@ -66,7 +72,9 @@ export default function Live() {
   useEffect(() => {
     (async () => {
       try {
-        setBrain(await Api.liveStatus());
+        const s = await Api.liveStatus();
+        setBrain(s);
+        setPresenterUploaded(!!s?.has_presenter);
       } catch {
         setBrain({ brain_ready: false });
       }
@@ -134,6 +142,35 @@ export default function Live() {
     setProductContext(p.title);
   }
 
+  // Foto que aparece no palco: a enviada (backend) tem prioridade; senao a URL colada.
+  const presenterSrc = presenterUploaded
+    ? `/api/live/presenter?v=${presenterVer}`
+    : presenterUrl || "";
+
+  async function handlePresenterUpload(file) {
+    if (!file) return;
+    setUploading(true);
+    try {
+      await Api.livePresenterUpload(file);
+      setPresenterUploaded(true);
+      setPresenterVer((v) => v + 1);
+    } catch (e) {
+      window.alert(
+        "Não consegui enviar a foto: " + (e?.response?.data?.detail || e?.message || e)
+      );
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  // Toca o clipe de video do apresentador (com a voz embutida) no palco.
+  useEffect(() => {
+    if (videoUrl && videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [videoUrl]);
+
   function startLive() {
     if (mode === "real") {
       window.alert(
@@ -146,6 +183,7 @@ export default function Live() {
     }
     setMessages([]);
     setCaption("");
+    setVideoUrl("");
     setViewers(Math.floor(Math.random() * 40) + 12);
     setLive(true);
   }
@@ -154,8 +192,12 @@ export default function Live() {
     setLive(false);
     setSpeaking(false);
     setCaption("");
+    setVideoUrl("");
     if (audioRef.current) {
       audioRef.current.pause();
+    }
+    if (videoRef.current) {
+      videoRef.current.pause();
     }
   }
 
@@ -188,6 +230,7 @@ export default function Live() {
         product_context: productContext,
         persona,
         with_voice: true,
+        with_video: videoOn && presenterUploaded,
       });
 
       if (!res?.ok) {
@@ -209,6 +252,7 @@ export default function Live() {
       }
 
       const audioUrl = res.audio_url || "";
+      const clipUrl = res.video_url || "";
       setMessages((m) =>
         m.map((x) =>
           x.id === hostMsg.id
@@ -217,7 +261,14 @@ export default function Live() {
         )
       );
       setCaption(res.answer);
-      if (audioUrl) playAudio(audioUrl);
+      // Se veio video do apresentador, toca o video (com a voz embutida);
+      // senao, cai na voz + foto estatica.
+      if (clipUrl) {
+        setSpeaking(true);
+        setVideoUrl(clipUrl);
+      } else if (audioUrl) {
+        playAudio(audioUrl);
+      }
     } catch (e) {
       setMessages((m) =>
         m.map((x) =>
@@ -313,12 +364,23 @@ export default function Live() {
                   <span className="studio-floor" />
                 </div>
 
-                {/* Apresentador realista (foto de pessoa) */}
+                {/* Apresentador realista (video do avatar quando gerado, senao foto) */}
                 <div className={"presenter" + (speaking ? " speaking" : "")}>
-                  {presenterUrl ? (
+                  {videoUrl && live ? (
+                    <video
+                      ref={videoRef}
+                      className="presenter-img"
+                      src={videoUrl}
+                      playsInline
+                      autoPlay
+                      onPlay={() => setSpeaking(true)}
+                      onEnded={() => setSpeaking(false)}
+                      onPause={() => setSpeaking(false)}
+                    />
+                  ) : presenterSrc ? (
                     <img
                       className="presenter-img"
-                      src={presenterUrl}
+                      src={presenterSrc}
                       alt="Apresentador"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -328,12 +390,12 @@ export default function Live() {
                     <div className="presenter-ph">
                       <div className="presenter-emoji">🧑‍💼</div>
                       <div className="presenter-hint">
-                        Cole a foto de uma pessoa realista em{" "}
+                        Envie a foto de uma pessoa realista em{" "}
                         <b>Ajustes → Foto do apresentador</b>
                       </div>
                     </div>
                   )}
-                  {speaking && (
+                  {speaking && !videoUrl && (
                     <div className="speak-bars">
                       <span></span><span></span><span></span><span></span>
                     </div>
@@ -455,15 +517,56 @@ export default function Live() {
                 onChange={(e) => setPrice(e.target.value)}
               />
             </label>
-            <label className="cfg-row">
+            <div className="cfg-row">
               <span>Foto do apresentador (pessoa realista)</span>
+              <div className="presenter-upload">
+                <label className="file-btn">
+                  {uploading
+                    ? "Enviando…"
+                    : presenterUploaded
+                    ? "Trocar foto"
+                    : "Enviar foto"}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    hidden
+                    disabled={uploading}
+                    onChange={(e) => handlePresenterUpload(e.target.files?.[0])}
+                  />
+                </label>
+                {presenterUploaded && <span className="ok-tag">✓ foto enviada</span>}
+              </div>
               <input
                 type="text"
-                placeholder="Cole a URL de uma foto (ex.: pessoa gerada por IA)"
+                className="url-alt"
+                placeholder="…ou cole a URL de uma foto (só pré-visualiza)"
                 value={presenterUrl}
                 onChange={(e) => setPresenterUrl(e.target.value)}
               />
+            </div>
+            <label className="cfg-row toggle-row">
+              <span>
+                Vídeo do apresentador (avatar)
+                {brain?.avatar_engine ? ` · motor: ${brain.avatar_engine}` : ""}
+              </span>
+              <input
+                type="checkbox"
+                checked={videoOn}
+                disabled={!presenterUploaded}
+                onChange={(e) => setVideoOn(e.target.checked)}
+              />
             </label>
+            {!presenterUploaded && (
+              <div className="cfg-note">
+                Para ligar o vídeo do avatar, envie uma foto do apresentador acima.
+              </div>
+            )}
+            {videoOn && brain?.avatar_engine === "ffmpeg" && (
+              <div className="cfg-note">
+                ℹ️ Motor <b>ffmpeg</b>: gera o vídeo com a foto + voz (ainda sem a boca
+                mexendo). No G15 com <b>Wav2Lip</b> a boca passa a sincronizar.
+              </div>
+            )}
             <label className="cfg-row">
               <span>Estilo do apresentador (opcional)</span>
               <input

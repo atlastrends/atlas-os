@@ -18,15 +18,17 @@ import os
 import re
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
+from app.services import live_avatar_service as avatar
 from app.services import live_brain_service as brain
 
 router = APIRouter(prefix="/api/live", tags=["Live"])
 
 _AUDIO_DIR = brain._AUDIO_DIR
+_CLIP_DIR = avatar._CLIP_DIR
 
 # Pasta docs/ onde o build da bio deixa a lista de produtos e o cache de imagens.
 _DOCS_DIR = Path(__file__).resolve().parents[2] / "docs"
@@ -82,6 +84,7 @@ class AnswerRequest(BaseModel):
     persona: str = ""
     with_voice: bool = True
     voice: str = ""
+    with_video: bool = False
 
 
 @router.post("/answer")
@@ -101,6 +104,20 @@ def answer(req: AnswerRequest):
         result["audio_url"] = f"/api/live/audio/{os.path.basename(audio_rel)}"
     else:
         result["audio_url"] = ""
+
+    # Gera o VIDEO do apresentador falando (opcional). Se faltar foto/motor,
+    # o proprio servico devolve o motivo e o palco cai na foto estatica.
+    result["video_url"] = ""
+    if req.with_video and audio_rel:
+        abs_audio = Path(_AUDIO_DIR) / os.path.basename(audio_rel)
+        clip = avatar.render_clip(abs_audio)
+        if clip.get("ok") and clip.get("video_rel"):
+            result["video_url"] = f"/api/live/clip/{os.path.basename(clip['video_rel'])}"
+            result["video_engine"] = clip.get("engine", "")
+            if clip.get("note"):
+                result["video_note"] = clip["note"]
+        else:
+            result["video_note"] = clip.get("reason", "Nao foi possivel gerar o video.")
 
     return result
 
@@ -122,6 +139,63 @@ def audio(name: str):
     return FileResponse(str(abs_path), media_type="audio/mpeg")
 
 
+@router.get("/clip/{name}")
+def clip(name: str):
+    """Entrega o video (mp4) do apresentador falando (somente dessa pasta)."""
+    safe = os.path.basename(name)
+    if not safe.endswith(".mp4"):
+        raise HTTPException(status_code=403, detail="Tipo de arquivo nao permitido.")
+
+    abs_path = (Path(_CLIP_DIR) / safe).resolve()
+    root = Path(_CLIP_DIR).resolve()
+    if root not in abs_path.parents:
+        raise HTTPException(status_code=403, detail="Caminho nao permitido.")
+    if not abs_path.is_file():
+        raise HTTPException(status_code=404, detail="Video nao encontrado.")
+
+    return FileResponse(str(abs_path), media_type="video/mp4")
+
+
+# Tamanho maximo da foto do apresentador (8 MB).
+_MAX_PRESENTER_BYTES = 8 * 1024 * 1024
+_ALLOWED_PRESENTER_EXT = {".png", ".jpg", ".jpeg", ".webp"}
+
+
+@router.post("/presenter")
+async def upload_presenter(file: UploadFile = File(...)):
+    """Recebe a foto do apresentador (pessoa realista) para o avatar em video."""
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in _ALLOWED_PRESENTER_EXT:
+        raise HTTPException(
+            status_code=400,
+            detail="Envie uma imagem .png, .jpg ou .webp.",
+        )
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Arquivo vazio.")
+    if len(data) > _MAX_PRESENTER_BYTES:
+        raise HTTPException(status_code=413, detail="Imagem muito grande (max 8 MB).")
+
+    try:
+        avatar.save_presenter(data, ext)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return {"ok": True, "has_presenter": True}
+
+
+@router.get("/presenter")
+def get_presenter():
+    """Serve a foto do apresentador salva (para o palco exibir)."""
+    path = avatar.presenter_path()
+    if not path:
+        raise HTTPException(status_code=404, detail="Sem foto do apresentador.")
+    media = "image/png" if path.suffix.lower() == ".png" else "image/jpeg"
+    if path.suffix.lower() == ".webp":
+        media = "image/webp"
+    return FileResponse(str(path), media_type=media)
+
+
 @router.get("/status")
 def status():
     """Informa se a IA e a voz estao prontas para a live."""
@@ -132,6 +206,8 @@ def status():
         "gemini_ready": gemini_ready,
         "groq_ready": groq_ready,
         "default_voices": brain.DEFAULT_VOICES,
+        "avatar_engine": avatar.engine_name(),
+        "has_presenter": avatar.has_presenter(),
     }
 
 

@@ -25,6 +25,11 @@ env/
 ENV/
 .venv-dash/
 
+# --- Avatar (Wav2Lip no G15): venv/pesos/clone gigantes + launcher local ---
+.venv-avatar/
+/avatar/
+start-live-g15.ps1
+
 # --- Testes / cobertura ---
 .pytest_cache/
 .coverage

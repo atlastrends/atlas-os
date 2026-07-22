@@ -1444,7 +1444,54 @@ a {
 }
 .cfg-row input:focus { outline: none; border-color: var(--brand); }
 
-/* -------- Chat ao vivo -------- */
+/* Envio da foto do apresentador + toggle do avatar */
+.presenter-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.file-btn {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  background: var(--brand);
+  color: #fff;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.file-btn:hover { filter: brightness(1.08); }
+.ok-tag {
+  font-size: 12px;
+  font-weight: 600;
+  color: #16a34a;
+}
+.url-alt { margin-top: 8px; }
+.toggle-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.toggle-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+.cfg-note {
+  font-size: 12px;
+  color: var(--text-faint);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin: -4px 0 12px;
+  line-height: 1.5;
+}
+
+
 .live-chat {
   display: flex;
   flex-direction: column;

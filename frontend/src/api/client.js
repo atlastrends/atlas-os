@@ -125,11 +125,26 @@ export const Api = {
 
   // ----- Live (canal de lives com avatar de IA) -----
   liveStatus: () => api.get("/live/status").then((r) => r.data),
-  liveAnswer: (body) => api.post("/live/answer", body).then((r) => r.data),
+  liveAnswer: (body) =>
+    api
+      .post("/live/answer", body, {
+        // gerar o video do avatar pode demorar (ainda mais com lip-sync no G15)
+        timeout: body?.with_video ? 300000 : 120000,
+      })
+      .then((r) => r.data),
   liveProducts: (market) =>
     api
       .get("/live/products", { params: market ? { market } : {} })
       .then((r) => r.data),
+  livePresenterUpload: (file) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api
+      .post("/live/presenter", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data);
+  },
 };
 
 export default Api;
