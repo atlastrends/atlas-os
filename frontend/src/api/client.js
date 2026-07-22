@@ -122,6 +122,10 @@ export const Api = {
     api.post("/marketing/campaigns", body).then((r) => r.data),
   launchCampaign: (id) =>
     api.post(`/marketing/campaigns/${id}/launch`).then((r) => r.data),
+
+  // ----- Live (canal de lives com avatar de IA) -----
+  liveStatus: () => api.get("/live/status").then((r) => r.data),
+  liveAnswer: (body) => api.post("/live/answer", body).then((r) => r.data),
 };
 
 export default Api;

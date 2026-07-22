@@ -6,6 +6,7 @@ import Overview from "./pages/Overview.jsx";
 import Products from "./pages/Products.jsx";
 import AffiliateVideos from "./pages/AffiliateVideos.jsx";
 import Reels from "./pages/Reels.jsx";
+import Live from "./pages/Live.jsx";
 import Publishing from "./pages/Publishing.jsx";
 import Marketing from "./pages/Marketing.jsx";
 import Analytics from "./pages/Analytics.jsx";
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/produtos" element={<Products />} />
             <Route path="/afiliados" element={<AffiliateVideos />} />
             <Route path="/reels" element={<Reels />} />
+            <Route path="/live" element={<Live />} />
             <Route path="/publicacoes" element={<Publishing />} />
             <Route path="/marketing" element={<Marketing />} />
             <Route path="/analytics" element={<Analytics />} />

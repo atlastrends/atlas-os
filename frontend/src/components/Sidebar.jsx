@@ -13,6 +13,7 @@ const groups = [
       { to: "/produtos", icon: "🛒", label: "Produtos Amazon" },
       { to: "/afiliados", icon: "🎬", label: "Vídeos Afiliados" },
       { to: "/reels", icon: "🔥", label: "Reels Trending" },
+      { to: "/live", icon: "🔴", label: "Live (Ao Vivo)" },
     ],
   },
   {
