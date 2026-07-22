@@ -16,8 +16,10 @@
 
 from __future__ import annotations
 
+import io
 import os
 import time
+import zipfile
 from pathlib import Path
 from typing import Optional
 
@@ -32,12 +34,12 @@ _SESSION_DIR = Path(os.environ.get("ATLAS_ROOT") or os.getcwd()) / "storage" / "
 # login (Amazon Associates Central) mas a home muda por marketplace.
 _MARKET_URLS = {
     "BR": {
-        "login": "https://associados.amazon.com.br/",
-        "reports": "https://associados.amazon.com.br/home/reports/earnings",
+        "login": "https://associados.amazon.com.br/home",
+        "reports": "https://associados.amazon.com.br/home/reports",
     },
     "US": {
-        "login": "https://affiliate-program.amazon.com/",
-        "reports": "https://affiliate-program.amazon.com/home/reports/earnings",
+        "login": "https://affiliate-program.amazon.com/home",
+        "reports": "https://affiliate-program.amazon.com/home/reports",
     },
 }
 
@@ -139,9 +141,23 @@ def _login(page, market: str, email: str, password: str) -> None:
 
 
 def _download_earnings_report(page, market: str) -> tuple[str, bytes]:
-    """Abre a pagina de relatorios de ganhos e baixa o CSV do periodo mais
-    recente disponivel. As etiquetas variam um pouco entre marketplaces,
-    por isso tenta alguns textos alternativos (PT/EN)."""
+    """Abre a pagina de 'Relatorios', pede um relatorio de ganhos (CSV, por
+    produto) do periodo padrao (ultimos 30 dias) e baixa o arquivo assim
+    que a Amazon terminar de gera-lo.
+
+    O fluxo real da Amazon Associates e assincrono:
+      1. Clica em "Fazer download de relatorios" (abre um popover/modal).
+      2. Marca o formato CSV e pelo menos um tipo de relatorio (usamos
+         "Produto relacionado", que traz o detalhamento por produto/ASIN).
+      3. Clica em "Gerar Relatorios".
+      4. A Amazon processa em segundo plano; o modal mostra uma tabela
+         "Relatorios Disponiveis" com o status ("Preparando...", depois um
+         link "Fazer download"). Precisamos clicar em "Atualizar" ate o
+         link aparecer.
+      5. O arquivo baixado e um .zip com um unico CSV dentro - extraimos
+         esse CSV e devolvemos os bytes (o amazon_report_service ja sabe
+         ler CSV puro).
+    """
     urls = _MARKET_URLS[market]
     page.goto(urls["reports"], wait_until="domcontentloaded", timeout=45000)
     page.wait_for_timeout(2000)
@@ -150,41 +166,75 @@ def _download_earnings_report(page, market: str) -> tuple[str, bytes]:
     if block:
         raise AmazonLoginBlocked(f"Amazon pediu verificacao extra na pagina de relatorios ({block}).")
 
-    download_labels = [
-        "Baixar relatório", "Baixar relatorio", "Download report",
-        "Baixar", "Download", "Exportar", "Export",
-    ]
-    download_locator = None
-    for label in download_labels:
-        loc = page.get_by_role("link", name=label, exact=False)
-        if loc.count() == 0:
-            loc = page.get_by_role("button", name=label, exact=False)
-        if loc.count() > 0:
-            download_locator = loc.first
-            break
-
-    if download_locator is None:
+    launcher = page.locator("#ac-report-download-launcher-osp")
+    if launcher.count() == 0:
         raise RuntimeError(
-            "Nao encontrei o botao de baixar relatorio na pagina da Amazon. "
-            "O layout do site pode ter mudado."
+            "Nao encontrei o botao 'Fazer download de relatorios' na pagina "
+            "da Amazon. O layout do site pode ter mudado."
+        )
+    launcher.click()
+    page.wait_for_timeout(1000)
+
+    # Formato CSV (o clique no <label> evita o icone customizado da Amazon
+    # que fica por cima do <input type=radio> de verdade).
+    csv_label = page.locator("#report-download-export-format-csv label")
+    csv_label.click()
+
+    # Tipo de relatorio: "Produto relacionado" (detalhamento por produto).
+    product_checkbox = page.locator("#report-download-program-commission-creativeasin label")
+    product_checkbox.click()
+
+    generate_btn = page.locator("#ac-reports-download-generate-osp-announce")
+    generate_btn.click()
+    page.wait_for_timeout(2000)
+
+    refresh_link = page.locator("#ac-report-download-refresh-link-osp")
+    download_link = page.locator('a[title="Fazer download"]').first
+
+    ready = False
+    for _ in range(20):  # ate ~60s de espera (3s por tentativa)
+        if download_link.count() > 0:
+            ready = True
+            break
+        if refresh_link.count() > 0:
+            refresh_link.click()
+        page.wait_for_timeout(3000)
+
+    if not ready:
+        raise RuntimeError(
+            "A Amazon nao terminou de gerar o relatorio a tempo (ou a "
+            "solicitacao foi limitada - 'THROTTLED'). Tente de novo em "
+            "alguns minutos."
         )
 
     with page.expect_download(timeout=60000) as download_info:
-        download_locator.click()
+        download_link.click()
     download = download_info.value
-    filename = download.suggested_filename or f"amazon_{market.lower()}_earnings.csv"
     tmp_path = download.path()
-    data = Path(tmp_path).read_bytes() if tmp_path else b""
-    if not data:
-        # fallback: salva via save_as em caminho temporario proprio
+    raw = Path(tmp_path).read_bytes() if tmp_path else b""
+    if not raw:
         tmp_target = _SESSION_DIR / f"_tmp_{market.lower()}_{int(time.time())}"
         download.save_as(str(tmp_target))
-        data = tmp_target.read_bytes()
+        raw = tmp_target.read_bytes()
         try:
             tmp_target.unlink()
         except Exception:
             pass
+
+    suggested = download.suggested_filename or f"amazon_{market.lower()}_earnings.zip"
+    if suggested.lower().endswith(".zip") or raw[:2] == b"PK":
+        with zipfile.ZipFile(io.BytesIO(raw)) as z:
+            names = z.namelist()
+            if not names:
+                raise RuntimeError("O relatorio baixado da Amazon veio vazio (zip sem arquivos).")
+            filename = names[0]
+            data = z.read(filename)
+    else:
+        filename = suggested
+        data = raw
+
     return filename, data
+
 
 
 def fetch_report_for_market(db: Session, market: str) -> dict:
@@ -282,3 +332,106 @@ def fetch_all_configured_markets(db: Session) -> dict:
         "results": results,
         "errors": errors,
     }
+
+
+def run_manual_login_setup(market: str) -> None:
+    """Configuracao unica (feita a mao, uma vez so) para contas com 2FA
+    ativado. A Amazon pede verificacao extra no PRIMEIRO login de um
+    navegador novo; depois que esse navegador fica "conhecido"/confiavel,
+    os proximos logins (feitos sozinhos pelo robo, sem tela) normalmente
+    nao pedem 2FA de novo - por isso basta fazer isso uma vez por mercado.
+
+    Abre uma janela de navegador DE VERDADE (headless=False) para voce
+    fazer o login manualmente (usuario, senha e o codigo de verificacao).
+    Quando terminar de logar, volte no terminal e aperte ENTER: o ATLAS
+    salva a sessao (cookies) e a partir dai o clique em "Atualizar" no
+    painel funciona 100% sozinho, sem precisar repetir isso.
+    """
+    market = (market or "").upper()
+    if market not in _MARKET_URLS:
+        raise ValueError("Mercado invalido. Use BR ou US.")
+
+    from playwright.sync_api import sync_playwright
+
+    urls = _MARKET_URLS[market]
+    session_file = _session_path(market)
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        context = browser.new_context(
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+            ),
+            locale="pt-BR" if market == "BR" else "en-US",
+        )
+        page = context.new_page()
+        page.goto(urls["login"], wait_until="domcontentloaded", timeout=45000)
+
+        print()
+        print(f"=== Configuracao unica do login Amazon ({market}) ===")
+        print("1. Uma janela do navegador foi aberta, ja na tela de login.")
+        print("2. Faca o login normalmente (email, senha e o codigo de verificacao/2FA).")
+        print("3. Quando estiver logado e vendo o painel do Amazon Associates")
+        print("   (nao mais a tela de login), volte aqui no terminal e aperte ENTER.")
+        print()
+        while True:
+            input("Aperte ENTER depois de logar com sucesso na janela do navegador... ")
+            # da um tempinho para qualquer redirecionamento final terminar
+            page.wait_for_timeout(2000)
+            current_url = page.url
+            print(f"(url atual: {current_url})")
+            if "/ap/signin" in current_url or "/ap/cvf" in current_url or "/ap/mfa" in current_url:
+                print()
+                print("Ainda estou vendo uma tela de login/verificacao nessa janela.")
+                print("Termine o login na janela do navegador e aperte ENTER de novo.")
+                continue
+            break
+
+        context.storage_state(path=str(session_file))
+        context.close()
+        browser.close()
+
+    print(f"Sessao salva em {session_file}. Pode fechar esta janela.")
+    print("A partir de agora, o botao 'Atualizar' no painel deve logar sozinho.")
+
+
+if __name__ == "__main__":
+    import sys
+
+    def _debug_reports_page(market: str) -> None:
+        """So para diagnostico: reaproveita a sessao salva, abre a pagina
+        de relatorios e salva screenshot + HTML em storage/amazon_sessions/
+        para o desenvolvedor ver o layout real da pagina."""
+        from playwright.sync_api import sync_playwright
+
+        market = market.upper()
+        session_file = _session_path(market)
+        if not session_file.exists():
+            print(f"Nao ha sessao salva para {market}. Rode o setup primeiro.")
+            raise SystemExit(1)
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(storage_state=str(session_file))
+            page = context.new_page()
+            page.goto(_MARKET_URLS[market]["login"], wait_until="domcontentloaded", timeout=45000)
+            page.wait_for_timeout(3000)
+            shot_path = _SESSION_DIR / f"debug_home_{market.lower()}.png"
+            html_path = _SESSION_DIR / f"debug_home_{market.lower()}.html"
+            page.screenshot(path=str(shot_path), full_page=True)
+            html_path.write_text(page.content(), encoding="utf-8")
+            print(f"URL atual: {page.url}")
+            print(f"Screenshot: {shot_path}")
+            print(f"HTML: {html_path}")
+            context.close()
+            browser.close()
+
+    if len(sys.argv) == 3 and sys.argv[1] == "--debug" and sys.argv[2].upper() in ("BR", "US"):
+        _debug_reports_page(sys.argv[2])
+    elif len(sys.argv) == 2 and sys.argv[1].upper() in ("BR", "US"):
+        run_manual_login_setup(sys.argv[1])
+    else:
+        print("Uso: python -m app.services.amazon_scraper_service BR|US")
+        print("     python -m app.services.amazon_scraper_service --debug BR|US")
+        raise SystemExit(1)
