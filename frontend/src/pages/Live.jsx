@@ -63,8 +63,26 @@ export default function Live() {
   const [videoOn, setVideoOn] = useState(false); // gerar video do apresentador?
   const [videoUrl, setVideoUrl] = useState(""); // clipe atual tocando no palco
 
+  // ----- Live GRAVADA (video pronto que roda como se fosse ao vivo) -----
+  const [platformsList, setPlatformsList] = useState([]);
+  const [buildPlatform, setBuildPlatform] = useState("amazon");
+  const [secondsPer, setSecondsPer] = useState(30);
+  const [maxProducts, setMaxProducts] = useState(0);
+  const [useAi, setUseAi] = useState(true);
+  const [building, setBuilding] = useState(false);
+  const [buildProg, setBuildProg] = useState(null); // {done,total,label,ok,reason,video}
+  const [recorded, setRecorded] = useState([]);
+  const [airName, setAirName] = useState(""); // video selecionado para transmitir
+  const [airUrl, setAirUrl] = useState(""); // url do video no ar
+  const [airManifest, setAirManifest] = useState(null);
+  const [recap, setRecap] = useState(""); // frase de recomeco entre as repeticoes
+
   const audioRef = useRef(null);
   const videoRef = useRef(null);
+  const airRef = useRef(null);
+  const recapIdx = useRef(0);
+  const airingRef = useRef(false);
+  const buildTimer = useRef(null);
   const chatBottomRef = useRef(null);
   const viewersTimer = useRef(null);
 
@@ -163,6 +181,133 @@ export default function Live() {
     }
   }
 
+  // -------- Live gravada: carregar plataformas + videos ja montados --------
+  useEffect(() => {
+    if (mode !== "gravada") return;
+    let alive = true;
+    (async () => {
+      try {
+        const p = await Api.livePlatforms();
+        if (alive) setPlatformsList(p?.platforms || []);
+      } catch {
+        if (alive) setPlatformsList([]);
+      }
+      refreshRecorded(alive);
+    })();
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
+  async function refreshRecorded(alive = true) {
+    try {
+      const r = await Api.liveRecorded();
+      if (!alive) return;
+      const vids = r?.videos || [];
+      setRecorded(vids);
+      setAirName((cur) => (vids.some((v) => v.video === cur) ? cur : vids[0]?.video || ""));
+    } catch {
+      if (alive) setRecorded([]);
+    }
+  }
+
+  // Inicia a montagem do video (roda no servidor, pode demorar).
+  async function startBuild() {
+    if (building) return;
+    setBuilding(true);
+    setBuildProg({ done: 0, total: 0, label: "iniciando", ok: null });
+    try {
+      await Api.liveBuild({
+        platform: buildPlatform,
+        market,
+        language,
+        persona,
+        seconds_per_product: secondsPer,
+        max_products: Number(maxProducts) || 0,
+        use_ai: useAi,
+      });
+      pollBuild();
+    } catch (e) {
+      setBuilding(false);
+      setBuildProg({
+        ok: false,
+        reason: e?.response?.data?.detail || e?.message || "Falha ao iniciar.",
+      });
+    }
+  }
+
+  function pollBuild() {
+    if (buildTimer.current) clearInterval(buildTimer.current);
+    buildTimer.current = setInterval(async () => {
+      try {
+        const s = await Api.liveBuildStatus();
+        setBuildProg(s);
+        if (!s.running) {
+          clearInterval(buildTimer.current);
+          buildTimer.current = null;
+          setBuilding(false);
+          if (s.ok) refreshRecorded(true);
+        }
+      } catch {
+        // mantem tentando; erro de rede momentaneo
+      }
+    }, 1500);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (buildTimer.current) clearInterval(buildTimer.current);
+    };
+  }, []);
+
+  // Liga a transmissao de um video ja montado (roda em loop, como live).
+  async function startAir(name) {
+    const target = name || airName;
+    if (!target) {
+      window.alert("Monte um vídeo da live primeiro (botão “Gerar vídeo da live”).");
+      return;
+    }
+    let manifest = null;
+    try {
+      manifest = await Api.liveManifest(target);
+    } catch {
+      manifest = null;
+    }
+    recapIdx.current = 0;
+    setRecap("");
+    setAirManifest(manifest);
+    setAirName(target);
+    setAirUrl(Api.liveRecordedUrl(target));
+    setViewers(Math.floor(Math.random() * 40) + 12);
+    airingRef.current = true;
+    setLive(true);
+  }
+
+  // Fim de uma passada do video: mostra a frase de recomeco e repete (anti-loop).
+  function onAirEnded() {
+    const lines = airManifest?.recap_lines || [];
+    const restart = () => {
+      if (!airingRef.current) return;
+      const v = airRef.current;
+      if (v) {
+        v.currentTime = 0;
+        v.play().catch(() => {});
+      }
+    };
+    if (lines.length) {
+      const line = lines[recapIdx.current % lines.length];
+      recapIdx.current += 1;
+      setRecap(line);
+      setTimeout(() => {
+        setRecap("");
+        restart();
+      }, 3500);
+    } else {
+      restart();
+    }
+  }
+
   // Toca o clipe de video do apresentador (com a voz embutida) no palco.
   useEffect(() => {
     if (videoUrl && videoRef.current) {
@@ -181,6 +326,10 @@ export default function Live() {
       );
       return;
     }
+    if (mode === "gravada") {
+      startAir(airName);
+      return;
+    }
     setMessages([]);
     setCaption("");
     setVideoUrl("");
@@ -189,15 +338,21 @@ export default function Live() {
   }
 
   function stopLive() {
+    airingRef.current = false;
     setLive(false);
     setSpeaking(false);
     setCaption("");
     setVideoUrl("");
+    setAirUrl("");
+    setRecap("");
     if (audioRef.current) {
       audioRef.current.pause();
     }
     if (videoRef.current) {
       videoRef.current.pause();
+    }
+    if (airRef.current) {
+      airRef.current.pause();
     }
   }
 
@@ -316,6 +471,14 @@ export default function Live() {
               🧪 Simulação
             </button>
             <button
+              className={mode === "gravada" ? "on" : ""}
+              onClick={() => setMode("gravada")}
+              disabled={live}
+              title="Monta um vídeo com os produtos e transmite como se fosse ao vivo"
+            >
+              🎬 Live gravada
+            </button>
+            <button
               className={mode === "real" ? "on" : ""}
               onClick={() => setMode("real")}
               disabled={live}
@@ -329,8 +492,12 @@ export default function Live() {
               ⏹️ Encerrar
             </button>
           ) : (
-            <button className="btn primary" onClick={startLive}>
-              ▶️ Entrar ao vivo
+            <button
+              className="btn primary"
+              onClick={startLive}
+              disabled={mode === "gravada" && recorded.length === 0}
+            >
+              {mode === "gravada" ? "🔴 Ligar transmissão" : "▶️ Entrar ao vivo"}
             </button>
           )}
         </div>
@@ -350,7 +517,7 @@ export default function Live() {
             <div className={"stage" + (live ? " on" : "")}>
               <div className="stage-top">
                 <span className={"live-badge" + (live ? " on" : "")}>
-                  {live ? (mode === "real" ? "🔴 AO VIVO" : "🔴 AO VIVO · SIMULAÇÃO") : "OFFLINE"}
+                  {live ? (mode === "sim" ? "🔴 AO VIVO · SIMULAÇÃO" : "🔴 AO VIVO") : "OFFLINE"}
                 </span>
                 {live && (
                   <span className="viewers">👁️ {viewers.toLocaleString("pt-BR")}</span>
@@ -358,6 +525,20 @@ export default function Live() {
               </div>
 
               <div className="stage-center">
+                {mode === "gravada" && airUrl && live ? (
+                  <div className="air-wrap">
+                    <video
+                      ref={airRef}
+                      className="air-video"
+                      src={airUrl}
+                      autoPlay
+                      playsInline
+                      onEnded={onAirEnded}
+                    />
+                    {recap && <div className="air-recap">🔁 {recap}</div>}
+                  </div>
+                ) : (
+                <>
                 {/* Fundo de estudio profissional */}
                 <div className="studio-bg" aria-hidden="true">
                   <span className="studio-glow" />
@@ -423,9 +604,11 @@ export default function Live() {
                     )}
                   </div>
                 )}
+                </>
+                )}
               </div>
 
-              {caption && live && (
+              {mode !== "gravada" && caption && live && (
                 <div className="stage-caption">{caption}</div>
               )}
 
@@ -579,7 +762,169 @@ export default function Live() {
           </div>
         </div>
 
-        {/* -------- CHAT AO VIVO -------- */}
+        {/* -------- CHAT AO VIVO / PAINEL DA LIVE GRAVADA -------- */}
+        {mode === "gravada" ? (
+          <div className="card live-record">
+            <div className="chat-head">
+              <span>🎬 Live gravada</span>
+              <span className="chat-engine">grava agora, transmite depois</span>
+            </div>
+
+            <div className="rec-body">
+              <p className="rec-help">
+                O Atlas monta <b>um vídeo só</b> com todos os produtos (fala + card
+                de cada um) e depois você <b>liga a transmissão</b> — roda em loop,
+                como se fosse ao vivo.
+              </p>
+
+              <div className="rec-field">
+                <span>Plataforma dos produtos</span>
+                <div className="plat-grid">
+                  {platformsList.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={
+                        "plat-chip" +
+                        (p.id === buildPlatform ? " on" : "") +
+                        (p.ready ? "" : " off")
+                      }
+                      disabled={!p.ready || building}
+                      title={p.ready ? p.name : `${p.name} — em breve`}
+                      onClick={() => p.ready && setBuildPlatform(p.id)}
+                    >
+                      {p.name}
+                      {!p.ready && <span className="soon">em breve</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rec-field">
+                <span>Tempo por produto</span>
+                <div className="seg sm">
+                  <button
+                    className={secondsPer === 30 ? "on" : ""}
+                    onClick={() => setSecondsPer(30)}
+                    disabled={building}
+                  >
+                    30s
+                  </button>
+                  <button
+                    className={secondsPer === 45 ? "on" : ""}
+                    onClick={() => setSecondsPer(45)}
+                    disabled={building}
+                  >
+                    45s
+                  </button>
+                  <button
+                    className={secondsPer === 60 ? "on" : ""}
+                    onClick={() => setSecondsPer(60)}
+                    disabled={building}
+                  >
+                    60s
+                  </button>
+                </div>
+              </div>
+
+              <label className="rec-field">
+                <span>Quantos produtos (0 = todos)</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={maxProducts}
+                  disabled={building}
+                  onChange={(e) => setMaxProducts(e.target.value)}
+                />
+              </label>
+
+              <label className="rec-toggle">
+                <input
+                  type="checkbox"
+                  checked={useAi}
+                  disabled={building}
+                  onChange={(e) => setUseAi(e.target.checked)}
+                />
+                <span>
+                  Falas escritas pela IA (mais naturais; sem IA é mais rápido)
+                </span>
+              </label>
+
+              <button
+                className="btn primary rec-build-btn"
+                onClick={startBuild}
+                disabled={building}
+              >
+                {building ? "🎬 Montando…" : "🎬 Gerar vídeo da live"}
+              </button>
+
+              {buildProg && (
+                <div className="rec-prog">
+                  {buildProg.ok === false ? (
+                    <div className="rec-err">⚠️ {buildProg.reason}</div>
+                  ) : buildProg.ok ? (
+                    <div className="rec-ok">✅ Vídeo pronto! Escolha abaixo e ligue.</div>
+                  ) : (
+                    <>
+                      <div className="rec-bar">
+                        <span
+                          style={{
+                            width: buildProg.total
+                              ? `${Math.round((buildProg.done / buildProg.total) * 100)}%`
+                              : "8%",
+                          }}
+                        />
+                      </div>
+                      <div className="rec-bar-label">
+                        {buildProg.total
+                          ? `bloco ${buildProg.done}/${buildProg.total}`
+                          : "iniciando…"}{" "}
+                        {buildProg.label ? `· ${buildProg.label}` : ""}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div className="rec-list-head">
+                <span>📼 Vídeos montados</span>
+                <button className="mini-btn" onClick={() => refreshRecorded(true)}>
+                  ↻
+                </button>
+              </div>
+              <div className="rec-list">
+                {recorded.length === 0 && (
+                  <div className="rec-empty">
+                    Nenhum vídeo ainda. Gere o primeiro acima. 🎬
+                  </div>
+                )}
+                {recorded.map((v) => (
+                  <div
+                    key={v.video}
+                    className={"rec-item" + (v.video === airName ? " on" : "")}
+                  >
+                    <button className="rec-pick" onClick={() => setAirName(v.video)}>
+                      <b>{v.platform_name || v.platform || "Live"}</b>
+                      <small>
+                        {v.market ? v.market + " · " : ""}
+                        {v.product_count} produtos ·{" "}
+                        {Math.round((v.total_seconds || 0) / 60)}min
+                      </small>
+                    </button>
+                    <button
+                      className="btn primary sm"
+                      disabled={live}
+                      onClick={() => startAir(v.video)}
+                    >
+                      🔴 Transmitir
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
         <div className="card live-chat">
           <div className="chat-head">
             <span>💬 Comentários ao vivo</span>
@@ -672,6 +1017,7 @@ export default function Live() {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

@@ -145,6 +145,20 @@ export const Api = {
       })
       .then((r) => r.data);
   },
+
+  // ----- Live gravada (video pronto que roda como se fosse ao vivo) -----
+  livePlatforms: () => api.get("/live/platforms").then((r) => r.data),
+  liveCatalog: (platform, market) =>
+    api
+      .get("/live/catalog", { params: { platform, ...(market ? { market } : {}) } })
+      .then((r) => r.data),
+  liveBuild: (body) => api.post("/live/build", body).then((r) => r.data),
+  liveBuildStatus: () => api.get("/live/build/status").then((r) => r.data),
+  liveRecorded: () => api.get("/live/recorded").then((r) => r.data),
+  liveManifest: (name) =>
+    api.get(`/live/recorded/${encodeURIComponent(name)}/manifest`).then((r) => r.data),
+  liveRecordedUrl: (name) => `/api/live/recorded/${encodeURIComponent(name)}`,
 };
 
 export default Api;
+

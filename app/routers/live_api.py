@@ -16,6 +16,8 @@ import html
 import json
 import os
 import re
+import threading
+import time
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -24,6 +26,8 @@ from pydantic import BaseModel
 
 from app.services import live_avatar_service as avatar
 from app.services import live_brain_service as brain
+from app.services import live_catalog_service as catalog
+from app.services import live_video_service as video
 
 router = APIRouter(prefix="/api/live", tags=["Live"])
 
@@ -220,3 +224,132 @@ def products(market: str = ""):
     """
     items = _bio_products(market)
     return {"ok": True, "count": len(items), "products": items}
+
+
+# ============================================================
+# LIVE GRAVADA (video pronto que roda como se fosse ao vivo)
+# ============================================================
+
+@router.get("/platforms")
+def platforms():
+    """Lista as plataformas de venda (Amazon pronta; outras 'em breve')."""
+    return {"ok": True, "platforms": catalog.list_platforms()}
+
+
+@router.get("/catalog")
+def catalog_products(platform: str = "amazon", market: str = "", limit: int = 0):
+    """Produtos de UMA plataforma, ja normalizados para a live."""
+    if not catalog.is_ready(platform):
+        return {"ok": False, "reason": "Plataforma ainda nao disponivel.", "products": []}
+    items = catalog.get_products(platform, market, limit=limit)
+    return {"ok": True, "count": len(items), "products": items}
+
+
+# ---- Montagem em segundo plano (pode demorar minutos) --------------------
+_build_lock = threading.Lock()
+_build_state: dict = {
+    "running": False,
+    "done": 0,
+    "total": 0,
+    "label": "",
+    "ok": None,
+    "video": "",
+    "video_url": "",
+    "reason": "",
+    "platform": "",
+    "started": 0.0,
+    "finished": 0.0,
+}
+
+
+def _run_build(params: dict) -> None:
+    def progress(done: int, total: int, label: str) -> None:
+        _build_state["done"] = done
+        _build_state["total"] = total
+        _build_state["label"] = label
+
+    try:
+        res = video.build_live(progress=progress, **params)
+        _build_state["ok"] = bool(res.get("ok"))
+        if res.get("ok"):
+            _build_state["video"] = res.get("video", "")
+            _build_state["video_url"] = f"/api/live/recorded/{res.get('video', '')}"
+            _build_state["total_seconds"] = res.get("total_seconds", 0)
+        else:
+            _build_state["reason"] = res.get("reason", "Falha ao montar o video.")
+    except Exception as exc:  # nunca deixa o thread morrer sem status
+        _build_state["ok"] = False
+        _build_state["reason"] = f"Erro inesperado: {exc}"
+    finally:
+        _build_state["running"] = False
+        _build_state["finished"] = time.time()
+
+
+class BuildRequest(BaseModel):
+    platform: str = "amazon"
+    market: str = ""
+    language: str = "pt"
+    persona: str = ""
+    seconds_per_product: int = 30
+    max_products: int = 0
+    use_ai: bool = True
+
+
+@router.post("/build")
+def build(req: BuildRequest):
+    """Comeca a montar o video da live gravada (roda em segundo plano)."""
+    if not catalog.is_ready(req.platform):
+        raise HTTPException(status_code=400, detail="Plataforma ainda nao disponivel.")
+    with _build_lock:
+        if _build_state["running"]:
+            raise HTTPException(status_code=409, detail="Ja existe uma montagem em andamento.")
+        _build_state.update(
+            running=True, done=0, total=0, label="iniciando", ok=None,
+            video="", video_url="", reason="", platform=req.platform,
+            started=time.time(), finished=0.0,
+        )
+    params = dict(
+        platform=req.platform,
+        market=req.market,
+        language=req.language,
+        persona=req.persona,
+        seconds_per_product=max(20, min(60, req.seconds_per_product)),
+        max_products=max(0, req.max_products),
+        use_ai=req.use_ai,
+    )
+    threading.Thread(target=_run_build, args=(params,), daemon=True).start()
+    return {"ok": True, "started": True}
+
+
+@router.get("/build/status")
+def build_status():
+    """Progresso da montagem (para a barra de progresso na tela)."""
+    return dict(_build_state)
+
+
+@router.get("/recorded")
+def recorded():
+    """Lista os videos de live ja montados (prontos para transmitir)."""
+    return {"ok": True, "videos": video.list_recorded()}
+
+
+@router.get("/recorded/{name}/manifest")
+def recorded_manifest(name: str):
+    """Manifesto do video (legendas, produtos e frases de recomeco por bloco)."""
+    path = video.recorded_path(name)
+    if not path:
+        raise HTTPException(status_code=404, detail="Video nao encontrado.")
+    manifest = path.with_suffix(".json")
+    data = _load_json(manifest)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Manifesto nao encontrado.")
+    return data
+
+
+@router.get("/recorded/{name}")
+def recorded_file(name: str):
+    """Entrega o mp4 da live montada (o palco toca como se fosse ao vivo)."""
+    path = video.recorded_path(name)
+    if not path:
+        raise HTTPException(status_code=404, detail="Video nao encontrado.")
+    return FileResponse(str(path), media_type="video/mp4")

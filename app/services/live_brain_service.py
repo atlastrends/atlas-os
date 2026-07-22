@@ -249,6 +249,28 @@ def answer_comment(
     }
 
 
+def generate(prompt: str) -> dict:
+    """Gera um texto livre a partir de um prompt (Gemini primario, Groq reserva).
+
+    Usado pelo "roteirista" da live gravada para escrever a fala de cada
+    produto. Retorna {ok, text, engine}. Nunca lanca excecao.
+    """
+    prompt = (prompt or "").strip()
+    if not prompt:
+        return {"ok": False, "text": "", "engine": "none"}
+
+    raw = _gemini_answer(prompt)
+    engine = "gemini"
+    if not raw:
+        raw = _groq_answer(prompt)
+        engine = "groq"
+
+    text = _clean_answer(raw)
+    if not text:
+        return {"ok": False, "text": "", "engine": "none"}
+    return {"ok": True, "text": text, "engine": engine}
+
+
 # ----------------------------------------------------------------
 # VOZ: texto -> audio (Edge TTS, gratis, sem GPU)
 # ----------------------------------------------------------------
