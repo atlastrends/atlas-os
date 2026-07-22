@@ -21,6 +21,20 @@ class MetadataService:
         self.max_instagram_caption = 2200
         self.max_facebook_caption = 3000
 
+        # Quantidade IDEAL de hashtags por plataforma (ajuste inteligente).
+        # Mais hashtags NAO da proporcionalmente mais views: cada rede tem um
+        # ponto ideal e passar dele pode cheirar a spam e reduzir alcance.
+        #   - Instagram: hashtag ajuda de verdade na descoberta (8-15).
+        #   - TikTok: algoritmo entende pelo conteudo/audio; poucas e relevantes (3-6).
+        #   - YouTube Shorts: so as ~3 primeiras contam de verdade (3-5).
+        #   - Facebook: hashtag tem pouco efeito no alcance (2-5).
+        self.max_hashtags_instagram = 15
+        self.max_hashtags_tiktok = 5
+        self.max_hashtags_youtube = 4
+        self.max_hashtags_facebook = 4
+        # Teto da lista-mestre (a maior das redes define o limite de geracao).
+        self.max_hashtags_master = 15
+
         self.api_key = os.getenv("GROQ_API_KEY")
 
         if self.api_key:
@@ -728,27 +742,32 @@ Rules:
         else:
             hashtags = ai_hashtags
 
-        hashtags = hashtags[:14]
-        hashtag_line = " ".join(hashtags)
+        hashtags = hashtags[: self.max_hashtags_master]
+
+        # Ajuste inteligente: cada rede recebe a quantidade IDEAL de hashtags
+        # (as primeiras da lista sao as mais fortes/relevantes).
+        tiktok_hashtag_line = " ".join(hashtags[: self.max_hashtags_tiktok])
+        instagram_hashtag_line = " ".join(hashtags[: self.max_hashtags_instagram])
+        facebook_hashtag_line = " ".join(hashtags[: self.max_hashtags_facebook])
+        youtube_hashtag_line = " ".join(hashtags[: self.max_hashtags_youtube])
 
         tiktok_caption = str(payload.get("tiktok_caption", "") or "").strip()
         instagram_caption = str(payload.get("instagram_caption", "") or "").strip()
         facebook_caption = str(payload.get("facebook_caption", "") or "").strip()
 
         # Se a IA retornou caption sem hashtags, apenas anexamos as hashtags geradas por IA.
-        # Não cria frase nova.
-        if hashtag_line:
-            if "#" not in tiktok_caption:
-                tiktok_caption = f"{tiktok_caption} {hashtag_line}".strip()
+        # Não cria frase nova. Cada rede usa a quantidade ideal para ela.
+        if tiktok_hashtag_line and "#" not in tiktok_caption:
+            tiktok_caption = f"{tiktok_caption} {tiktok_hashtag_line}".strip()
 
-            if "#" not in instagram_caption:
-                instagram_caption = f"{instagram_caption}\n\n{hashtag_line}".strip()
+        if instagram_hashtag_line and "#" not in instagram_caption:
+            instagram_caption = f"{instagram_caption}\n\n{instagram_hashtag_line}".strip()
 
-            if "#" not in facebook_caption:
-                facebook_caption = f"{facebook_caption}\n\n{hashtag_line}".strip()
+        if facebook_hashtag_line and "#" not in facebook_caption:
+            facebook_caption = f"{facebook_caption}\n\n{facebook_hashtag_line}".strip()
 
-            if "#" not in youtube_description:
-                youtube_description = f"{youtube_description}\n\n{hashtag_line}".strip()
+        if youtube_hashtag_line and "#" not in youtube_description:
+            youtube_description = f"{youtube_description}\n\n{youtube_hashtag_line}".strip()
 
         tiktok_caption = self._truncate(tiktok_caption, self.max_tiktok_caption)
         instagram_caption = instagram_caption[: self.max_instagram_caption].rstrip()

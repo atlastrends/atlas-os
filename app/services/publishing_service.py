@@ -259,12 +259,16 @@ class PublishingService:
             self.db.refresh(pub)
         return pub
 
-    def _affiliate_caption(self, asset: VideoAsset) -> tuple[str, str, list]:
+    def _affiliate_caption(self, asset: VideoAsset, platform: str | None = None) -> tuple[str, str, list]:
         """Cria legenda + hashtags para um video de afiliado.
 
         Retorna (caption, description, hashtags). As hashtags tambem sao
         embutidas no texto, porque Instagram e Facebook so mostram o que
         estiver dentro da legenda/descricao.
+
+        A quantidade de hashtags e ajustada por plataforma (ajuste inteligente):
+        Instagram usa mais (a hashtag ajuda na descoberta), TikTok/YouTube/Facebook
+        usam poucas e relevantes (passar do ponto vira spam e reduz alcance).
         """
         import html
         import re
@@ -337,7 +341,16 @@ class PublishingService:
             if tag not in tags:
                 tags.append(tag)
 
-        tags = tags[:15]
+        # Ajuste inteligente da quantidade por plataforma. As primeiras da lista
+        # sao as mais fortes/relevantes; cada rede recebe a sua quantidade ideal.
+        platform_limits = {
+            "instagram": 15,
+            "tiktok": 5,
+            "youtube": 4,
+            "facebook": 4,
+        }
+        limit = platform_limits.get((platform or "").strip().lower(), 15)
+        tags = tags[:limit]
         tag_line = " ".join(tags)
         caption_full = f"{caption_text}\n\n{tag_line}"
         return caption_full, caption_full, tags
@@ -371,7 +384,7 @@ class PublishingService:
             getattr(asset, "kind", "")
         ).lower().endswith("affiliate")
         if is_affiliate and not hashtags:
-            caption, description, hashtags = self._affiliate_caption(asset)
+            caption, description, hashtags = self._affiliate_caption(asset, platform)
             title = title or asset.title or ""
 
         # Limpa entidades HTML (ex.: "&amp;" -> "&") vindas do titulo da Amazon.
