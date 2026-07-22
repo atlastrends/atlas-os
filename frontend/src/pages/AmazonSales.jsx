@@ -46,7 +46,9 @@ export default function AmazonSales() {
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const load = async (refresh = false) => {
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const load = async (refresh = false, manual = false) => {
     try {
       const s = await Api.amazonSalesStats({
         market: market || undefined,
@@ -54,11 +56,19 @@ export default function AmazonSales() {
         refresh: refresh ? 1 : undefined,
       });
       setStats(s);
+      setLastUpdated(new Date());
       const novos = s?.auto_import?.imported_rows || 0;
       if (novos > 0) {
         setToast({
           type: "success",
           msg: `Encontrei e importei ${novos} venda(s) nova(s) automaticamente.`,
+        });
+      } else if (manual) {
+        // Feedback explicito quando o usuario clica em "Atualizar" e nao
+        // ha vendas novas: sem isso, o botao parecia nao fazer nada.
+        setToast({
+          type: "success",
+          msg: "Atualizado! Nenhuma venda nova encontrada.",
         });
       }
     } catch {
@@ -81,7 +91,7 @@ export default function AmazonSales() {
   const doRefresh = async () => {
     setBusy(true);
     try {
-      await load(true);
+      await load(true, true);
     } finally {
       setBusy(false);
     }
@@ -103,6 +113,11 @@ export default function AmazonSales() {
           <p>Ganhos e desempenho dos seus links de afiliado.</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          {lastUpdated && (
+            <span style={{ color: "var(--text-faint)", fontSize: 12 }}>
+              Atualizado às {lastUpdated.toLocaleTimeString("pt-BR")}
+            </span>
+          )}
           <button className="btn" onClick={doRefresh} disabled={busy}>
             {busy ? "Atualizando…" : "↻ Atualizar"}
           </button>
