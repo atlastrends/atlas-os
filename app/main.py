@@ -26,6 +26,7 @@ from app.routers import (
     amazon_sales,
     auth,
     dashboard_api,
+    live_api,
     media,
     shortlink,
     users,
@@ -176,6 +177,7 @@ app.include_router(affiliate_video.router)
 app.include_router(amazon_catalog.router)
 app.include_router(amazon_sales.router)
 app.include_router(dashboard_api.router)
+app.include_router(live_api.router)
 app.include_router(shortlink.router)
 app.include_router(media.router)
 
