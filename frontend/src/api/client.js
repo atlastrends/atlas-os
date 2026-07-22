@@ -126,6 +126,10 @@ export const Api = {
   // ----- Live (canal de lives com avatar de IA) -----
   liveStatus: () => api.get("/live/status").then((r) => r.data),
   liveAnswer: (body) => api.post("/live/answer", body).then((r) => r.data),
+  liveProducts: (market) =>
+    api
+      .get("/live/products", { params: market ? { market } : {} })
+      .then((r) => r.data),
 };
 
 export default Api;

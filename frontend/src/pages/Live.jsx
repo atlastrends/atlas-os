@@ -50,6 +50,14 @@ export default function Live() {
   const [speaking, setSpeaking] = useState(false);
   const [caption, setCaption] = useState(""); // fala atual do apresentador (legenda no palco)
 
+  // Produtos REAIS da bio (Amazon) + apresentador realista (foto).
+  const [products, setProducts] = useState([]);
+  const [productAsin, setProductAsin] = useState(""); // produto selecionado
+  const [price, setPrice] = useState(""); // preco opcional mostrado na tela
+  const [presenterUrl, setPresenterUrl] = useState(
+    () => localStorage.getItem("atlas_live_presenter") || ""
+  );
+
   const audioRef = useRef(null);
   const chatBottomRef = useRef(null);
   const viewersTimer = useRef(null);
@@ -85,6 +93,46 @@ export default function Live() {
   }, [live]);
 
   const suggestions = useMemo(() => SUGGESTIONS[language] || SUGGESTIONS.pt, [language]);
+
+  // Mercado da bio conforme o idioma (PT -> BR, EN -> US).
+  const market = language === "en" ? "US" : "BR";
+
+  // Carrega os produtos reais da bio para o mercado atual.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await Api.liveProducts(market);
+        if (!alive) return;
+        const list = res?.products || [];
+        setProducts(list);
+        setProductAsin((cur) =>
+          list.some((p) => p.asin === cur) ? cur : list[0]?.asin || ""
+        );
+      } catch {
+        if (alive) setProducts([]);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [market]);
+
+  // Guarda a foto do apresentador (fica salva pro proximo acesso).
+  useEffect(() => {
+    localStorage.setItem("atlas_live_presenter", presenterUrl);
+  }, [presenterUrl]);
+
+  const selectedProduct = useMemo(
+    () => products.find((p) => p.asin === productAsin) || null,
+    [products, productAsin]
+  );
+
+  // Escolher um produto ja preenche o contexto do apresentador com o titulo real.
+  function selectProduct(p) {
+    setProductAsin(p.asin);
+    setProductContext(p.title);
+  }
 
   function startLive() {
     if (mode === "real") {
@@ -259,22 +307,61 @@ export default function Live() {
               </div>
 
               <div className="stage-center">
-                <div className={"avatar-ph" + (speaking ? " speaking" : "")}>
-                  <div className="avatar-face">🧑‍💼</div>
-                  <div className="avatar-label">
-                    {live ? "Apresentador de IA" : "Avatar entra aqui"}
-                  </div>
+                {/* Fundo de estudio profissional */}
+                <div className="studio-bg" aria-hidden="true">
+                  <span className="studio-glow" />
+                  <span className="studio-floor" />
+                </div>
+
+                {/* Apresentador realista (foto de pessoa) */}
+                <div className={"presenter" + (speaking ? " speaking" : "")}>
+                  {presenterUrl ? (
+                    <img
+                      className="presenter-img"
+                      src={presenterUrl}
+                      alt="Apresentador"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <div className="presenter-ph">
+                      <div className="presenter-emoji">🧑‍💼</div>
+                      <div className="presenter-hint">
+                        Cole a foto de uma pessoa realista em{" "}
+                        <b>Ajustes → Foto do apresentador</b>
+                      </div>
+                    </div>
+                  )}
                   {speaking && (
                     <div className="speak-bars">
                       <span></span><span></span><span></span><span></span>
                     </div>
                   )}
                 </div>
-              </div>
 
-              {productContext.trim() && live && (
-                <div className="stage-product">🛍️ {productContext.trim()}</div>
-              )}
+                {/* Produto REAL da bio em destaque (estilo TV de vendas) */}
+                {selectedProduct && live && (
+                  <div className="showcase">
+                    {selectedProduct.image && (
+                      <img
+                        className="showcase-img"
+                        src={selectedProduct.image}
+                        alt={selectedProduct.title}
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    )}
+                    <div className="showcase-title">{selectedProduct.title}</div>
+                    {price.trim() ? (
+                      <div className="showcase-price">{price.trim()}</div>
+                    ) : (
+                      <div className="showcase-cta">🛒 Oferta na Amazon</div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {caption && live && (
                 <div className="stage-caption">{caption}</div>
@@ -319,13 +406,62 @@ export default function Live() {
                 </button>
               </div>
             </label>
+            <div className="cfg-row">
+              <span>Produto real da bio ({market})</span>
+              <div className="prod-grid">
+                {products.length === 0 && (
+                  <div className="prod-empty">
+                    Nenhum produto encontrado na bio para {market}.
+                  </div>
+                )}
+                {products.map((p) => (
+                  <button
+                    key={p.asin || p.url}
+                    type="button"
+                    className={"prod-chip" + (p.asin === productAsin ? " on" : "")}
+                    title={p.title}
+                    onClick={() => selectProduct(p)}
+                  >
+                    {p.image ? (
+                      <img
+                        src={p.image}
+                        alt=""
+                        onError={(e) => {
+                          e.currentTarget.style.visibility = "hidden";
+                        }}
+                      />
+                    ) : (
+                      <span className="prod-noimg">📦</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
             <label className="cfg-row">
-              <span>Produto em destaque</span>
+              <span>Fala do apresentador sobre o produto</span>
               <input
                 type="text"
-                placeholder="Ex.: Sérum de vitamina C para o rosto"
+                placeholder="Escolha um produto acima ou escreva aqui"
                 value={productContext}
                 onChange={(e) => setProductContext(e.target.value)}
+              />
+            </label>
+            <label className="cfg-row">
+              <span>Preço na tela (opcional)</span>
+              <input
+                type="text"
+                placeholder="Ex.: R$ 89,90"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+              />
+            </label>
+            <label className="cfg-row">
+              <span>Foto do apresentador (pessoa realista)</span>
+              <input
+                type="text"
+                placeholder="Cole a URL de uma foto (ex.: pessoa gerada por IA)"
+                value={presenterUrl}
+                onChange={(e) => setPresenterUrl(e.target.value)}
               />
             </label>
             <label className="cfg-row">
