@@ -47,6 +47,15 @@ GRAPH_BASE = f"https://graph.facebook.com/{GRAPH_VERSION}"
 # Orcamento diario minimo recomendado por mercado (evita "budget too low").
 MIN_DAILY = {"BR": 6.0, "US": 3.0}
 
+# --- Referencias para ESTIMAR o ROI de afiliado (valores aproximados) ---
+# Comissao media da Amazon (afiliados) sobre o preco do produto.
+AMAZON_COMMISSION_RATE = 0.04
+# Fracao dos cliques no link que viram compra (conversao tipica de afiliado).
+CLICK_TO_SALE_RATE = 0.05
+# Custo de referencia por 1000 impressoes de anuncio (CPM) por mercado.
+# Usado so para estimar o ROAS -- nao e cobranca real.
+AD_CPM = {"BR": 18.0, "US": 9.0}
+
 # Interesses recomendados por categoria de produto (nomes amigaveis).
 # Para afiliados usamos a categoria; para reels usamos o publico amplo.
 CATEGORY_INTERESTS = {
@@ -126,6 +135,176 @@ class MarketingService:
             "shares": 0,
             "clicks": 0,
         }
+
+    # ----------------------------------------------------------------
+    # RANKING DE ROI (qual video vale mais a pena anunciar)
+    # ----------------------------------------------------------------
+    def roi_ranking(self, limit: int = 10) -> list[dict]:
+        """Ordena os videos pelo POTENCIAL DE ROI para anuncio.
+
+        Como ainda nao ha gasto real de anuncio (trafego organico), o ROI e
+        uma ESTIMATIVA baseada em sinais que ja temos:
+          - CTR (cliques no link / views): o quanto o video leva a pessoa a
+            clicar no produto -- e o que mais decide ROI de afiliado.
+          - Engajamento (curtidas+comentarios+compart. / views): valida o
+            criativo; criativo bom = distribuicao mais barata (CPM menor).
+          - Valor do produto (preco -> comissao estimada): quanto cada clique
+            pode render.
+        Com isso estimamos o retorno por 1000 views e comparamos com um custo
+        de anuncio de referencia (CPM) para chegar num ROAS/ROI estimado.
+        """
+        metrics = AnalyticsService(self.db).top_videos(limit=200)
+        by_id = {m["id"]: m for m in metrics}
+
+        # Considera videos publicados/aprovados (candidatos a anuncio).
+        assets = (
+            self.db.query(VideoAsset)
+            .filter(
+                VideoAsset.status.in_(
+                    [VideoStatusEnum.PUBLISHED, VideoStatusEnum.APPROVED]
+                )
+            )
+            .all()
+        )
+
+        out: list[dict] = []
+        for asset in assets:
+            kind = (
+                asset.kind.value if hasattr(asset.kind, "value") else str(asset.kind or "")
+            )
+            is_affiliate = kind == VideoKindEnum.AFFILIATE.value
+            market = market_code(asset.country_code or "", asset.language or "")
+            currency = "BRL" if market == "BR" else "USD"
+
+            m = by_id.get(asset.id, {})
+            views = int(m.get("views", 0) or 0)
+            likes = int(m.get("likes", 0) or 0)
+            comments = int(m.get("comments", 0) or 0)
+            shares = int(m.get("shares", 0) or 0)
+            clicks = int(m.get("clicks", 0) or 0)
+
+            ctr = (clicks / views) if views else 0.0
+            engagement = ((likes + comments + shares) / views) if views else 0.0
+
+            price = self._parse_price(asset)
+            commission_per_sale = price * AMAZON_COMMISSION_RATE if price else 0.0
+            value_per_click = commission_per_sale * CLICK_TO_SALE_RATE
+
+            # Retorno estimado por 1000 views (so afiliado gera receita direta).
+            if is_affiliate and views:
+                est_value_per_1000 = ctr * value_per_click * 1000.0
+                cpm = AD_CPM.get(market, AD_CPM["US"])
+                est_roas = (est_value_per_1000 / cpm) if cpm else 0.0
+            else:
+                est_value_per_1000 = 0.0
+                est_roas = 0.0
+
+            # Confianca: precisa de views suficientes para o CTR fazer sentido.
+            confidence = "alta" if views >= 500 else "media" if views >= 50 else "baixa"
+
+            # Score 0-100 para ordenar (combina ROAS estimado, CTR e engajamento).
+            # ROAS pesa mais; CTR e engajamento entram como qualidade do criativo.
+            score = (
+                min(est_roas, 10.0) / 10.0 * 60.0  # ate 60 pts pelo ROAS estimado
+                + min(ctr * 100.0, 10.0) / 10.0 * 25.0  # ate 25 pts pelo CTR
+                + min(engagement * 100.0, 15.0) / 15.0 * 15.0  # ate 15 pts engajamento
+            )
+            if views < 50:
+                score *= 0.5  # pouca amostra -> menos confiavel
+
+            out.append(
+                {
+                    "id": asset.id,
+                    "title": asset.title or asset.topic or f"Video {asset.id}",
+                    "kind": kind,
+                    "market": market,
+                    "currency": currency,
+                    "views": views,
+                    "clicks": clicks,
+                    "likes": likes,
+                    "comments": comments,
+                    "shares": shares,
+                    "ctr_pct": round(ctr * 100.0, 2),
+                    "engagement_pct": round(engagement * 100.0, 2),
+                    "price": round(price, 2) if price else 0.0,
+                    "est_value_per_click": round(value_per_click, 2),
+                    "est_roas": round(est_roas, 2),
+                    "roi_score": round(score, 1),
+                    "confidence": confidence,
+                    "reason": self._roi_reason(
+                        is_affiliate, views, ctr, engagement, est_roas, price
+                    ),
+                }
+            )
+
+        out.sort(key=lambda x: (x["roi_score"], x["clicks"], x["views"]), reverse=True)
+        return out[:limit]
+
+    @staticmethod
+    def _parse_price(asset: VideoAsset) -> float:
+        """Extrai o preco numerico do produto a partir do payload."""
+        import re
+
+        payload = asset.payload or {}
+        raw = (
+            payload.get("price_value")
+            or payload.get("price")
+            or payload.get("price_text")
+            or payload.get("preco")
+            or ""
+        )
+        if isinstance(raw, (int, float)):
+            return float(raw)
+        s = str(raw)
+        # Remove simbolos de moeda e espacos; trata "1.299,90" e "1,299.90".
+        s = re.sub(r"[^\d,.]", "", s)
+        if not s:
+            return 0.0
+        if "," in s and "." in s:
+            # O ultimo separador e o decimal.
+            if s.rfind(",") > s.rfind("."):
+                s = s.replace(".", "").replace(",", ".")
+            else:
+                s = s.replace(",", "")
+        elif "," in s:
+            s = s.replace(",", ".")
+        try:
+            return float(s)
+        except ValueError:
+            return 0.0
+
+    @staticmethod
+    def _roi_reason(
+        is_affiliate: bool,
+        views: int,
+        ctr: float,
+        engagement: float,
+        est_roas: float,
+        price: float,
+    ) -> str:
+        """Frase curta explicando por que este video tem (ou nao) bom ROI."""
+        if not is_affiliate:
+            return "Reel/trend: serve para crescer o canal, nao gera comissao direta."
+        if views < 50:
+            return "Poucos dados ainda: espere mais views para medir o ROI com seguranca."
+        parts = []
+        if ctr >= 0.03:
+            parts.append("otimo CTR (muita gente clica no link)")
+        elif ctr >= 0.01:
+            parts.append("CTR razoavel")
+        else:
+            parts.append("CTR baixo (poucos cliques)")
+        if engagement >= 0.05:
+            parts.append("criativo forte (bom engajamento)")
+        if price >= 150:
+            parts.append("produto de ticket alto (comissao maior)")
+        if est_roas >= 3:
+            parts.append("ROI estimado alto")
+        elif est_roas >= 1:
+            parts.append("ROI estimado positivo")
+        else:
+            parts.append("ROI estimado ainda baixo")
+        return "; ".join(parts) + "."
 
     # ----------------------------------------------------------------
     # PLANO AUTOMATICO (o "cerebro" do marqueteiro)

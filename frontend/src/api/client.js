@@ -104,6 +104,8 @@ export const Api = {
   // ----- Marketing / Anuncios -----
   marketingStatus: () => api.get("/marketing/status").then((r) => r.data),
   marketingBestVideo: () => api.get("/marketing/best-video").then((r) => r.data),
+  marketingRoiRanking: (limit = 10) =>
+    api.get("/marketing/roi-ranking", { params: { limit } }).then((r) => r.data),
   marketingRecommendation: (videoId, force = false) =>
     api
       .get(`/marketing/recommendation/${videoId}`, {

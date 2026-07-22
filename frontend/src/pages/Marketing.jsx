@@ -151,18 +151,21 @@ export default function Marketing() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState(null);
   const [recLoading, setRecLoading] = useState(false);
+  const [roiRanking, setRoiRanking] = useState([]);
 
   async function loadAll() {
     setLoading(true);
     try {
-      const [st, best, list, camps] = await Promise.all([
+      const [st, best, list, camps, roi] = await Promise.all([
         Api.marketingStatus(),
         Api.marketingBestVideo(),
         Api.listVideos({}),
         Api.marketingCampaigns(),
+        Api.marketingRoiRanking(10).catch(() => ({ items: [] })),
       ]);
       setStatus(st);
       setCampaigns(camps || []);
+      setRoiRanking(roi?.items || []);
       const vids = (list?.items || list || []).filter((v) => v?.id);
       setVideos(vids);
       const pick = best?.id || vids[0]?.id || null;
@@ -342,6 +345,15 @@ export default function Marketing() {
       )}
 
       {msg && <div className={`alert alert-${msg.type}`}>{msg.text}</div>}
+
+      <RoiRanking
+        items={roiRanking}
+        selectedId={selectedId}
+        onPick={(id) => {
+          setSelectedId(id);
+          setMsg(null);
+        }}
+      />
 
       <div className="grid-2">
         {/* Coluna: escolher vídeo + orçamento */}
@@ -669,6 +681,106 @@ function PitchCard({ pitch, onCopy }) {
         </button>
       </div>
       <pre className="pitch-text">{pitch.text}</pre>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------------
+// RANKING DE ROI — qual vídeo vale mais a pena anunciar.
+// -------------------------------------------------------------------
+function RoiRanking({ items, selectedId, onPick }) {
+  if (!items || items.length === 0) return null;
+
+  const withData = items.filter((v) => v.views > 0);
+  const list = withData.length ? withData : items;
+  const top = list[0];
+
+  function roasLabel(v) {
+    if (v.kind !== "affiliate") return "—";
+    if (!v.est_roas) return "sem dados";
+    return `${v.est_roas.toFixed(1)}x`;
+  }
+
+  function confBadge(c) {
+    if (c === "alta") return "badge badge-ok";
+    if (c === "media") return "badge badge-warn";
+    return "badge";
+  }
+
+  return (
+    <div className="card">
+      <h3>🏆 Qual vídeo tem o maior ROI para anunciar</h3>
+      <p className="muted small">
+        Ranking automático por <b>potencial de retorno</b>. Combina cliques no
+        link (CTR), engajamento e valor do produto. O ROI é uma{" "}
+        <b>estimativa</b> — quanto maior, mais vale a pena colocar dinheiro.
+      </p>
+
+      {top && (
+        <div className="alert alert-ok" style={{ marginTop: 8 }}>
+          👉 <b>Melhor aposta agora:</b>{" "}
+          {top.kind === "affiliate" ? "🛒" : "🔥"}{" "}
+          {top.title || `Vídeo ${top.id}`} — ROI estimado{" "}
+          <b>{roasLabel(top)}</b>. {top.reason}
+        </div>
+      )}
+
+      <div className="table-wrap" style={{ marginTop: 10 }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Vídeo</th>
+              <th>Views</th>
+              <th>Cliques</th>
+              <th>CTR</th>
+              <th>ROI est.</th>
+              <th>Confiança</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((v, i) => (
+              <tr
+                key={v.id}
+                className={v.id === selectedId ? "row-sel" : undefined}
+              >
+                <td>{i + 1}</td>
+                <td>
+                  {v.kind === "affiliate" ? "🛒 " : "🔥 "}
+                  {v.title || `Vídeo ${v.id}`}
+                </td>
+                <td>{Number(v.views || 0).toLocaleString("pt-BR")}</td>
+                <td>{Number(v.clicks || 0).toLocaleString("pt-BR")}</td>
+                <td>{v.ctr_pct ? `${v.ctr_pct}%` : "—"}</td>
+                <td>
+                  <b>{roasLabel(v)}</b>
+                </td>
+                <td>
+                  <span className={confBadge(v.confidence)}>
+                    {v.confidence}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => onPick(v.id)}
+                    disabled={v.id === selectedId}
+                  >
+                    {v.id === selectedId ? "Selecionado" : "Anunciar este"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="muted small" style={{ marginTop: 8 }}>
+        Dica: no afiliado, o melhor ROI costuma vir do vídeo que <b>já</b>{" "}
+        recebe muitos cliques organicamente e promove um produto de comissão
+        maior. Anunciar um vencedor validado rende mais que apostar num vídeo
+        sem dados.
+      </p>
     </div>
   );
 }

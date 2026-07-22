@@ -680,6 +680,13 @@ a {
 .table tr:hover td {
   background: var(--bg-elev-2);
 }
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+.table tr.row-sel td {
+  background: rgba(34, 197, 94, 0.12);
+}
 
 /* ---------------- Modal ---------------- */
 

@@ -507,6 +507,11 @@ def marketing_best_video(db: Session = Depends(get_db)):
     return MarketingService(db).best_video()
 
 
+@router.get("/marketing/roi-ranking")
+def marketing_roi_ranking(limit: int = 10, db: Session = Depends(get_db)):
+    return {"items": MarketingService(db).roi_ranking(limit=limit)}
+
+
 @router.get("/marketing/recommendation/{video_id}")
 def marketing_recommendation(
     video_id: int, force: bool = False, db: Session = Depends(get_db)
