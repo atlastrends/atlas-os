@@ -2,7 +2,7 @@
 # ATLAS OS - scripts/setup_avatar_g15.ps1
 #
 # Prepara o LIP-SYNC de verdade (boca mexendo) no Dell G15 (placa NVIDIA
-# GeForce RTX 50). Instala o Wav2Lip num ambiente separado, baixa os pesos
+# GeForce RTX). Instala o Wav2Lip num ambiente separado, baixa os pesos
 # e deixa tudo pronto para a live usar o motor "wav2lip".
 #
 # COMO USAR (no G15, no PowerShell, dentro da pasta do projeto):
@@ -10,9 +10,12 @@
 #
 # Depois, para rodar a live COM lip-sync, use o atalho que este script cria:
 #     .\start-live-g15.ps1
+#   (esse atalho ATUALIZA o Atlas pelo GitHub sozinho antes de subir.)
 #
-# OBS.: a placa RTX 50 e' nova (arquitetura Blackwell). Por isso instalamos o
-# PyTorch com CUDA 12.8 (cu128) - versoes antigas dao erro "no kernel image".
+# PLACA DE VIDEO: o script DETECTA a sua GPU automaticamente e instala o
+# PyTorch certo:
+#   - RTX 50xx (Blackwell) -> CUDA 12.8 (cu128)
+#   - RTX 30xx/40xx e afins -> CUDA 12.1 (cu121)   <- caso do G15 5515 (RTX 3050/3060)
 #
 # HONESTIDADE: o Wav2Lip e' um projeto antigo e as vezes exige ajuste fino de
 # dependencias. Se algo falhar, me chame que a gente resolve o passo especifico.
@@ -83,10 +86,30 @@ Write-Host "[AVATAR] Atualizando pip ..." -ForegroundColor Cyan
 & $VenvPy -m pip install --upgrade pip wheel setuptools
 
 # ------------------------------------------------------------
-# 3) PyTorch com CUDA 12.8 (obrigatorio para a RTX 50 / Blackwell)
+# 3) PyTorch com CUDA - detecta a placa e escolhe a versao certa
+#    - RTX 50xx (Blackwell)  -> cu128
+#    - RTX 30xx/40xx (Ampere/Ada, ex.: G15 5515 RTX 3050/3060) -> cu121
 # ------------------------------------------------------------
-Write-Host "[AVATAR] Instalando PyTorch CUDA 12.8 (cu128) - pode demorar ..." -ForegroundColor Cyan
-& $VenvPy -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+function Get-CudaChannel {
+    # Le o nome da GPU pelo nvidia-smi. Se for RTX 50xx -> cu128, senao cu121.
+    $name = ""
+    if (Get-Command nvidia-smi -ErrorAction SilentlyContinue) {
+        try {
+            $name = (& nvidia-smi --query-gpu=name --format=csv,noheader 2>$null | Select-Object -First 1)
+        }
+        catch {}
+    }
+    if ($name) { Write-Host "[AVATAR] Placa detectada: $name" -ForegroundColor DarkGray }
+    else { Write-Host "[AVATAR] Nao consegui ler a placa (nvidia-smi). Vou assumir cu121." -ForegroundColor Yellow }
+
+    # RTX 50xx (5050/5060/5070/5080/5090) = Blackwell -> cu128
+    if ($name -match "RTX\s*50\d0") { return "cu128" }
+    return "cu121"
+}
+
+$cuda = Get-CudaChannel
+Write-Host "[AVATAR] Instalando PyTorch ($cuda) - pode demorar ..." -ForegroundColor Cyan
+& $VenvPy -m pip install torch torchvision torchaudio --index-url "https://download.pytorch.org/whl/$cuda"
 
 # ------------------------------------------------------------
 # 4) Baixar (clonar) o Wav2Lip
@@ -168,9 +191,22 @@ $launcher = Join-Path $Root "start-live-g15.ps1"
 $launcherBody = @"
 # ============================================================
 # ATLAS OS - start-live-g15.ps1  (GERADO por setup_avatar_g15.ps1)
-# Sobe o painel com o LIP-SYNC ligado (motor Wav2Lip) no G15.
+# 1) ATUALIZA o Atlas pelo GitHub (git pull + reconstroi o painel).
+# 2) Sobe o painel com o LIP-SYNC ligado (motor Wav2Lip) no G15.
+#
+# Para NAO atualizar nesta vez (subir mais rapido):  .\start-live-g15.ps1 -NoUpdate
 # ============================================================
+param([switch]`$NoUpdate)
 Set-Location -Path `$PSScriptRoot
+
+if (-not `$NoUpdate) {
+    `$updater = Join-Path `$PSScriptRoot "scripts\update-atlas-g15.ps1"
+    if (Test-Path `$updater) {
+        Write-Host "[LIVE] Verificando atualizacoes no GitHub ..." -ForegroundColor Cyan
+        & `$updater
+    }
+}
+
 `$env:ATLAS_AVATAR_ENGINE = "wav2lip"
 `$env:ATLAS_WAV2LIP_DIR   = "$RepoDir"
 `$env:ATLAS_WAV2LIP_PY    = "$VenvPy"

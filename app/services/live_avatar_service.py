@@ -27,6 +27,9 @@ from pathlib import Path
 _ATLAS_ROOT = Path(os.getenv("ATLAS_ROOT", os.getcwd()))
 _CLIP_DIR = _ATLAS_ROOT / "storage" / "live" / "clips"
 _PRESENTER_DIR = _ATLAS_ROOT / "storage" / "live" / "presenter"
+# Modelo PADRAO da apresentadora (vai para o Git -> sincroniza com o G15).
+# Se o usuario nao enviar uma foto propria, usamos esta.
+_DEFAULT_PRESENTER_DIR = _ATLAS_ROOT / "assets"
 
 # Motor padrao: ffmpeg (sem placa). No G15: defina ATLAS_AVATAR_ENGINE=wav2lip.
 _ENGINE = (os.getenv("ATLAS_AVATAR_ENGINE", "ffmpeg") or "ffmpeg").strip().lower()
@@ -63,7 +66,19 @@ _FFMPEG = _resolve_ffmpeg()
 # Foto do apresentador (guardada em storage/live/presenter/)
 # ------------------------------------------------------------
 def presenter_path() -> Path | None:
-    """Retorna a foto do apresentador salva, se existir."""
+    """Retorna a foto do apresentador em uso.
+
+    Prioridade: foto ENVIADA pelo usuario (storage/live/presenter/) e, se
+    nao houver, o MODELO PADRAO versionado (assets/presenter_default.*).
+    """
+    uploaded = _uploaded_presenter()
+    if uploaded is not None:
+        return uploaded
+    return _default_presenter()
+
+
+def _uploaded_presenter() -> Path | None:
+    """Foto que o usuario enviou pelo painel (tem prioridade)."""
     if not _PRESENTER_DIR.is_dir():
         return None
     for ext in _IMG_EXTS:
@@ -71,6 +86,22 @@ def presenter_path() -> Path | None:
         if candidate.is_file():
             return candidate
     return None
+
+
+def _default_presenter() -> Path | None:
+    """Modelo padrao versionado (assets/presenter_default.*)."""
+    if not _DEFAULT_PRESENTER_DIR.is_dir():
+        return None
+    for ext in _IMG_EXTS:
+        candidate = _DEFAULT_PRESENTER_DIR / f"presenter_default{ext}"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def using_default_presenter() -> bool:
+    """True se estamos usando o modelo padrao (usuario nao enviou foto)."""
+    return _uploaded_presenter() is None and _default_presenter() is not None
 
 
 def save_presenter(data: bytes, ext: str) -> Path:

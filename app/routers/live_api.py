@@ -208,6 +208,7 @@ def status():
         "default_voices": brain.DEFAULT_VOICES,
         "avatar_engine": avatar.engine_name(),
         "has_presenter": avatar.has_presenter(),
+        "presenter_is_default": avatar.using_default_presenter(),
     }
 
 
