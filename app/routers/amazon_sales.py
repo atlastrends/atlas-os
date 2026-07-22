@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.amazon_sales import AmazonSale
-from app.services import amazon_report_service
+from app.services import amazon_report_service, amazon_scraper_service
 
 router = APIRouter(prefix="/api/affiliate/amazon-sales", tags=["Amazon Sales"])
 
@@ -71,15 +71,27 @@ def amazon_sales_stats(
 ):
     """Estatisticas agregadas para a pagina.
 
-    Antes de calcular, o ATLAS procura sozinho novos relatorios da Amazon
-    nas pastas monitoradas (Downloads etc.) e importa automaticamente. Assim
-    o usuario so precisa abrir a pagina para ver os numeros atualizados.
+    Ao clicar em "Atualizar" (refresh=1), o ATLAS loga sozinho no Amazon
+    Associates (BR e/ou US, conforme credenciais configuradas no .env) e
+    baixa o relatorio de ganhos mais recente - o usuario nao precisa baixar
+    nada na mao. Tambem mantem, como reforco, a varredura de pastas
+    (Downloads etc.) para o caso de o login automatico falhar.
     """
+    scraped = None
+    if refresh:
+        scraped = amazon_scraper_service.fetch_all_configured_markets(db)
+
     auto = amazon_report_service.auto_scan_and_import(db, force=bool(refresh))
     mkt = (market or "").strip().upper() or None
     if mkt not in (None, "BR", "US"):
         mkt = None
     stats = amazon_report_service.compute_stats(db, market=mkt, days=days)
+
+    imported_rows = auto.get("imported_rows", 0) + (scraped.get("imported_rows", 0) if scraped else 0)
+    auto["imported_rows"] = imported_rows
+    if scraped is not None:
+        auto["scraper_ran"] = scraped["ran"]
+        auto["scraper_errors"] = scraped["errors"]
     stats["auto_import"] = auto
     return stats
 

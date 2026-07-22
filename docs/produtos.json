@@ -1,6 +1,30 @@
 {
-  "updated_at": "2026-07-22T09:26:26.449436+00:00",
+  "updated_at": "2026-07-22T13:23:20.779476+00:00",
   "products": [
+    {
+      "keyword": "OREAL",
+      "title": "L&#x27;Oréal Professionnel Óleo 10 em 1 Absolut Repair | Multi-benefícios para cabelos secos e danificados | Repara e Promove Bril",
+      "url": "https://www.amazon.com.br/dp/B0918FHY6P?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18109164265958512",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "PILHA",
+      "title": "Pilha Alcalina, Elgin, Palito AAA, Blister com 4",
+      "url": "https://www.amazon.com.br/dp/B0754J12RW?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17979395685061815",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "GARRAFA",
+      "title": "Garrafa Térmica Inox Parede Dupla Matterhorn 591ml Azul Mônaco Contigo",
+      "url": "https://www.amazon.com.br/dp/B07K8XJF9D?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18150144553504768",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "ELECTROLUX",
       "title": "Electrolux, Aspirador pó vertical com fio portátil de mão 2 em 1 potente 1450W cabo 6m capacidade 1,6L filtro HEPA Electrolux",
@@ -384,6 +408,46 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "OPTIMUM",
+      "title": "Optimum Nutrition Gold Standard 100% Whey Protein Powder, Vanilla Ice Cream, 2 Pound (Packaging May Vary)",
+      "url": "https://www.amazon.com/dp/B000GISTZ4?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "OWALA",
+      "title": "Owala FreeSip Insulated Stainless Steel Water Bottle with Straw, BPA-Free Sports Water Bottle, Great for Travel, 24 Oz, Very,",
+      "url": "https://www.amazon.com/dp/B085DTZQNZ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "APPLE",
+      "title": "Apple AirTag (2nd Generation): Tracker for Keychain, Wallet, and More; Locator with Sound; Simple One-Tap Setup with iPhone o",
+      "url": "https://www.amazon.com/dp/B0GJTFXNRX?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18010097567935295",
+      "facebook_post_id": "1001163962825462"
+    },
+    {
+      "keyword": "HYDROJUG",
+      "title": "HydroJug Traveler 40oz, Insulated Tumbler with Handle & Straw, Pink Sand",
+      "url": "https://www.amazon.com/dp/B0CQVWT2NH?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18098368325193047",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Clear Thermal Laminating Sheets for Documents and Photos, 9 x 11.5-Inch, 2.8 mil, 200-Pack",
+      "url": "https://www.amazon.com/dp/B079KL4C91?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18118147738779608",
+      "facebook_post_id": "1437816311440709"
     },
     {
       "keyword": "SURGE",

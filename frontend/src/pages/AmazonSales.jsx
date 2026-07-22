@@ -58,7 +58,15 @@ export default function AmazonSales() {
       setStats(s);
       setLastUpdated(new Date());
       const novos = s?.auto_import?.imported_rows || 0;
-      if (novos > 0) {
+      const scraperErrors = s?.auto_import?.scraper_errors || [];
+      if (manual && scraperErrors.length > 0) {
+        // Login automatico na Amazon falhou (senha errada, 2FA, captcha,
+        // site fora do ar etc.) - avisa o usuario com o motivo exato.
+        setToast({
+          type: "error",
+          msg: `Nao consegui logar sozinho na Amazon: ${scraperErrors.join(" | ")}`,
+        });
+      } else if (novos > 0) {
         setToast({
           type: "success",
           msg: `Encontrei e importei ${novos} venda(s) nova(s) automaticamente.`,

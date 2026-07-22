@@ -103,3 +103,8 @@ google-genai
 
 
 qrcode[pil]
+
+# Amazon Associates - login e download automatico do relatorio de vendas
+# (a Amazon nao tem API de ganhos/vendas; o ATLAS "clica" sozinho no site).
+playwright
+openpyxl

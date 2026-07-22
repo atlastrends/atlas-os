@@ -34,6 +34,14 @@ class Settings(BaseSettings):
     # a pasta Downloads do usuario e a pasta "relatorios_amazon" do projeto.
     ATLAS_AMAZON_REPORTS_DIR: str = ""
 
+    # Vendas Amazon: login automatico no Amazon Associates (o ATLAS loga
+    # sozinho e baixa o relatorio, sem o usuario precisar baixar nada na
+    # mao). Cada mercado e uma conta separada no site da Amazon.
+    ATLAS_AMAZON_BR_EMAIL: str = ""
+    ATLAS_AMAZON_BR_PASSWORD: str = ""
+    ATLAS_AMAZON_US_EMAIL: str = ""
+    ATLAS_AMAZON_US_PASSWORD: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
