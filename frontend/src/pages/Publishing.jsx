@@ -1,13 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Api from "../api/client.js";
 import { StatusBadge } from "../components/VideoCard.jsx";
 import PlatformLogo, { platformName } from "../components/PlatformLogo.jsx";
 import Toast from "../components/Toast.jsx";
 
+const RESEND_STATUSES = ["failed", "rate_limited", "credentials_missing"];
+
 export default function Publishing() {
   const [pubs, setPubs] = useState(null);
   const [platforms, setPlatforms] = useState([]);
   const [toast, setToast] = useState(null);
+  const [tab, setTab] = useState("all"); // "all" | "resend"
+  const [busyId, setBusyId] = useState(null);
 
   const load = async () => {
     try {
@@ -25,6 +29,43 @@ export default function Publishing() {
     const t = setInterval(load, 15000);
     return () => clearInterval(t);
   }, []);
+
+  const resendItems = useMemo(
+    () => (pubs || []).filter((p) => RESEND_STATUSES.includes(p.status)),
+    [pubs]
+  );
+  const visibleItems = tab === "resend" ? resendItems : pubs || [];
+
+  async function handleRetry(pub) {
+    setBusyId(pub.id);
+    try {
+      await Api.retryPublication(pub.id);
+      setToast({ type: "success", msg: `Reenviado para ${platformName(pub.platform)}.` });
+      await load();
+    } catch (e) {
+      const detail = e?.response?.data?.detail || e?.message || String(e);
+      setToast({ type: "error", msg: "Falha ao reenviar: " + detail });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDelete(pub) {
+    if (!window.confirm("Excluir este registro de reenvio? Isso não apaga o vídeo, só o histórico desta plataforma.")) {
+      return;
+    }
+    setBusyId(pub.id);
+    try {
+      await Api.deletePublication(pub.id);
+      setToast({ type: "success", msg: "Registro excluído." });
+      await load();
+    } catch (e) {
+      const detail = e?.response?.data?.detail || e?.message || String(e);
+      setToast({ type: "error", msg: "Falha ao excluir: " + detail });
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   return (
     <div>
@@ -63,7 +104,23 @@ export default function Publishing() {
         ))}
       </div>
 
-      <div className="section-title">Envios</div>
+      <div className="section-title" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span>Envios</span>
+        <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
+          <button
+            className={tab === "all" ? "btn btn-sm" : "btn ghost btn-sm"}
+            onClick={() => setTab("all")}
+          >
+            Todos
+          </button>
+          <button
+            className={tab === "resend" ? "btn btn-sm" : "btn ghost btn-sm"}
+            onClick={() => setTab("resend")}
+          >
+            ⏳ Aguardando reenvio {resendItems.length > 0 ? `(${resendItems.length})` : ""}
+          </button>
+        </div>
+      </div>
       <div className="card" style={{ padding: 0 }}>
         <table className="table">
           <thead>
@@ -73,22 +130,25 @@ export default function Publishing() {
               <th>Status</th>
               <th>Link</th>
               <th>Atualizado</th>
+              {tab === "resend" && <th>Ações</th>}
             </tr>
           </thead>
           <tbody>
             {pubs === null ? (
               <tr>
-                <td colSpan={5}>Carregando…</td>
+                <td colSpan={tab === "resend" ? 6 : 5}>Carregando…</td>
               </tr>
-            ) : pubs.length === 0 ? (
+            ) : visibleItems.length === 0 ? (
               <tr>
-                <td colSpan={5} style={{ color: "var(--text-faint)" }}>
-                  Nenhuma publicação ainda. Aprove um vídeo para enfileirar.
+                <td colSpan={tab === "resend" ? 6 : 5} style={{ color: "var(--text-faint)" }}>
+                  {tab === "resend"
+                    ? "Nenhuma publicação aguardando reenvio no momento. 🎉"
+                    : "Nenhuma publicação ainda. Aprove um vídeo para enfileirar."}
                 </td>
               </tr>
             ) : (
-              pubs.map((p, i) => (
-                <tr key={i}>
+              visibleItems.map((p, i) => (
+                <tr key={p.id ?? i}>
                   <td>#{p.video_asset_id}</td>
                   <td>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -114,6 +174,27 @@ export default function Publishing() {
                     )}
                   </td>
                   <td>{fmtDate(p.updated_at)}</td>
+                  {tab === "resend" && (
+                    <td>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button
+                          className="btn btn-sm"
+                          disabled={busyId === p.id}
+                          onClick={() => handleRetry(p)}
+                        >
+                          {busyId === p.id ? "Enviando…" : "↻ Reenviar"}
+                        </button>
+                        <button
+                          className="btn ghost btn-sm"
+                          disabled={busyId === p.id}
+                          onClick={() => handleDelete(p)}
+                          style={{ color: "#fca5a5" }}
+                        >
+                          🗑 Excluir
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

@@ -142,79 +142,120 @@ class PublishingService:
         targets = [p for p in (platforms or PLATFORMS) if p in PLATFORMS]
 
         results = []
-        any_published = False
-        any_failed = False
-        any_rate_limited = False
-
         for platform in targets:
             pub = self._get_or_create_publication(asset, platform)
 
             # Ja publicado antes: nao reenvia (evita duplicar no canal).
             if pub.status == PublicationStatusEnum.PUBLISHED:
-                any_published = True
                 results.append(self._pub_dict(pub))
                 continue
 
-            request = self._build_request(asset, platform)
-
-            publisher = get_publisher(platform)
-            if publisher is None:
-                pub.status = PublicationStatusEnum.SKIPPED
-                pub.error = "Plataforma sem conector."
-                self.db.commit()
-                results.append(self._pub_dict(pub))
-                continue
-
-            pub.status = PublicationStatusEnum.UPLOADING
-            self.db.commit()
-
-            result = publisher.publish(request)
-
-            if result.status == "published":
-                pub.status = PublicationStatusEnum.PUBLISHED
-                pub.external_id = result.external_id
-                pub.external_url = result.external_url
-                pub.error = None
-                pub.published_at = _now()
-                any_published = True
-            elif result.status == "credentials_missing":
-                pub.status = PublicationStatusEnum.CREDENTIALS_MISSING
-                pub.error = result.error
-            elif _is_rate_limited(result.error):
-                # Bloqueio TEMPORARIO da plataforma (limite diario/cota).
-                # NAO e erro: fica aguardando reenvio.
-                pub.status = PublicationStatusEnum.RATE_LIMITED
-                pub.error = result.error
-                any_rate_limited = True
-            else:
-                pub.status = PublicationStatusEnum.FAILED
-                pub.error = result.error
-                any_failed = True
-
-            self.db.commit()
+            self._publish_to_platform(asset, pub, platform)
             results.append(self._pub_dict(pub))
 
-        # Status consolidado do asset.
-        if any_published:
-            asset.status = VideoStatusEnum.PUBLISHED
-            asset.published_at = _now()
-        elif any_rate_limited:
-            # A plataforma bloqueou por limite. Guarda para reenviar depois,
-            # sem marcar como erro.
-            asset.status = VideoStatusEnum.RETRY_PENDING
-        elif any_failed:
-            asset.status = VideoStatusEnum.FAILED
+        self._recompute_asset_status(asset)
+
+        return {
+            "asset_id": asset.id,
+            "status": asset.status.value if hasattr(asset.status, "value") else str(asset.status),
+            "publications": results,
+        }
+
+    def retry_single_publication(self, publication_id: int) -> dict:
+        """Reenvia SOMENTE a plataforma que falhou (nao mexe nas outras).
+
+        Usado pelo botao "Reenviar" na aba de publicacoes com erro. Se falhar
+        de novo, o registro CONTINUA existindo (nao e descartado) com o novo
+        erro, pronto para nova tentativa ou exclusao manual.
+        """
+        pub = self.db.query(Publication).filter(Publication.id == publication_id).first()
+        if pub is None:
+            raise ValueError("Publicacao nao encontrada.")
+
+        asset = self.db.query(VideoAsset).filter(VideoAsset.id == pub.video_asset_id).first()
+        if asset is None:
+            raise ValueError("Video nao encontrado.")
+
+        if pub.status == PublicationStatusEnum.PUBLISHED:
+            # Ja publicado: nao reenvia (evita duplicar no canal).
+            return {"asset_id": asset.id, "publication": self._pub_dict(pub)}
+
+        self._publish_to_platform(asset, pub, pub.platform)
+        self._recompute_asset_status(asset)
+
+        return {"asset_id": asset.id, "publication": self._pub_dict(pub)}
+
+    def delete_publication(self, publication_id: int) -> dict:
+        """Remove um registro de publicacao (usado na aba de reenvio para
+        limpar tentativas que o usuario decidiu nao repetir mais).
+        Nao apaga o video, so o historico daquela plataforma."""
+        pub = self.db.query(Publication).filter(Publication.id == publication_id).first()
+        if pub is None:
+            raise ValueError("Publicacao nao encontrada.")
+
+        asset_id = pub.video_asset_id
+        self.db.delete(pub)
+        self.db.commit()
+
+        asset = self.db.query(VideoAsset).filter(VideoAsset.id == asset_id).first()
+        if asset is not None:
+            self._recompute_asset_status(asset)
+
+        return {"deleted": True, "asset_id": asset_id}
+
+    # ----------------------------------------------------------------
+    # HELPERS
+    # ----------------------------------------------------------------
+
+    def _publish_to_platform(
+        self,
+        asset: VideoAsset,
+        pub: Publication,
+        platform: str,
+    ) -> Publication:
+        """Executa a tentativa de publicacao de UMA publicacao/plataforma e
+        grava o resultado (published / failed / credentials_missing /
+        rate_limited). Nao mexe no status do asset (isso e feito por quem
+        chama, via _recompute_asset_status, ja que um asset pode ter varias
+        publicacoes)."""
+        request = self._build_request(asset, platform)
+
+        publisher = get_publisher(platform)
+        if publisher is None:
+            pub.status = PublicationStatusEnum.SKIPPED
+            pub.error = "Plataforma sem conector."
+            self.db.commit()
+            return pub
+
+        pub.status = PublicationStatusEnum.UPLOADING
+        self.db.commit()
+
+        result = publisher.publish(request)
+
+        if result.status == "published":
+            pub.status = PublicationStatusEnum.PUBLISHED
+            pub.external_id = result.external_id
+            pub.external_url = result.external_url
+            pub.error = None
+            pub.published_at = _now()
+        elif result.status == "credentials_missing":
+            pub.status = PublicationStatusEnum.CREDENTIALS_MISSING
+            pub.error = result.error
+        elif _is_rate_limited(result.error):
+            # Bloqueio TEMPORARIO da plataforma (limite diario/cota).
+            # NAO e erro: fica aguardando reenvio.
+            pub.status = PublicationStatusEnum.RATE_LIMITED
+            pub.error = result.error
         else:
-            # Nada publicou (ex.: faltam credenciais). Continua aprovado, na fila.
-            asset.status = VideoStatusEnum.APPROVED
+            pub.status = PublicationStatusEnum.FAILED
+            pub.error = result.error
 
         self.db.commit()
-        self.db.refresh(asset)
 
         # Atualiza a bio (link na bio) automaticamente quando um AFILIADO e
         # publicado: regenera a pagina e publica no GitHub Pages em segundo plano.
         if (
-            any_published
+            pub.status == PublicationStatusEnum.PUBLISHED
             and asset.kind == VideoKindEnum.AFFILIATE
             and getattr(asset, "affiliate_url", None)
         ):
@@ -225,15 +266,39 @@ class PublishingService:
             except Exception:  # nunca bloqueia a publicacao por causa da bio
                 pass
 
-        return {
-            "asset_id": asset.id,
-            "status": asset.status.value if hasattr(asset.status, "value") else str(asset.status),
-            "publications": results,
-        }
+        return pub
 
-    # ----------------------------------------------------------------
-    # HELPERS
-    # ----------------------------------------------------------------
+    def _recompute_asset_status(self, asset: VideoAsset) -> VideoAsset:
+        """Recalcula o status do video a partir de TODAS as publicacoes dele.
+        Usado apos aprovar/publicar, reenviar uma plataforma ou apagar um
+        registro de publicacao."""
+        pubs = (
+            self.db.query(Publication)
+            .filter(Publication.video_asset_id == asset.id)
+            .all()
+        )
+
+        any_published = any(p.status == PublicationStatusEnum.PUBLISHED for p in pubs)
+        any_rate_limited = any(p.status == PublicationStatusEnum.RATE_LIMITED for p in pubs)
+        any_failed = any(p.status == PublicationStatusEnum.FAILED for p in pubs)
+
+        if any_published:
+            asset.status = VideoStatusEnum.PUBLISHED
+            if not asset.published_at:
+                asset.published_at = _now()
+        elif any_rate_limited:
+            # A plataforma bloqueou por limite. Guarda para reenviar depois,
+            # sem marcar como erro.
+            asset.status = VideoStatusEnum.RETRY_PENDING
+        elif any_failed:
+            asset.status = VideoStatusEnum.FAILED
+        else:
+            # Nada publicou ainda (ex.: faltam credenciais). Continua na fila.
+            asset.status = VideoStatusEnum.APPROVED
+
+        self.db.commit()
+        self.db.refresh(asset)
+        return asset
 
     def _get_or_create_publication(
         self,
@@ -468,6 +533,7 @@ class PublishingService:
 
     def _pub_dict(self, pub: Publication) -> dict:
         return {
+            "id": pub.id,
             "platform": pub.platform,
             "status": pub.status.value if hasattr(pub.status, "value") else str(pub.status),
             "external_url": pub.external_url,

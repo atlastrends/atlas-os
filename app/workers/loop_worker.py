@@ -268,6 +268,53 @@ class Engine:
 
         return True
 
+    # Estúdios/distribuidoras cujo conteúdo (trailers oficiais, cenas de
+    # filmes) costuma disparar Content ID / copyright strike no YouTube.
+    _COPYRIGHT_STUDIO_KEYWORDS = (
+        "marvel", "disney", "pixar", "warner", "sony pictures", "universal",
+        "paramount", "netflix", "hbo", "dc studios", "lucasfilm",
+        "20th century", "a24", "dreamworks", "illumination",
+        "columbia pictures", "mgm", "lionsgate", "sony picture",
+    )
+
+    _COPYRIGHT_TRAILER_HINTS = (
+        "trailer oficial", "official trailer", "trailer dublado",
+        "trailer legendado", "teaser trailer", "final trailer",
+        "trailer final",
+    )
+
+    _COPYRIGHT_MOVIE_SOURCE_HINTS = ("filme", "movie", "animação", "animacao", "animation")
+
+    def _is_copyright_risky_topic(self, topic: str, source: str = "") -> bool:
+        """
+        Detecta trends com alto risco de bloqueio por direitos autorais
+        (ex.: trailers oficiais de filmes/estúdios), ANTES de gastar tempo
+        criando o vídeo. Se der positivo, o motor pula esse assunto e usa
+        outro no lugar (ver _select_best_unique_trends).
+        """
+        if not topic:
+            return False
+
+        topic_norm = topic.lower()
+        source_norm = (source or "").lower()
+
+        # 1) Nome de estúdio/distribuidora aparece no topico ou na fonte.
+        for kw in self._COPYRIGHT_STUDIO_KEYWORDS:
+            if kw in topic_norm or kw in source_norm:
+                return True
+
+        # 2) "trailer" + termo de trailer oficial/dublado/teaser/final.
+        if "trailer" in topic_norm:
+            for hint in self._COPYRIGHT_TRAILER_HINTS:
+                if hint in topic_norm:
+                    return True
+
+        # 3) Fonte indica categoria de filmes/animação E o tópico fala de trailer.
+        if "trailer" in topic_norm and any(h in source_norm for h in self._COPYRIGHT_MOVIE_SOURCE_HINTS):
+            return True
+
+        return False
+
     def _select_best_unique_trends(
         self,
         trends: list,
@@ -306,6 +353,12 @@ class Engine:
                 print(f"⏭️ [ATLAS ENGINE] Assunto já usado recentemente em {country_code}: {topic}")
                 continue
 
+            # Evita assuntos com alto risco de direitos autorais (trailers
+            # oficiais de estúdio) — pula e deixa outro assunto preencher a vaga.
+            if self._is_copyright_risky_topic(topic, str(t.get("source", ""))):
+                print(f"🚫 [ATLAS ENGINE] Assunto com risco de direitos autorais, pulando: {topic}")
+                continue
+
             seen_topics.add(topic_key)
             valid_trends.append(t)
 
@@ -326,6 +379,8 @@ class Engine:
                 if not topic:
                     continue
                 if self._was_topic_used_recently(country_code, topic):
+                    continue
+                if self._is_copyright_risky_topic(topic, str(t.get("source", ""))):
                     continue
                 fallback_pool.append(t)
 

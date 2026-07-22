@@ -40,6 +40,10 @@ export const Api = {
     api.post(`/videos/${id}/reject`, body).then((r) => r.data),
 
   publications: () => api.get("/publications").then((r) => r.data),
+  retryPublication: (id) =>
+    api.post(`/publications/${id}/retry`).then((r) => r.data),
+  deletePublication: (id) =>
+    api.delete(`/publications/${id}`).then((r) => r.data),
 
   // ----- Vendas Amazon (afiliado) -----
   amazonSalesStats: (params = {}) =>

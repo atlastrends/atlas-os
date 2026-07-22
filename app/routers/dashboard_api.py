@@ -291,6 +291,24 @@ def list_publications(db: Session = Depends(get_db)):
     return PublishingService(db).list_publications()
 
 
+@router.post("/publications/{publication_id}/retry")
+def retry_publication(publication_id: int, db: Session = Depends(get_db)):
+    """Reenvia SOMENTE a plataforma que falhou (nao mexe nas outras)."""
+    try:
+        return PublishingService(db).retry_single_publication(publication_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@router.delete("/publications/{publication_id}")
+def delete_publication(publication_id: int, db: Session = Depends(get_db)):
+    """Remove um registro de publicacao com erro (aba de reenvio)."""
+    try:
+        return PublishingService(db).delete_publication(publication_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
 # ----------------------------------------------------------------
 # JOBS (botoes do painel)
 # ----------------------------------------------------------------

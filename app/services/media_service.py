@@ -552,6 +552,61 @@ class MediaService:
         cleaned = " ".join(words).strip()
         return cleaned or self._clean_text(topic)
 
+    # Palavras que indicam que a trend e sobre um JOGO (video game). Usadas
+    # para ajustar a busca de fundo: em vez de baixar o video do streamer
+    # (que mostra o ROSTO da pessoa, facecam, "IRL"), buscamos GAMEPLAY do
+    # jogo em si — que e o que o espectador espera ver no reel.
+    _GAME_KEYWORDS = frozenset({
+        "gameplay", "playthrough", "walkthrough", "speedrun", "gaming",
+        "roblox", "minecraft", "fortnite", "gta", "valorant", "fifa",
+        "pubg", "cod", "warzone", "apex", "overwatch", "elden ring",
+        "zelda", "mario", "pokemon", "among us", "fall guys", "free fire",
+        "efootball", "nba 2k", "madden", "cs2", "counter strike", "dota",
+        "genshin", "brawl stars", "clash royale", "clash of clans",
+        "league of legends", "lol patch", "gta v", "gta vi", "gta 5",
+        "gta 6", "rainbow six", "rocket league", "the sims", "sims 4",
+        "call of duty", "grand theft auto",
+    })
+
+    # Termos extras a bloquear SOMENTE quando o assunto e um jogo: conteudo
+    # de FACECAM/IRL/vlog do criador, que mostra a PESSOA e nao o jogo.
+    _GAME_EXTRA_BLOCKED_TERMS = (
+        "irl", "in real life", "just chatting", "facecam", "face cam",
+        "vlog", "unboxing", "cosplay", "meet and greet", "q&a", "qna",
+        "behind the scenes", "bastidores", "minha rotina", "day in my life",
+        "get ready with me", "grwm",
+    )
+
+    def _is_game_topic(self, topic: str, trend_source: str = "") -> bool:
+        """Detecta se a trend e sobre um video game (para ajustar a busca
+        de fundo visual e priorizar GAMEPLAY, nao facecam/reacao)."""
+        source_norm = self._normalize_text(trend_source)
+        if "game" in source_norm or "gaming" in source_norm:
+            return True
+
+        topic_norm = self._normalize_text(topic)
+        return any(kw in topic_norm for kw in self._GAME_KEYWORDS)
+
+    def _build_game_search_query(self, topic: str) -> str:
+        """Para trends de jogos: usa so os termos PRINCIPAIS do assunto
+        (nome do jogo/franquia) + 'gameplay', em vez do titulo clickbait
+        completo do streamer (ex.: 'PLAYING GTA V UNTIL I BEAT IT DAY 3').
+        Isso busca compilacoes de GAMEPLAY do jogo, e nao o video especifico
+        daquele criador (que costuma ter facecam/rosto na tela)."""
+        cores = self._core_terms(topic)
+        if not cores:
+            base = self._build_search_query(topic)
+        else:
+            # Preserva a ordem aproximada usando as palavras originais do topic.
+            words = self._clean_text(topic).split()
+            ordered = [w for w in words if self._normalize_text(w) in cores]
+            base = " ".join(ordered) if ordered else " ".join(sorted(cores))
+
+        base = base.strip()
+        if "gameplay" not in base.lower():
+            base = f"{base} gameplay".strip()
+        return base
+
     def _extract_first_sentence(self, script: str) -> str:
         script = self._clean_text(script)
         if not script:
@@ -908,7 +963,7 @@ class MediaService:
     # CANDIDATE FILTER
     # ============================================================
 
-    def _is_bad_background_candidate(self, title: str, entry=None) -> bool:
+    def _is_bad_background_candidate(self, title: str, entry=None, extra_blocked: list | None = None) -> bool:
         title_norm = self._normalize_text(title or "")
 
         blocked_terms = [
@@ -929,6 +984,9 @@ class MediaService:
             "review", "opinion", "opinião", "debate", "talk show", "cortes do",
             "cortes de", "flow", "podpah", "videocast", "episode", "episódio"
         ]
+
+        if extra_blocked:
+            blocked_terms = blocked_terms + list(extra_blocked)
 
         for term in blocked_terms:
             if term in title_norm:
@@ -966,12 +1024,22 @@ class MediaService:
     # YOUTUBE SEARCH / DOWNLOAD
     # ============================================================
 
-    def _download_youtube_background(self, topic: str, temp_dir: str):
+    def _download_youtube_background(self, topic: str, temp_dir: str, trend_source: str = ""):
         safe_topic = self._clean_text(topic)
         if not safe_topic:
             return None
 
-        query_topic = self._build_search_query(topic)
+        is_game = self._is_game_topic(topic, trend_source)
+        extra_blocked = list(self._GAME_EXTRA_BLOCKED_TERMS) if is_game else None
+
+        if is_game:
+            # Para jogos: busca GAMEPLAY do jogo/franquia, nao o video
+            # especifico do streamer (que costuma ter facecam/rosto na tela).
+            query_topic = self._build_game_search_query(topic)
+            print(f"🎮 [MEDIA ENGINE] Assunto de jogo detectado. Priorizando GAMEPLAY sobre: '{query_topic}'...")
+        else:
+            query_topic = self._build_search_query(topic)
+
         print(f"🎥 [MEDIA ENGINE] Buscando asset visual HD (>60s) validado sobre: '{query_topic}'...")
 
         search_query = f"ytsearch{self.search_result_limit}:{query_topic}"
@@ -1007,11 +1075,17 @@ class MediaService:
                 title = entry.get("title", "") or ""
                 description = entry.get("description", "") or ""
 
-                if self._is_bad_background_candidate(title, entry):
+                if self._is_bad_background_candidate(title, entry, extra_blocked=extra_blocked):
                     continue
 
                 candidate_text = f"{title} {description}"
                 score = self._keyword_match_score(query_topic, candidate_text)
+                # Bonus leve para candidatos de jogo cujo titulo ja indica
+                # gameplay puro (compilacao/gameplay), sem facecam/streamer.
+                if is_game:
+                    title_norm = self._normalize_text(title)
+                    if any(kw in title_norm for kw in ("gameplay", "playthrough", "walkthrough", "no commentary", "sem comentario")):
+                        score = min(1.0, score + 0.15)
                 print(f"🔎 [MEDIA ENGINE] Candidato: '{title}' | Match: {score:.2f}")
 
                 scored_candidates.append({
@@ -2070,7 +2144,9 @@ class MediaService:
                     research_context=content_service.last_research_context,
                 )
     
-            background_path = self._download_youtube_background(topic=topic, temp_dir=temp_dir)
+            background_path = self._download_youtube_background(
+                topic=topic, temp_dir=temp_dir, trend_source=trend_source
+            )
     
             if not background_path:
                 print("🎬 [MEDIA ENGINE] YouTube sem vídeo utilizável. Buscando fundo em bancos (Pexels/Pixabay)...")
