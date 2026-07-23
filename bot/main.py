@@ -92,8 +92,11 @@ async def verify(request: Request) -> Response:
     return Response(content="forbidden", status_code=403)
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def health() -> dict:
+    # O Render (e outros health checks) usam HEAD / para checar se a porta
+    # esta aberta. Sem "HEAD" aqui, essa versao do FastAPI/Starlette responde
+    # 405 e o deploy e marcado como falho por "porta nao encontrada".
     return {"ok": True, "produtos": len(products.load_products())}
 
 
