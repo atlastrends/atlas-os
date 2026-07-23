@@ -87,6 +87,7 @@ async def lifespan(app: FastAPI):
             dashboard_models.ShortLink.__table__,
             dashboard_models.LinkClick.__table__,
             dashboard_models.AdCampaign.__table__,
+            dashboard_models.AnsweredComment.__table__,
             # Tabela usada pelo motor de reels (loop_worker) para salvar o
             # roteiro gerado antes de renderizar o video.
             Content.__table__,

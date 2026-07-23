@@ -411,6 +411,15 @@ def trigger_auto_approve():
     return job_service.get_job_state("auto_approval")
 
 
+@router.post("/jobs/watch-comments")
+def trigger_watch_comments():
+    """Dispara agora 1 ciclo do robo de respostas por comentario (polling
+    via Graph API -- responde com o link do produto quem comentou nos
+    posts do Instagram/Facebook ja publicados)."""
+    job_service.run_watch_comments()
+    return job_service.get_job_state("watch_comments")
+
+
 @router.get("/jobs")
 def jobs_status():
     return job_service.get_job_state()

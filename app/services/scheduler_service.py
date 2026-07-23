@@ -51,6 +51,12 @@ def _auto_approval_job():
     job_service.run_auto_approval()
 
 
+def _watch_comments_job():
+    from app.services import job_service
+
+    job_service.run_watch_comments()
+
+
 def start_scheduler() -> bool:
     """Inicia o agendador. Retorna True se ficou ativo."""
     global _scheduler
@@ -115,6 +121,26 @@ def start_scheduler() -> bool:
             )
             print(
                 f"[ATLAS SCHEDULER] Aprovacao automatica por qualidade a cada {approve_hours}h."
+            )
+
+    # Robo de respostas por comentario (polling via Graph API -- nao depende
+    # de webhook/app publicado). Ligado por padrao; ATLAS_COMMENT_WATCH_ENABLED=false
+    # desativa.
+    if _env_bool("ATLAS_COMMENT_WATCH_ENABLED", True):
+        watch_minutes = _env_int("ATLAS_COMMENT_WATCH_INTERVAL_MINUTES", 15)
+        if watch_minutes > 0:
+            scheduler.add_job(
+                _watch_comments_job,
+                trigger="interval",
+                minutes=watch_minutes,
+                id="watch_comments",
+                replace_existing=True,
+                max_instances=1,
+                coalesce=True,
+                next_run_time=datetime.now(timezone.utc) + timedelta(seconds=25),
+            )
+            print(
+                f"[ATLAS SCHEDULER] Robo de comentarios (polling) a cada {watch_minutes}min."
             )
 
     if not scheduler.get_jobs():

@@ -432,3 +432,59 @@ class AdCampaign(Base):
     )
 
     video = relationship("VideoAsset")
+
+
+class AnsweredComment(Base):
+    """
+    Registro de cada comentario ja respondido automaticamente pelo robo
+    de comentarios (CommentWatcherService).
+
+    Este robo funciona por POLLING (busca periodica via Graph API), nao
+    por webhook -- o webhook em tempo real da Meta so entrega comentarios
+    de usuarios reais se o app estiver PUBLICADO (exige Verificacao de
+    Empresa/CNPJ, pausada por decisao do usuario). O polling le os
+    comentarios das PROPRIAS paginas/contas administradas pelo token,
+    entao funciona mesmo com o app "Em desenvolvimento".
+
+    Guarda o id do comentario ja tratado para NUNCA responder duas vezes
+    o mesmo comentario entre um ciclo e outro.
+    """
+
+    __tablename__ = "answered_comments"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "platform",
+            "external_comment_id",
+            name="uq_answered_comments_platform_comment",
+        ),
+        Index("ix_answered_comments_publication", "publication_id"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    publication_id = Column(
+        Integer,
+        ForeignKey("publications.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # instagram | facebook
+    platform = Column(String(30), nullable=False)
+    external_comment_id = Column(String(255), nullable=False)
+
+    commenter = Column(String(255), nullable=True)
+    comment_text = Column(Text, nullable=True)
+
+    # sent | failed | skipped
+    reply_status = Column(String(20), nullable=False, default="sent")
+    reply_error = Column(Text, nullable=True)
+
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    publication = relationship("Publication")
