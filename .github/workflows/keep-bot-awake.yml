@@ -1,0 +1,16 @@
+name: Keep atlas-dm-bot awake
+
+# Faz um ping no servico do Render a cada 10 minutos pra ele nunca dormir
+# (free tier do Render desliga apos 15 min sem trafego, o que atrasa demais
+# a resposta ao webhook da Meta). Repo publico = minutos de Actions gratis.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health check
+        run: curl -fsS --max-time 30 https://atlas-dm-bot.onrender.com/ || true
