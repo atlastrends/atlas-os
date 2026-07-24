@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlparse
 
 import requests
 from sqlalchemy.orm import Session
@@ -42,6 +43,19 @@ WATCH_WINDOW_DAYS = int(os.getenv("COMMENT_WATCH_WINDOW_DAYS", "30"))
 
 REPLY_TEMPLATE_PT = "Aqui esta o link do produto \U0001F449 {url}"
 REPLY_TEMPLATE_EN = "Here's the product link \U0001F449 {url}"
+
+_LOCAL_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0", ""}
+
+
+def _is_public_url(url: str) -> bool:
+    """True se o host do link NAO for localhost/loopback -- usado para
+    garantir que nunca mandamos um link inacessivel de fora para
+    comentarios de usuarios reais."""
+    try:
+        host = (urlparse(url).hostname or "").lower()
+    except ValueError:
+        return False
+    return host not in _LOCAL_HOSTS
 
 
 class CommentWatcherService:
@@ -163,9 +177,23 @@ class CommentWatcherService:
 
     # ----------------------------------------------------------------
     def _product_link(self, video) -> str:
+        # SEMPRE preferimos o link de afiliado bruto (dominio publico da
+        # Amazon) -- ele nunca depende deste painel estar acessivel de fora.
+        # So usamos o link curto interno (/go/codigo) como alternativa, e
+        # apenas quando ATLAS_PUBLIC_BASE_URL for mesmo um endereco publico
+        # (ex.: tunel Cloudflare ativo). Isso evita mandar para comentarios
+        # reais um link tipo "http://localhost:8000/go/xxxx", que so funciona
+        # na propria maquina e quebra a experiencia do usuario.
+        affiliate_url = (video.affiliate_url or "").strip()
+        if affiliate_url:
+            return affiliate_url
+
         if video.short_code:
-            return ShortLinkService(self.db).build_public_url(video.short_code)
-        return (video.affiliate_url or "").strip()
+            short_url = ShortLinkService(self.db).build_public_url(video.short_code)
+            if _is_public_url(short_url):
+                return short_url
+
+        return ""
 
     # ----------------------------------------------------------------
     # LEITURA DE COMENTARIOS
