@@ -13,6 +13,16 @@
 # desenvolvimento", pois le dados das PROPRIAS paginas/contas
 # administradas pelo token (nao depende de push de eventos de terceiros).
 #
+# IMPORTANTE (24/jul/2026): a resposta NAO e mais um comentario publico.
+# Instagram/Facebook NAO transformam links em texto clicavel dentro de
+# comentarios publicos -- so em mensagens diretas (DM). Por isso usamos a
+# API de "resposta privada" (private reply) da Meta: POST /{ig_id ou
+# page_id}/messages com recipient={"comment_id": ...}. Isso manda uma
+# mensagem direta para quem comentou (sem precisar seguir a pagina nem ter
+# conversa anterior), com o link clicavel de verdade. Requer que o
+# comentario tenha no maximo ~7 dias (janela de resposta privada da Meta) e
+# as permissoes instagram_manage_messages / pages_messaging no token.
+#
 # Cada comentario respondido fica registrado em AnsweredComment para
 # NUNCA responder duas vezes o mesmo comentario entre um ciclo e outro.
 # ============================================================
@@ -102,10 +112,12 @@ class CommentWatcherService:
             return 0
 
         kind = video.kind.value if hasattr(video.kind, "value") else video.kind
-        page_id, _ig_id, _role, _market = resolve_meta_targets(
+        page_id, ig_id, _role, _market = resolve_meta_targets(
             kind, video.country_code or "", video.language or ""
         )
         if not page_id:
+            return 0
+        if pub.platform == "instagram" and not ig_id:
             return 0
 
         try:
@@ -151,9 +163,9 @@ class CommentWatcherService:
             error = None
             try:
                 if pub.platform == "instagram":
-                    self._reply_instagram(comment_id, reply_text, token)
+                    self._send_instagram_private_reply(ig_id, comment_id, reply_text, token)
                 else:
-                    self._reply_facebook(comment_id, reply_text, token)
+                    self._send_facebook_private_reply(page_id, comment_id, reply_text, token)
                 sent += 1
             except Exception as exc:  # noqa: BLE001
                 status = "failed"
@@ -234,23 +246,36 @@ class CommentWatcherService:
         ]
 
     # ----------------------------------------------------------------
-    # RESPOSTA (reply publica no proprio comentario)
+    # RESPOSTA (mensagem privada/DM para quem comentou -- link fica clicavel;
+    # NAO responde publicamente no comentario)
     # ----------------------------------------------------------------
 
-    def _reply_instagram(self, comment_id: str, message: str, token: str) -> None:
+    def _send_instagram_private_reply(
+        self, ig_id: str, comment_id: str, message: str, token: str
+    ) -> None:
         resp = requests.post(
-            f"{GRAPH_BASE}/{comment_id}/replies",
-            data={"message": message, "access_token": token},
+            f"{GRAPH_BASE}/{ig_id}/messages",
+            json={
+                "recipient": {"comment_id": comment_id},
+                "message": {"text": message},
+            },
+            params={"access_token": token},
             timeout=30,
         ).json()
         if "error" in resp:
-            raise RuntimeError(f"Erro Graph API (IG reply): {resp['error']}")
+            raise RuntimeError(f"Erro Graph API (IG DM privada): {resp['error']}")
 
-    def _reply_facebook(self, comment_id: str, message: str, token: str) -> None:
+    def _send_facebook_private_reply(
+        self, page_id: str, comment_id: str, message: str, token: str
+    ) -> None:
         resp = requests.post(
-            f"{GRAPH_BASE}/{comment_id}/comments",
-            data={"message": message, "access_token": token},
+            f"{GRAPH_BASE}/{page_id}/messages",
+            json={
+                "recipient": {"comment_id": comment_id},
+                "message": {"text": message},
+            },
+            params={"access_token": token},
             timeout=30,
         ).json()
         if "error" in resp:
-            raise RuntimeError(f"Erro Graph API (FB reply): {resp['error']}")
+            raise RuntimeError(f"Erro Graph API (FB DM privada): {resp['error']}")
