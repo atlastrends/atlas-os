@@ -14,6 +14,7 @@ export default function Products() {
   const [groups, setGroups] = useState([]);
   const [selection, setSelection] = useState({}); // key -> { checked, quantity }
   const [toast, setToast] = useState(null);
+  const [expanded, setExpanded] = useState({}); // key -> bool (categoria expandida)
 
   // Robo automatico de afiliados (busca + gera + publica a cada 2h).
   const [autoAff, setAutoAff] = useState({
@@ -136,6 +137,11 @@ export default function Products() {
       const cur = prev[k] || { checked: false, quantity: 1 };
       return { ...prev, [k]: { ...cur, checked: !cur.checked } };
     });
+  };
+
+  const toggleExpand = (g) => {
+    const k = keyOf(g);
+    setExpanded((prev) => ({ ...prev, [k]: !prev[k] }));
   };
 
   const allChecked =
@@ -344,6 +350,13 @@ export default function Products() {
           </p>
         ) : (
           <>
+            <p className="foot" style={{ marginTop: 10, color: "var(--text-faint)" }}>
+              Clique na <b>seta ▸</b> de uma categoria para ver os produtos
+              mais vendidos dela. A Amazon não informa a quantidade exata de
+              vendas por dia/semana nas páginas públicas — por isso mostramos
+              o <b>ranking (posição)</b> e o <b>número de avaliações</b> de
+              cada produto, que é o melhor sinal público real de popularidade.
+            </p>
             <table className="table" style={{ marginTop: 12 }}>
               <thead>
                 <tr>
@@ -358,6 +371,7 @@ export default function Products() {
                       title="Selecionar todas as categorias"
                     />
                   </th>
+                  <th style={{ width: 32 }}></th>
                   <th>Mercado</th>
                   <th>Categoria</th>
                   <th>Disponíveis</th>
@@ -368,34 +382,101 @@ export default function Products() {
                 {groups.map((g) => {
                   const k = keyOf(g);
                   const sel = selection[k] || { checked: false, quantity: 1 };
+                  const isOpen = !!expanded[k];
                   return (
-                    <tr key={k}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={!!sel.checked}
-                          onChange={() => toggle(g)}
-                        />
-                      </td>
-                      <td>
-                        <span className="badge created">
-                          {g.marketplace_code === "US" ? "🇺🇸 EUA" : "🇧🇷 Brasil"}
-                        </span>
-                      </td>
-                      <td>{g.category_label || g.category}</td>
-                      <td>{g.count}</td>
-                      <td>
-                        <input
-                          type="number"
-                          min={1}
-                          max={g.count || 1}
-                          value={sel.quantity || 1}
-                          disabled={!sel.checked}
-                          onChange={(e) => setQty(g, e.target.value)}
-                          style={{ width: 80 }}
-                        />
-                      </td>
-                    </tr>
+                    <React.Fragment key={k}>
+                      <tr>
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={!!sel.checked}
+                            onChange={() => toggle(g)}
+                          />
+                        </td>
+                        <td>
+                          <button
+                            className="btn ghost"
+                            onClick={() => toggleExpand(g)}
+                            title={isOpen ? "Recolher produtos" : "Ver produtos mais vendidos"}
+                            style={{ padding: "2px 8px" }}
+                          >
+                            {isOpen ? "▾" : "▸"}
+                          </button>
+                        </td>
+                        <td>
+                          <span className="badge created">
+                            {g.marketplace_code === "US" ? "🇺🇸 EUA" : "🇧🇷 Brasil"}
+                          </span>
+                        </td>
+                        <td>{g.category_label || g.category}</td>
+                        <td>{g.count}</td>
+                        <td>
+                          <input
+                            type="number"
+                            min={1}
+                            max={g.count || 1}
+                            value={sel.quantity || 1}
+                            disabled={!sel.checked}
+                            onChange={(e) => setQty(g, e.target.value)}
+                            style={{ width: 80 }}
+                          />
+                        </td>
+                      </tr>
+                      {isOpen ? (
+                        <tr>
+                          <td colSpan={6} style={{ background: "rgba(255,255,255,0.03)" }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 8,
+                                padding: "10px 6px",
+                              }}
+                            >
+                              {(g.products || []).map((p) => (
+                                <div
+                                  key={p.asin}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 12,
+                                  }}
+                                >
+                                  <b style={{ minWidth: 28, textAlign: "right", color: "var(--text-faint)" }}>
+                                    #{p.rank}
+                                  </b>
+                                  {p.image_url ? (
+                                    <img
+                                      src={p.image_url}
+                                      alt=""
+                                      style={{
+                                        width: 40,
+                                        height: 40,
+                                        objectFit: "contain",
+                                        borderRadius: 6,
+                                        background: "#fff",
+                                      }}
+                                    />
+                                  ) : null}
+                                  <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {p.title}
+                                  </span>
+                                  <span className="foot" style={{ color: "var(--text-faint)", whiteSpace: "nowrap" }}>
+                                    {p.price_display}
+                                  </span>
+                                  <span className="foot" style={{ whiteSpace: "nowrap" }}>
+                                    ⭐ {p.rating ? p.rating.toFixed(1) : "—"}
+                                  </span>
+                                  <span className="foot" style={{ whiteSpace: "nowrap" }}>
+                                    💬 {(p.reviews || 0).toLocaleString()} avaliações
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      ) : null}
+                    </React.Fragment>
                   );
                 })}
               </tbody>

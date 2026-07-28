@@ -603,8 +603,68 @@ def _product_facts(product: Any) -> str:
     return "\n".join(lines)
 
 
-def _story_prompt(product: Any, market: str) -> str:
+def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
     facts = _product_facts(product)
+
+    if mode == "live":
+        if market == "US":
+            return (
+                "You are a warm, professional LIVE shopping host presenting "
+                "this Amazon product RIGHT NOW to viewers watching your "
+                "livestream. Write her spoken lines in ENGLISH as 6 short "
+                "blocks, for about 55 to 75 seconds, talking ONLY about THIS "
+                "product, using its real details.\n\n"
+                f"PRODUCT DATA (from the Amazon listing):\n{facts}\n\n"
+                "RULES:\n"
+                "- Real LIVE tone: warm, natural, talking WITH the customer in "
+                "real time. Explain calmly and give MORE detail (it is live).\n"
+                "- Be specific to THIS product: mention real features and uses.\n"
+                "- Build genuine DESIRE to buy: name the problem it solves, the "
+                "practical benefit, why it is worth owning.\n"
+                "- NO short-video hooks: do NOT say 'stop scrolling', 'three "
+                "seconds', 'almost nobody knows'. This is a live, not a reel.\n"
+                "- Do NOT invent specs not in the data. Do NOT mention "
+                "discounts, sales, 'lowest price' or guarantees. Do NOT tell "
+                "them to scan a QR code.\n"
+                "- You may invite them to check the pinned link / link in the "
+                "description (live language).\n"
+                "- No emojis. Each block = 1 to 2 spoken sentences that flow "
+                "naturally into the next.\n"
+                "- Return ONLY valid JSON, no markdown, in this exact shape:\n"
+                '{"scenes":[{"caption":"...","voice":"..."}, ... 6 items]}\n'
+                "where 'voice' is the spoken line and 'caption' is a tiny "
+                "3-5 word summary of that block (internal use)."
+            )
+        return (
+            "Voce e uma APRESENTADORA de live de vendas, profissional e "
+            "carismatica, apresentando AO VIVO este produto da Amazon para "
+            "quem esta assistindo agora. Escreva a fala dela, em PORTUGUES DO "
+            "BRASIL, em 6 blocos curtos, para cerca de 55 a 75 segundos, "
+            "falando SO deste produto, com os dados reais dele.\n\n"
+            f"DADOS DO PRODUTO (do anuncio da Amazon):\n{facts}\n\n"
+            "REGRAS:\n"
+            "- Tom de LIVE de verdade: acolhedor, natural, como quem conversa "
+            "com o cliente em tempo real. Explique com calma e de MAIS "
+            "detalhes (por ser ao vivo).\n"
+            "- Seja especifica DESTE produto: cite caracteristicas e usos "
+            "reais.\n"
+            "- Desperte o DESEJO de compra: mostre o problema que ele resolve, "
+            "o beneficio pratico, por que vale a pena ter.\n"
+            "- NADA de gancho de reels: NAO diga 'pare de rolar o feed', 'tres "
+            "segundos', 'quase ninguem sabe'. Isso e live, nao video curto.\n"
+            "- NAO invente especificacoes que nao estao nos dados. NAO fale de "
+            "desconto, promocao, 'menor preco' nem garantia. NAO mande "
+            "escanear QR Code.\n"
+            "- Pode convidar a conferir pelo link fixado / link na descricao "
+            "(linguagem de live).\n"
+            "- Sem emojis. Cada bloco = 1 a 2 frases faladas que se encadeiam "
+            "naturalmente.\n"
+            "- Retorne SOMENTE JSON valido, sem markdown, neste formato "
+            "exato:\n"
+            '{"scenes":[{"caption":"...","voice":"..."}, ... 6 itens]}\n'
+            "onde 'voice' e a fala e 'caption' e um resumo curtinho de 3 a 5 "
+            "palavras daquele bloco (uso interno)."
+        )
 
     if market == "US":
         return (
@@ -810,7 +870,7 @@ def _groq_story_text(prompt: str) -> str | None:
         return None
 
 
-def _llm_story(product: Any, market: str) -> list[dict[str, str]] | None:
+def _llm_story(product: Any, market: str, mode: str = "reel") -> list[dict[str, str]] | None:
     """Gera o roteiro com IA a partir dos dados reais do produto Amazon.
 
     Tenta Gemini e, se faltar cota, cai no Groq. Retorna None se ambos
@@ -821,7 +881,7 @@ def _llm_story(product: Any, market: str) -> list[dict[str, str]] | None:
     }:
         return None
 
-    prompt = _story_prompt(product, market)
+    prompt = _story_prompt(product, market, mode)
 
     for provider, generator in (
         ("gemini", _gemini_story_text),
@@ -836,8 +896,9 @@ def _llm_story(product: Any, market: str) -> list[dict[str, str]] | None:
             continue
         if len(scenes) >= 5:
             title = short_title(product)
+            label = "de live" if mode == "live" else "de reels"
             print(
-                f"[BROLL] Roteiro especifico gerado pela IA ({provider}): {title}"
+                f"[BROLL] Roteiro {label} gerado pela IA ({provider}): {title}"
             )
             return scenes[:6]
 
@@ -846,7 +907,7 @@ def _llm_story(product: Any, market: str) -> list[dict[str, str]] | None:
 
 
 
-def make_story(product: Any) -> list[dict[str, str]]:
+def make_story(product: Any, mode: str = "reel") -> list[dict[str, str]]:
     title = short_title(product)
     profile = product_profile(product)
     feature = verified_feature(product)
@@ -865,9 +926,52 @@ def make_story(product: Any) -> list[dict[str, str]]:
             product
         )
 
-    ai_story = _llm_story(product, market)
+    ai_story = _llm_story(product, market, mode)
     if ai_story:
         return ai_story
+
+    if mode == "live":
+        if market == "US":
+            return [
+                {"caption": "welcome", "voice": (
+                    f"Hey everyone, welcome in! Let me show you the {title} - "
+                    "I really think you are going to like this one.")},
+                {"caption": "what it is", "voice": (
+                    f"So what is it? It is made to help you {profile['benefit']}, "
+                    "and it fits right into your everyday routine.")},
+                {"caption": "real detail", "voice": (
+                    f"Here is a detail straight from the listing: {feature}."
+                    if feature else
+                    "What I love is how it makes something you do every day "
+                    "genuinely easier and more comfortable.")},
+                {"caption": "why it is worth it", "voice": (
+                    f"If {profile['pain']}, this is exactly the kind of thing "
+                    "that solves it without any hassle. That is why it is worth "
+                    "having at home.")},
+                {"caption": "how to get it", "voice": (
+                    "If you want it, the link is pinned right here and in the "
+                    "description - go take a look at the full listing while "
+                    "you are watching.")},
+            ]
+        return [
+            {"caption": "boas-vindas", "voice": (
+                f"Oi, gente, sejam bem-vindos! Deixa eu mostrar pra voces o "
+                f"{title} - eu tenho certeza que voces vao gostar desse aqui.")},
+            {"caption": "o que e", "voice": (
+                f"Entao, o que e isso? Ele foi feito pra te ajudar a "
+                f"{profile['benefit']}, e encaixa direitinho no seu dia a dia.")},
+            {"caption": "detalhe real", "voice": (
+                f"Olha um detalhe direto do anuncio: {feature}."
+                if feature else
+                "O que eu mais gosto e como ele deixa uma coisa que voce faz "
+                "todo dia bem mais facil e confortavel.")},
+            {"caption": "por que vale", "voice": (
+                f"Se {profile['pain']}, esse aqui resolve exatamente isso, sem "
+                "complicacao. Por isso vale muito a pena ter em casa.")},
+            {"caption": "como pegar", "voice": (
+                "Se voce quiser, o link ta fixado aqui e na descricao - da uma "
+                "olhada no anuncio completo enquanto assiste.")},
+        ]
 
     if market == "US":
         return [
@@ -1135,7 +1239,8 @@ def search_candidates(product: Any) -> list[dict[str, Any]]:
     return results
 
 
-def choose_candidate(product: Any) -> dict[str, Any]:
+def choose_candidates(product: Any) -> list[dict[str, Any]]:
+    """Devolve os candidatos de b-roll ordenados do melhor para o pior."""
     allowed = approved_terms()
 
     raw_tokens = [
@@ -1221,16 +1326,7 @@ def choose_candidate(product: Any) -> dict[str, Any]:
 
         ranked.append((overlap * 20 + base_score, candidate))
 
-    if not ranked:
-        # Plano B: a busca ja mirou o produto vendido, entao em vez de
-        # falhar pegamos o melhor resultado relevante encontrado.
-        if fallback:
-            fallback.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return fallback[0][1]
-
+    if not ranked and not fallback:
         if allowed:
             raise BrollError(
                 "Nenhum video relacionado foi encontrado nos canais aprovados."
@@ -1239,12 +1335,30 @@ def choose_candidate(product: Any) -> dict[str, Any]:
             "Nenhum video relacionado foi encontrado no YouTube."
         )
 
-    ranked.sort(
-        key=lambda item: item[0],
-        reverse=True,
-    )
+    ranked.sort(key=lambda item: item[0], reverse=True)
+    fallback.sort(key=lambda item: item[0], reverse=True)
 
-    return ranked[0][1]
+    # Lista final: primeiro os candidatos com palavras batendo no titulo
+    # (ranked), depois o resto relevante (fallback), sem repetir o mesmo
+    # video. Isso da varias opcoes para pular candidatos com QR/codigo de
+    # barras embutido (ver _video_has_qr_code) sem falhar a geracao.
+    ordered: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for _, candidate in ranked + fallback:
+        video_id = clean(candidate.get("id"), 100)
+        key = video_id or clean(candidate.get("webpage_url"), 200)
+        if key in seen_ids:
+            continue
+        seen_ids.add(key)
+        ordered.append(candidate)
+
+    return ordered
+
+
+def choose_candidate(product: Any) -> dict[str, Any]:
+    """Compatibilidade: devolve so o melhor candidato (ver choose_candidates)."""
+    candidates = choose_candidates(product)
+    return candidates[0]
 
 
 def download_broll(
@@ -1392,6 +1506,48 @@ def duration(path: Path) -> float:
 
     hours, minutes, seconds = match.groups()
     return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+
+
+def _video_has_qr_code(path: Path, samples: int = 8) -> bool:
+    """Verifica se o video de b-roll ja tem um QR code embutido na imagem.
+
+    Usamos poucos frames amostrados (nao o video inteiro) para ser rapido.
+    Se o OpenCV nao estiver instalado, retorna False (nao bloqueia a
+    geracao; so deixa de aplicar essa checagem extra).
+    """
+    try:
+        import cv2
+    except Exception:
+        print(
+            "[BROLL] opencv nao instalado; pulando checagem de QR no b-roll."
+        )
+        return False
+
+    capture = cv2.VideoCapture(str(path))
+    try:
+        total_frames = int(capture.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        if total_frames <= 0:
+            return False
+
+        detector = cv2.QRCodeDetector()
+        step = max(total_frames // samples, 1)
+
+        for index in range(samples):
+            frame_index = min(index * step, total_frames - 1)
+            capture.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+            ok, frame = capture.read()
+            if not ok or frame is None:
+                continue
+            try:
+                found, _ = detector.detect(frame)
+            except Exception:
+                found = False
+            if found:
+                return True
+    finally:
+        capture.release()
+
+    return False
 
 
 def normalize_audio(
@@ -1586,6 +1742,66 @@ def create_ass(
     )
 
 
+def create_live_ass(
+    narration: str,
+    total_duration: float,
+    destination: Path,
+    market: str,
+) -> None:
+    """Legenda estilo LIVE: mostra o que a apresentadora esta FALANDO,
+    frase a frase, no rodape. Sem banner de QR e sem ganchos de reels."""
+    header = [
+        "[Script Info]",
+        "ScriptType: v4.00+",
+        "PlayResX: 1080",
+        "PlayResY: 1920",
+        "WrapStyle: 0",
+        "",
+        "[V4+ Styles]",
+        (
+            "Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,"
+            "OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,"
+            "ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,"
+            "Alignment,MarginL,MarginR,MarginV,Encoding"
+        ),
+        (
+            "Style: LiveCaption,DejaVu Sans,46,&H00FFFFFF,&H000000FF,"
+            "&H00101010,&HB4000000,-1,0,0,0,100,100,0,0,3,4,2,2,90,90,210,1"
+        ),
+        "",
+        "[Events]",
+        "Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text",
+    ]
+
+    # Quebra a narracao em frases para cada uma virar uma legenda curta.
+    parts = re.split(r"(?<=[.!?])\s+", clean(narration, 4000))
+    sentences = [p.strip() for p in parts if p and p.strip()]
+    if not sentences:
+        destination.write_text("\n".join(header), encoding="utf-8")
+        return
+
+    weights = [max(1, len(s)) for s in sentences]
+    total_weight = sum(weights)
+    lines = list(header)
+    cursor = 0.0
+
+    for sentence, weight in zip(sentences, weights):
+        span = total_duration * (weight / total_weight)
+        start = cursor
+        end = min(total_duration, cursor + span)
+        cursor = end
+        lines.append(
+            "Dialogue: 0,"
+            + ass_time(start)
+            + ","
+            + ass_time(end)
+            + ",LiveCaption,,0,0,0,,"
+            + wrap_caption(sentence, 30, max_lines=3)
+        )
+
+    destination.write_text("\n".join(lines), encoding="utf-8")
+
+
 def render_authorized_video(
     product: Any,
     audio_path: Path,
@@ -1600,11 +1816,44 @@ def render_authorized_video(
         work_directory,
     )
 
-    candidate = choose_candidate(product)
-    broll = download_broll(
-        candidate,
-        work_directory,
-    )
+    # Tenta os candidatos do melhor para o pior, pulando qualquer video que
+    # ja tenha um QR code embutido na imagem (atrapalharia o NOSSO QR do
+    # produto, que fica sobreposto por cima do b-roll).
+    candidates = choose_candidates(product)
+
+    broll: dict[str, Any] | None = None
+    last_error: Exception | None = None
+    max_attempts = min(len(candidates), 5)
+
+    for attempt_index in range(max_attempts):
+        candidate = candidates[attempt_index]
+        try:
+            downloaded = download_broll(candidate, work_directory)
+        except Exception as exc:
+            last_error = exc
+            continue
+
+        if _video_has_qr_code(downloaded["path"]):
+            print(
+                "[BROLL] Candidato descartado (QR/codigo de barras "
+                "embutido no video): " + downloaded.get("title", "")
+            )
+            try:
+                downloaded["path"].unlink(missing_ok=True)
+            except Exception:
+                pass
+            continue
+
+        broll = downloaded
+        break
+
+    if broll is None:
+        if last_error is not None:
+            raise last_error
+        raise BrollError(
+            "Todos os videos encontrados ja tinham QR code ou codigo de "
+            "barras na imagem; nenhum ficou livre para usar como fundo."
+        )
 
     story = make_story(product)
 
@@ -1785,9 +2034,142 @@ def render_authorized_video(
             "source_duration_seconds": broll["source_duration_seconds"],
             "license_status": broll["license_status"],
         },
+        "broll_path": str(broll["path"]),
         "story": story,
         "narration": narration_from_story(story),
         "duration_seconds": video_duration,
         "static_image_fallback": False,
         "original_audio_used": False,
+    }
+
+
+def render_live_variant(
+    product: Any,
+    *,
+    broll_path: Path,
+    live_audio_path: Path,
+    live_narration: str,
+    output_path: Path,
+    work_directory: Path,
+) -> dict[str, Any]:
+    """Renderiza a versao de LIVE do produto.
+
+    Reaproveita a MESMA filmagem (b-roll ja baixado para o reels), mas usa a
+    NARRACAO da apresentadora (audio de live) e a legenda do que esta sendo
+    falado. SEM QR Code e SEM ganchos de reels.
+    """
+    broll_path = Path(broll_path)
+    live_audio_path = Path(live_audio_path)
+
+    if not broll_path.is_file():
+        raise BrollError("B-roll da live nao encontrado.")
+    if not live_audio_path.is_file():
+        raise BrollError("Audio da live nao foi criado.")
+
+    live_duration = duration(live_audio_path)
+    if live_duration < 12:
+        raise BrollError("Narracao de live muito curta.")
+    # Teto de seguranca para nao gerar um bloco gigante.
+    live_duration = min(live_duration, 120.0)
+
+    market = clean(getattr(product, "marketplace_code", ""), 10).upper()
+
+    ass_path = work_directory / "captions_live.ass"
+    create_live_ass(live_narration, live_duration, ass_path, market)
+    ass_for_filter = str(ass_path).replace("\\", "/").replace(":", "\\:")
+
+    filter_path = work_directory / "filters_live.txt"
+    filter_path.write_text(
+        (
+            "[0:v]"
+            "split=2"
+            "[background_source]"
+            "[foreground_source];"
+
+            "[background_source]"
+            "scale=1080:1920:force_original_aspect_ratio=increase,"
+            "crop=1080:1920,"
+            "gblur=sigma=42:steps=3,"
+            "eq=brightness=-0.22:saturation=0.82,"
+            "fps=30,"
+            "setsar=1,"
+            "format=yuv420p"
+            "[background];"
+
+            "[foreground_source]"
+            "scale=1080:1680:force_original_aspect_ratio=decrease,"
+            "fps=30,"
+            "setsar=1,"
+            "format=yuv420p"
+            "[foreground];"
+
+            "[background]"
+            "drawbox=x=0:y=0:w=iw:h=ih:color=black@0.12:t=fill"
+            "[dark_background];"
+
+            "[dark_background]"
+            "[foreground]"
+            "overlay=x=(W-w)/2:y=(H-h)/2:format=auto"
+            "[composed];"
+
+            "[composed]"
+            "subtitles=filename='"
+            + ass_for_filter
+            + "'"
+            "[v]"
+        ),
+        encoding="utf-8",
+    )
+
+    run(
+        [
+            _FFMPEG,
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-stream_loop",
+            "-1",
+            "-i",
+            str(broll_path),
+            "-i",
+            str(live_audio_path),
+            "-filter_complex_script",
+            str(filter_path),
+            "-map",
+            "[v]",
+            "-map",
+            "1:a:0",
+            "-t",
+            format(live_duration, ".3f"),
+            "-c:v",
+            "libx264",
+            "-preset",
+            "medium",
+            "-crf",
+            "19",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            "-ar",
+            "48000",
+            "-movflags",
+            "+faststart",
+            str(output_path),
+        ],
+        timeout=1800,
+    )
+
+    if (
+        not output_path.is_file()
+        or output_path.stat().st_size < 200_000
+    ):
+        raise BrollError("O FFmpeg nao criou a versao de live.")
+
+    return {
+        "duration_seconds": duration(output_path),
+        "narration": live_narration,
     }

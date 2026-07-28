@@ -7,9 +7,11 @@
 
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -54,6 +56,11 @@ def _serialize_asset(asset: VideoAsset, db: Session) -> dict:
             f"/media/{asset.video_path}" if asset.video_path else None
         ),
         "thumbnail_path": asset.thumbnail_path,
+        "thumbnail_url": (
+            f"/api/videos/{asset.id}/thumbnail"
+            if (asset.video_path or asset.thumbnail_path)
+            else None
+        ),
         "affiliate_url": asset.affiliate_url,
         "short_code": asset.short_code,
         "short_url": short_url,
@@ -227,6 +234,21 @@ def get_video(asset_id: int, db: Session = Depends(get_db)):
     return _serialize_asset(asset, db)
 
 
+@router.get("/videos/{asset_id}/thumbnail")
+def video_thumbnail(asset_id: int, db: Session = Depends(get_db)):
+    """Miniatura (.jpg) do video: 1 frame extraido do proprio video. Gera na
+    primeira vez e serve do cache depois. Leve — nao carrega o video inteiro,
+    deixando a grade bem mais rapida."""
+    library = VideoLibraryService(db)
+    asset = library.get(asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Video nao encontrado.")
+    path = library.ensure_thumbnail(asset)
+    if not path or not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail="Miniatura indisponivel.")
+    return FileResponse(path, media_type="image/jpeg")
+
+
 @router.get("/videos/{asset_id}/caption")
 def video_caption(
     asset_id: int,
@@ -280,6 +302,18 @@ def reject_video(
     body = body or ReviewRequest()
     asset = PublishingService(db).reject(asset, notes=body.notes)
     return _serialize_asset(asset, db)
+
+
+@router.post("/videos/{asset_id}/purge-file")
+def purge_video_file(asset_id: int, db: Session = Depends(get_db)):
+    """Apaga do computador SO O ARQUIVO de UM video ja PUBLICADO (libera
+    espaco). Preserva o registro no banco, as ESTATISTICAS e o .json ao lado
+    (para nao gerar o mesmo produto de novo). O video segue publicado nas
+    redes."""
+    try:
+        return VideoLibraryService(db).purge_published_file(asset_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 # ----------------------------------------------------------------
@@ -471,7 +505,7 @@ def tiktok_connect(market: str = Query("BR")):
 
 
 @router.get("/tiktok/callback")
-def tiktok_callback(code: str = Query(default=""), state: str = Query(default=""), error: str = Query(default="")):
+def tiktok_callback(code: str = Query(default=""), state: str = Query(default=""), error: str = Query(default=""), db: Session = Depends(get_db)):
     """Retorno do TikTok apos o login. Troca o code por tokens e salva."""
     from fastapi.responses import HTMLResponse
 
@@ -505,12 +539,36 @@ border:1px solid #1f2937;text-align:center">
     if not (data.get("access_token") or "").strip():
         return _page("Nao autorizado", f"O TikTok nao retornou o token. Resposta: {data}", ok=False)
 
-    tiktok_oauth_service.save_tokens(market, data)
+    try:
+        account = tiktok_oauth_service.upsert_account(db, market, data)
+    except Exception as exc:  # noqa: BLE001
+        return _page(
+            "Erro ao salvar",
+            f"Conectou, mas nao consegui salvar a conta: {exc}",
+            ok=False,
+        )
+
+    nome = account.display_name or "sua conta"
     return _page(
-        f"TikTok {market} conectado!",
-        f"A conta do TikTok ({market}) foi conectada e sera renovada automaticamente.",
+        f"TikTok conectado ({market})!",
+        f"A conta <b>{nome}</b> foi conectada e sera renovada automaticamente.",
         ok=True,
     )
+
+
+@router.get("/tiktok/accounts")
+def tiktok_accounts(db: Session = Depends(get_db)):
+    """Lista as contas do TikTok conectadas (multiusuario)."""
+    return {"accounts": tiktok_oauth_service.list_accounts(db)}
+
+
+@router.delete("/tiktok/accounts/{account_id}")
+def tiktok_disconnect(account_id: int, db: Session = Depends(get_db)):
+    """Desconecta (apaga) uma conta do TikTok."""
+    ok = tiktok_oauth_service.delete_account(db, account_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Conta nao encontrada.")
+    return {"ok": True}
 
 
 # ----------------------------------------------------------------

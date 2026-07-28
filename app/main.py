@@ -1,3 +1,4 @@
+import asyncio
 import os
 import threading
 from contextlib import asynccontextmanager
@@ -62,12 +63,48 @@ def is_atlas_engine_enabled() -> bool:
     )
 
 
+def _silenciar_conexoes_abortadas() -> None:
+    """Silencia o ruido do asyncio no Windows quando o cliente cancela o
+    streaming de um video.
+
+    Ao abrir o painel, o navegador faz varias requisicoes parciais (HTTP 206)
+    aos arquivos .mp4 e cancela as que nao precisa (preview/seek). No event
+    loop "Proactor" do Windows isso vira um ConnectionResetError
+    [WinError 10054] ("forcibly closed by the remote host") que o asyncio
+    imprime como um traceback gigante a cada video carregado. Nao e um erro
+    acionavel: so significa que o cliente foi embora. Instalamos aqui um
+    handler que ignora esse caso e repassa qualquer outra excecao para o
+    tratamento padrao, preservando os erros de verdade.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return
+
+    handler_anterior = loop.get_exception_handler()
+
+    def _tratar(loop, context):
+        exc = context.get("exception")
+        if isinstance(exc, (ConnectionResetError, ConnectionAbortedError)):
+            return
+        if handler_anterior is not None:
+            handler_anterior(loop, context)
+        else:
+            loop.default_exception_handler(context)
+
+    loop.set_exception_handler(_tratar)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _atlas_engine
     global _engine_thread
 
     print("[ATLAS OS] API iniciando...")
+
+    # Silencia os tracebacks de conexao cancelada pelo navegador ao carregar
+    # os videos (ConnectionResetError [WinError 10054]) que poluiam o log.
+    _silenciar_conexoes_abortadas()
 
     # Garante que as tabelas do painel existam (idempotente).
     try:
@@ -88,6 +125,8 @@ async def lifespan(app: FastAPI):
             dashboard_models.LinkClick.__table__,
             dashboard_models.AdCampaign.__table__,
             dashboard_models.AnsweredComment.__table__,
+            # Contas do TikTok conectadas por OAuth (Login Kit, multiusuario).
+            dashboard_models.TikTokAccount.__table__,
             # Tabela usada pelo motor de reels (loop_worker) para salvar o
             # roteiro gerado antes de renderizar o video.
             Content.__table__,

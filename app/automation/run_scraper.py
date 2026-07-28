@@ -22,15 +22,33 @@ CATEGORIES = {
     "pet-supplies": "Pet",
     "hpc": "Saude",
     "office-products": "Escritorio",
+    # Categorias adicionais (testadas e confirmadas com produtos reais em
+    # BR e US, mesmo slug funciona nos dois mercados) para garantir pelo
+    # menos 15 categorias disponiveis em cada mercado.
+    "automotive": "Automotivo",
+    "fashion": "Moda",
+    "books": "Livros",
+    "grocery": "Mercado",
+    "musical-instruments": "Instrumentos Musicais",
+    "appliances": "Eletrodomesticos",
 }
 
-# Em alguns mercados a lista geral da categoria nao faz jus ao nome. Ex.: nos
-# EUA "hpc" e' "Health & Household" (Saude e Utilidades Domesticas) e a lista
-# e' dominada por PILHAS e PAPEL TOALHA. A sub-lista de suplementos/vitaminas
-# (hpc/3764441) traz produtos de saude de verdade. Aqui trocamos SO a URL
-# (o rotulo e a chave continuam "hpc" -> "Saude").
+# Em alguns mercados a lista geral da categoria nao faz jus ao nome, ou o slug
+# padrao simplesmente nao traz produtos (pagina vazia). Aqui trocamos SO a URL
+# usada na busca (o rotulo e a chave do painel continuam os mesmos).
+# - US "hpc": "Health & Household" e' dominada por PILHAS/PAPEL TOALHA; a
+#   sub-lista de suplementos/vitaminas (hpc/3764441) traz produtos de saude.
+# - US "home"/"sports": o slug simples nao retorna produtos no site dos EUA;
+#   "home-garden"/"sporting-goods" sao os slugs que realmente funcionam la.
+# - BR "pet-supplies"/"office-products": os slugs padrao (iguais ao US) dao
+#   erro 503 ou pagina vazia no site brasileiro; "pet-products"/"office" sao
+#   os slugs que realmente trazem produtos por la.
 MARKET_CATEGORY_PATH = {
     ("US", "hpc"): "hpc/3764441",
+    ("US", "home"): "home-garden",
+    ("US", "sports"): "sporting-goods",
+    ("BR", "pet-supplies"): "pet-products",
+    ("BR", "office-products"): "office",
 }
 
 def _stable_asin(real_asin):
@@ -122,7 +140,7 @@ def _get_html(url, headers, tries=3):
         time.sleep(2 + attempt)  # espera crescente entre as tentativas
     return last
 
-def fetch_category(domain, market, category, tag, limit):
+def fetch_category(domain, market, category, tag, limit, tries=3):
     # "Mais Vendidos" da categoria (ranking do mais vendido -> menos vendido).
     path = MARKET_CATEGORY_PATH.get((market, category), category)
     url = f"https://www.{domain}/gp/bestsellers/{path}/"
@@ -132,9 +150,25 @@ def fetch_category(domain, market, category, tag, limit):
         "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8"
     }
     label = CATEGORIES.get(category, category)
+    print(f"Buscando MAIS VENDIDOS [{market}] - {label}...")
+
+    # A Amazon as vezes devolve a pagina (status 200) mas SEM produtos no
+    # bloco esperado (variacao de layout / bloqueio brando). Tenta de novo
+    # algumas vezes antes de desistir da categoria, para nao perder
+    # categorias inteiras por causa de UMA tentativa ruim.
+    for attempt in range(tries):
+        products = _parse_bestsellers_html(url, headers, market, domain, category, label, tag, limit)
+        if products:
+            return products
+        if attempt < tries - 1:
+            time.sleep(2 + attempt * 2)
+    print(f"Categoria sem produtos [{market}] - {label} apos {tries} tentativa(s).")
+    return []
+
+
+def _parse_bestsellers_html(url, headers, market, domain, category, label, tag, limit):
     products = []
     seen = set()
-    print(f"Buscando MAIS VENDIDOS [{market}] - {label}...")
     try:
         html = _get_html(url, headers)
         # Divide a pagina em blocos de produto. Cada produto comeca em
@@ -215,10 +249,13 @@ def main():
 
     # Quantos produtos coletar por categoria/mercado (so metadados, rapido).
     # E' a mesma pagina, entao pegar mais itens nao custa requisicoes extras.
+    # Busca uma margem acima do minimo de 10 "disponiveis" exigido no painel:
+    # produtos ja transformados em video sao filtrados depois (dedup), entao
+    # pedir so 10 brutos poderia sobrar menos de 10 disponiveis.
     try:
-        limit = int(os.getenv("ATLAS_SCRAPER_LIMIT_PER_CATEGORY", "10"))
+        limit = int(os.getenv("ATLAS_SCRAPER_LIMIT_PER_CATEGORY", "15"))
     except Exception:
-        limit = 10
+        limit = 15
     limit = max(1, limit)
 
     all_products = []

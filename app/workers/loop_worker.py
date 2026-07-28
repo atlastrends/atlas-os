@@ -8,7 +8,7 @@ from app.core.database import SessionLocal
 from app.models.content import Content
 from app.services.trend_service import TrendService
 from app.services.content_service import ContentService
-from app.services.media_service import MediaService
+from app.services.media_service import MediaService, NoFaithfulBackgroundError
 from app.services.metadata_service import MetadataService
 from app.services.metadata_storage_service import MetadataStorageService
 
@@ -319,12 +319,21 @@ class Engine:
         self,
         trends: list,
         target_videos: int,
-        country_code: str
+        country_code: str,
+        pool_size: int | None = None,
     ):
         """
         Seleciona as melhores trends sem repetição.
         Também remove tópicos com score baixo e pula assuntos usados recentemente.
+
+        `pool_size` (se informado) permite coletar MAIS candidatos do que
+        `target_videos` — usados como assuntos RESERVA/substitutos quando um
+        assunto escolhido precisa ser descartado (ex.: sem vídeo real fiel ao
+        assunto encontrado) e o worker precisa buscar o próximo assunto em
+        alta no lugar dele, sem precisar buscar as trends de novo.
         """
+        collect_limit = max(target_videos, pool_size or target_videos)
+
         valid_trends = []
         seen_topics = set()
 
@@ -362,7 +371,7 @@ class Engine:
             seen_topics.add(topic_key)
             valid_trends.append(t)
 
-            if len(valid_trends) >= target_videos:
+            if len(valid_trends) >= collect_limit:
                 break
 
         # Fallback de idioma/produção:
@@ -389,7 +398,7 @@ class Engine:
                 reverse=True,
             )
 
-            for t in fallback_pool[:max(1, target_videos)]:
+            for t in fallback_pool[:max(1, collect_limit)]:
                 print(
                     f"🩹 [ATLAS ENGINE] Nenhuma trend acima do corte para "
                     f"{country_code}; usando a melhor trend disponível: "
@@ -495,7 +504,11 @@ class Engine:
                 selected_trends = self._select_best_unique_trends(
                     trends=trends,
                     target_videos=target_videos,
-                    country_code=channel["country_code"]
+                    country_code=channel["country_code"],
+                    # Reserva assuntos extras: se um assunto for descartado
+                    # (ex.: sem vídeo real fiel ao tema no YouTube), o próximo
+                    # da lista assume a vaga sem precisar buscar trends de novo.
+                    pool_size=target_videos * 4,
                 )
 
                 if not selected_trends:
@@ -505,7 +518,12 @@ class Engine:
                     )
                     continue
 
+                produced_for_channel = 0
+
                 for index, trend in enumerate(selected_trends, start=1):
+                    if produced_for_channel >= target_videos:
+                        break
+
                     topic = trend["topic"]
                     score = trend.get("score", 0)
                     source = trend.get("source", "Unknown")
@@ -600,6 +618,15 @@ class Engine:
                             hashtags=metadata.get("hashtags", hashtags),
                             source=source
                         )
+                    except NoFaithfulBackgroundError as exc:
+                        # Sem vídeo real fiel ao assunto: DESCARTA este assunto
+                        # (nao gera video com fundo generico/desconectado) e
+                        # segue para o próximo assunto em alta da reserva.
+                        done_videos += 1
+                        print(f"🚫 [ATLAS ENGINE] Assunto descartado (sem vídeo real fiel ao tema): {topic}")
+                        print(f"   Motivo: {exc}")
+                        print(f"⏭️ [ATLAS ENGINE] Buscando o próximo assunto em alta no lugar de '{topic}'…")
+                        continue
                     finally:
                         if _clear_render_cb:
                             _clear_render_cb()
@@ -625,6 +652,7 @@ class Engine:
 
                         videos_produced += 1
                         done_videos += 1
+                        produced_for_channel += 1
                         _report(0.0, topic, "Vídeo finalizado ✅")
 
                         print(

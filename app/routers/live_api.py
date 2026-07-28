@@ -27,6 +27,7 @@ from pydantic import BaseModel
 from app.services import live_avatar_service as avatar
 from app.services import live_brain_service as brain
 from app.services import live_catalog_service as catalog
+from app.services import live_montage_service as montage
 from app.services import live_video_service as video
 
 router = APIRouter(prefix="/api/live", tags=["Live"])
@@ -327,10 +328,95 @@ def build_status():
     return dict(_build_state)
 
 
+# ============================================================
+# LIVE COM VIDEOS JA PRONTOS (concatena os videos de produto do
+# pipeline de afiliados, sem avatar, com a IA respondendo perguntas)
+# ============================================================
+
+@router.get("/sources")
+def montage_sources(market: str = "", language: str = ""):
+    """Lista os videos de produto JA gerados que podem virar live."""
+    items = montage.list_sources(market=market, language=language)
+    return {"ok": True, "count": len(items), "videos": items}
+
+
+def _run_montage(params: dict) -> None:
+    def progress(done: int, total: int, label: str) -> None:
+        _build_state["done"] = done
+        _build_state["total"] = total
+        _build_state["label"] = label
+
+    try:
+        res = montage.build_live_from_videos(progress=progress, **params)
+        _build_state["ok"] = bool(res.get("ok"))
+        if res.get("ok"):
+            _build_state["video"] = res.get("video", "")
+            _build_state["video_url"] = f"/api/live/recorded/{res.get('video', '')}"
+            _build_state["total_seconds"] = res.get("total_seconds", 0)
+        else:
+            _build_state["reason"] = res.get("reason", "Falha ao montar o video.")
+    except Exception as exc:  # nunca deixa o thread morrer sem status
+        _build_state["ok"] = False
+        _build_state["reason"] = f"Erro inesperado: {exc}"
+    finally:
+        _build_state["running"] = False
+        _build_state["finished"] = time.time()
+
+
+class MontageRequest(BaseModel):
+    video_ids: list[str] = []
+    market: str = ""
+    language: str = "pt"
+    persona: str = ""
+    use_ai: bool = True
+    qa: bool = True
+    add_intro: bool = True
+    max_products: int = 0
+
+
+@router.post("/build-montage")
+def build_montage(req: MontageRequest):
+    """Monta a live concatenando os videos de produto ja gerados."""
+    with _build_lock:
+        if _build_state["running"]:
+            raise HTTPException(status_code=409, detail="Ja existe uma montagem em andamento.")
+        _build_state.update(
+            running=True, done=0, total=0, label="iniciando", ok=None,
+            video="", video_url="", reason="", platform="montage",
+            started=time.time(), finished=0.0,
+        )
+    params = dict(
+        video_ids=list(req.video_ids or []),
+        market=req.market,
+        language=req.language,
+        persona=req.persona,
+        use_ai=req.use_ai,
+        qa=req.qa,
+        add_intro=req.add_intro,
+        max_products=max(0, req.max_products),
+    )
+    threading.Thread(target=_run_montage, args=(params,), daemon=True).start()
+    return {"ok": True, "started": True}
+
+
 @router.get("/recorded")
 def recorded():
     """Lista os videos de live ja montados (prontos para transmitir)."""
     return {"ok": True, "videos": video.list_recorded()}
+
+
+@router.post("/recorded/clear")
+def recorded_clear():
+    """Apaga todos os videos de live ja montados (libera espaco)."""
+    return {"ok": True, **video.clear_recorded()}
+
+
+@router.delete("/recorded/{name}")
+def recorded_delete(name: str):
+    """Apaga um video de live montado especifico."""
+    if not video.delete_recorded(name):
+        raise HTTPException(status_code=404, detail="Video nao encontrado.")
+    return {"ok": True}
 
 
 @router.get("/recorded/{name}/manifest")

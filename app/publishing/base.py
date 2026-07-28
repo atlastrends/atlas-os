@@ -250,10 +250,26 @@ def resolve_meta_targets(
 
 
 # Cache simples em memoria: {page_id: (page_access_token, obtido_em)}.
-# Evita chamar /me/accounts a cada publicacao (o token da Pagina nao muda
-# com frequencia). Renovado a cada 5 minutos.
+# Uma unica chamada /me/accounts ja devolve TODAS as Paginas, entao
+# cacheamos todas de uma vez. O token da Pagina e LONGEVO (nao muda com
+# frequencia), por isso o TTL e alto: menos chamadas ao Graph API = menor
+# risco de estourar o limite de requisicoes do app ("(#4) Application
+# request limit reached"), sobretudo com o app em modo "Nao publicado".
 _PAGE_TOKEN_CACHE: dict[str, tuple[str, float]] = {}
-_PAGE_TOKEN_TTL_SECONDS = 300
+_PAGE_TOKEN_TTL_SECONDS = 6 * 60 * 60  # 6 horas
+
+# Cooldown apos um rate-limit do app (#4) em /me/accounts: enquanto durar,
+# reaproveitamos o token em cache em vez de chamar o Graph de novo (evita
+# piorar o bloqueio quando um lote inteiro publica em sequencia).
+_ME_ACCOUNTS_COOLDOWN_SECONDS = 120
+_ME_ACCOUNTS_STATE: dict[str, float] = {"blocked_until": 0.0}
+
+
+class MetaGraphTransientError(RuntimeError):
+    """Erro TEMPORARIO do Graph API (ex.: rate limit do app) ao resolver o
+    token da Pagina. Deve ser tratado como 'aguardar reenvio', nao como
+    permissao negada - o proprio texto do erro e propagado para que
+    publishing_service consiga classifica-lo via _is_rate_limited()."""
 
 
 def get_page_access_token(page_id: str) -> str:
@@ -263,38 +279,87 @@ def get_page_access_token(page_id: str) -> str:
 
     O Graph API exige o token da propria Pagina para acoes de escrita
     (video_reels, media, media_publish) - o token de usuario sozinho,
-    mesmo com 'pages_manage_posts', recebe 403 nessas chamadas.
+    mesmo com 'pages_manage_posts', recebe 403/#200 nessas chamadas.
 
-    Se a Pagina nao for encontrada em /me/accounts (ou a chamada falhar),
-    cai de volta para o token de usuario, para nao quebrar o fluxo.
+    Se /me/accounts responder com um ERRO do Graph (ex.: "(#4) Application
+    request limit reached", rate limit do app), NAO caimos silenciosamente
+    para o token de usuario (isso so trocaria um erro claro de rate-limit
+    por um #200 confuso e ainda gastaria mais uma chamada de API tentando
+    publicar com um token que ja sabemos que vai falhar). Em vez disso,
+    levantamos MetaGraphTransientError com a mensagem original do Graph.
+
+    Se a Pagina simplesmente nao aparecer em /me/accounts (sem erro - ex.:
+    token sem acesso aquela Pagina), ai sim caimos para o token de usuario,
+    para nao travar o fluxo (pode funcionar ou nao, dependendo das permissoes).
     """
     user_token = (os.getenv("META_ACCESS_TOKEN") or "").strip()
     if not page_id or not user_token:
         return user_token
 
-    cached = _PAGE_TOKEN_CACHE.get(page_id)
     now = time.time()
+    cached = _PAGE_TOKEN_CACHE.get(page_id)
     if cached and (now - cached[1]) < _PAGE_TOKEN_TTL_SECONDS:
         return cached[0]
 
+    # Se levamos rate-limit do app (#4) ha pouco, nao martelamos /me/accounts
+    # de novo dentro da janela de cooldown (isso so pioraria o bloqueio quando
+    # um lote publica em sequencia). Reaproveita o token da Pagina em cache
+    # (mesmo vencido - ele e longevo e quase sempre continua valido) ou, se
+    # nao houver cache, sinaliza erro TEMPORARIO para reenviar depois.
+    if now < _ME_ACCOUNTS_STATE["blocked_until"]:
+        if cached:
+            return cached[0]
+        raise MetaGraphTransientError(
+            "Limite de requisicoes do app (Meta) atingido ha pouco - "
+            "aguardando a janela de reenvio antes de consultar /me/accounts."
+        )
+
     graph_version = os.getenv("META_GRAPH_VERSION", "v21.0")
+    resp_json: dict = {}
     try:
         resp = requests.get(
             f"https://graph.facebook.com/{graph_version}/me/accounts",
             params={"access_token": user_token, "fields": "id,access_token"},
             timeout=30,
         )
-        data = resp.json().get("data", [])
-        for item in data:
-            if item.get("id") == page_id and item.get("access_token"):
-                page_token = item["access_token"]
-                _PAGE_TOKEN_CACHE[page_id] = (page_token, now)
-                return page_token
-    except Exception:  # noqa: BLE001
-        pass
+        resp_json = resp.json()
+    except Exception as exc:  # noqa: BLE001
+        # Falha de rede: reaproveita o token em cache (mesmo vencido) se houver.
+        if cached:
+            return cached[0]
+        raise MetaGraphTransientError(
+            f"Falha de rede ao consultar /me/accounts no Graph API: {exc}"
+        ) from exc
 
-    # Fallback: token de usuario (pode falhar em chamadas de escrita, mas
-    # nunca deve travar o fluxo de publicacao).
+    if "error" in resp_json:
+        # Erro explicito do Graph (rate limit do app, token invalido, etc.).
+        # Abre uma janela de cooldown para nao repetir a chamada no lote e,
+        # se ja temos o token da Pagina em cache (mesmo vencido), usa-o em vez
+        # de falhar por um bloqueio TEMPORARIO - o token da Pagina segue valido.
+        _ME_ACCOUNTS_STATE["blocked_until"] = now + _ME_ACCOUNTS_COOLDOWN_SECONDS
+        if cached:
+            return cached[0]
+        raise MetaGraphTransientError(
+            f"Erro do Graph API (Meta) ao obter token da Pagina {page_id}: "
+            f"{resp_json['error']}"
+        )
+
+    # Sucesso: cacheia TODAS as Paginas retornadas de uma vez. A mesma resposta
+    # ja traz o token das outras Paginas, entao os proximos page_id viram
+    # cache-hit e nao geram novas chamadas ao /me/accounts.
+    found_token = ""
+    for item in resp_json.get("data", []):
+        pid = item.get("id")
+        ptok = item.get("access_token")
+        if pid and ptok:
+            _PAGE_TOKEN_CACHE[pid] = (ptok, now)
+            if pid == page_id:
+                found_token = ptok
+    if found_token:
+        return found_token
+
+    # Pagina nao encontrada (sem erro do Graph) - fallback para o token de
+    # usuario, para nao travar o fluxo.
     return user_token
 
 

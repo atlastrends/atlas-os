@@ -82,6 +82,36 @@ export default function VideoGrid({
     }
   };
 
+  const [freeing, setFreeing] = useState(false);
+  // Libera espaco no PC: apaga SO os arquivos dos videos JA PUBLICADOS (que ja
+  // subiram para o YouTube). Eles seguem publicados e as estatisticas ficam.
+  const freeSpace = async () => {
+    if (
+      !window.confirm(
+        "Liberar espaço no computador?\n\n" +
+          "Isso apaga SÓ os arquivos dos vídeos JÁ PUBLICADOS (que já subiram " +
+          "para o YouTube). Eles continuam publicados, as ESTATÍSTICAS são " +
+          "mantidas e não serão gerados de novo. Só o arquivo pesado sai do PC."
+      )
+    )
+      return;
+    setFreeing(true);
+    try {
+      const r = await Api.clearPublished(kind);
+      setToast({
+        type: "success",
+        msg: `Espaço liberado: ${r?.removed_files ?? 0} arquivo(s), ~${
+          r?.freed_mb ?? 0
+        } MB. Estatísticas mantidas.`,
+      });
+      load();
+    } catch {
+      setToast({ type: "error", msg: "Falha ao liberar espaço." });
+    } finally {
+      setFreeing(false);
+    }
+  };
+
   const [retrying, setRetrying] = useState(false);
   const pendingCount = counts.retry_pending || 0;
   const retryPending = async () => {
@@ -165,6 +195,14 @@ export default function VideoGrid({
                 : `↑ Reenviar pendentes (${pendingCount})`}
             </button>
           )}
+          <button
+            className="btn ghost"
+            onClick={freeSpace}
+            disabled={freeing}
+            title="Apaga os arquivos dos vídeos já publicados para liberar espaço no PC (continuam no YouTube e as estatísticas ficam)"
+          >
+            {freeing ? "Liberando…" : "🧹 Liberar espaço"}
+          </button>
           <button className="btn ghost" onClick={clearRejected}>
             🗑 Apagar rejeitados
           </button>

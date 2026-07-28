@@ -26,6 +26,7 @@ from app.automation.authorized_broll_renderer import (
     make_story,
     narration_from_story,
     render_authorized_video,
+    render_live_variant,
 )
 
 WIDTH = 1080
@@ -121,6 +122,12 @@ CATEGORY_LABELS: dict[str, str] = {
     "pet-supplies": "Pet",
     "hpc": "Saude",
     "office-products": "Escritorio",
+    "automotive": "Automotivo",
+    "fashion": "Moda",
+    "books": "Livros",
+    "grocery": "Mercado",
+    "musical-instruments": "Instrumentos Musicais",
+    "appliances": "Eletrodomesticos",
 }
 
 
@@ -394,6 +401,10 @@ def available_products() -> list[dict[str, Any]]:
                 "title": product.title,
                 "price_display": product.price_display,
                 "image_url": product.image_url,
+                # A Amazon nao expoe "unidades vendidas por dia/semana" nas
+                # paginas publicas de Mais Vendidos. Usamos avaliacoes (review
+                # count) e nota como o melhor sinal PUBLICO de popularidade
+                # real, mais a posicao (rank) que a propria Amazon atribuiu.
                 "reviews": reviews,
                 "rating": rating,
                 "position": position,
@@ -405,6 +416,10 @@ def available_products() -> list[dict[str, Any]]:
         group["products"].sort(
             key=lambda p: (-p["reviews"], -p["rating"], p["position"]),
         )
+        # Rank exibido no painel (1 = mais vendido da categoria) + rotulos
+        # prontos para a UI, ja que review_count "puro" nao diz muito sozinho.
+        for idx, item in enumerate(group["products"], start=1):
+            item["rank"] = idx
 
     # Ordena as categorias por mercado e, dentro do mercado, pelos MAIS
     # VENDIDOS: mais avaliacoes primeiro; empate, melhor nota; depois quem a
@@ -420,14 +435,15 @@ def available_products() -> list[dict[str, Any]]:
         ),
     )
 
-    # Remove campos internos usados so para ordenar.
+    # Remove so os campos internos usados exclusivamente para ordenar as
+    # CATEGORIAS (posicao/força agregada). Os campos por PRODUTO (reviews,
+    # rating, rank) ficam no retorno: a UI usa isso para mostrar o
+    # "indicador de popularidade" de cada produto ao expandir a categoria.
     for group in ordered:
         group.pop("best_reviews", None)
         group.pop("best_rating", None)
         group.pop("best_position", None)
         for item in group["products"]:
-            item.pop("reviews", None)
-            item.pop("rating", None)
             item.pop("position", None)
 
     return ordered
@@ -784,6 +800,80 @@ def create_video_for_product(product: Product) -> dict[str, Any]:
                 job_id=job_id,
                 asin=product.asin,
                 error=str(sidecar_error),
+            )
+
+        # ------------------------------------------------------------------
+        # VERSAO DE LIVE (2o video): MESMA filmagem do reels, mas com uma
+        # narracao de apresentadora AO VIVO (mais explicativa e apelativa) e
+        # a legenda do que esta sendo falado. SEM ganchos de reels e SEM QR.
+        # O audio original do reels NAO entra na live -- ele serve so pro reels.
+        # Reaproveita o b-roll que o render do reels ja baixou (ainda esta na
+        # pasta de trabalho, so limpa no finally). Se falhar, o reels segue ok.
+        # ------------------------------------------------------------------
+        try:
+            broll_path = broll_metadata.get("broll_path")
+            if broll_path and Path(broll_path).is_file():
+                live_story = make_story(product, mode="live")
+                live_narration = narration_from_story(live_story)
+                live_audio = work / "voice_live.mp3"
+
+                if create_voice(product, live_narration, live_audio):
+                    live_video_path = OUTPUT_DIRECTORY / (output_name + ".live.mp4")
+                    live_meta = render_live_variant(
+                        product=product,
+                        broll_path=Path(broll_path),
+                        live_audio_path=live_audio,
+                        live_narration=live_narration,
+                        output_path=live_video_path,
+                        work_directory=work,
+                    )
+
+                    # Sidecar da live: kind="affiliate_live" para a montagem
+                    # preferir ESTE video (com audio de live) no lugar do reels.
+                    write_json(
+                        live_video_path.with_suffix(".json"),
+                        {
+                            "kind": "affiliate_live",
+                            "asin": product.asin,
+                            "title": product.title,
+                            "marketplace_code": product.marketplace_code,
+                            "affiliate_url": product.detail_url,
+                            "language": MARKETS[product.marketplace_code]["language"],
+                            "job_id": job_id,
+                            "created_at": utc_now(),
+                            "narration": live_narration,
+                            "category": product.category,
+                            "category_label": product.category_label,
+                            "reel_video": video_path.name,
+                            "duration_seconds": live_meta.get("duration_seconds"),
+                        },
+                    )
+                    log_event(
+                        "LIVE_VARIANT_READY",
+                        job_id=job_id,
+                        asin=product.asin,
+                        video=live_video_path.name,
+                    )
+                else:
+                    log_event(
+                        "LIVE_VARIANT_SKIPPED",
+                        job_id=job_id,
+                        asin=product.asin,
+                        error="voz da live nao foi gerada",
+                    )
+            else:
+                log_event(
+                    "LIVE_VARIANT_SKIPPED",
+                    job_id=job_id,
+                    asin=product.asin,
+                    error="b-roll do reels indisponivel para reaproveitar",
+                )
+        except Exception as live_error:  # noqa: BLE001
+            log_event(
+                "LIVE_VARIANT_FAILED",
+                job_id=job_id,
+                asin=product.asin,
+                error=str(live_error),
             )
 
         return approval_record

@@ -194,10 +194,11 @@ def _scene_image(
     _rounded(draw, (_W - 40 - pw - 40, 34, _W - 28, 88), 26, (255, 255, 255, 40))
     draw.text((_W - 40 - pw - 20, 46), ptxt, font=pf, fill=_WHITE)
 
-    kind = block.get("kind")
     product = block.get("product") or {}
 
-    if kind == "product" and product:
+    # Qualquer bloco que carregue um produto mostra o card (produto, Q&A,
+    # transicao, e o encerramento que ja volta ao 1o produto = loop suave).
+    if product:
         _draw_product_card(draw, scene, product, language)
     else:
         _draw_headline(draw, block, language)
@@ -549,3 +550,40 @@ def recorded_path(name: str) -> Path | None:
     if _VIDEO_DIR.resolve() not in path.parents:
         return None
     return path if path.is_file() else None
+
+
+def delete_recorded(name: str) -> bool:
+    """Apaga um video montado (mp4 + manifesto .json). Retorna True se removeu."""
+    path = recorded_path(name)
+    if not path:
+        return False
+    removed = False
+    for target in (path, path.with_suffix(".json")):
+        try:
+            if target.is_file():
+                target.unlink()
+                removed = True
+        except Exception:
+            pass
+    return removed
+
+
+def clear_recorded() -> dict:
+    """Apaga TODOS os videos de live montados (mp4 + sidecars .json)."""
+    if not _VIDEO_DIR.is_dir():
+        return {"removed": 0, "freed_bytes": 0}
+    removed = 0
+    freed = 0
+    for mp4 in list(_VIDEO_DIR.glob("live_*.mp4")):
+        try:
+            freed += mp4.stat().st_size
+        except Exception:
+            pass
+        for target in (mp4, mp4.with_suffix(".json")):
+            try:
+                if target.is_file():
+                    target.unlink()
+            except Exception:
+                pass
+        removed += 1
+    return {"removed": removed, "freed_bytes": freed}

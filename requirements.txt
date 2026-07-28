@@ -87,6 +87,7 @@ Pillow
 numpy
 edge-tts
 pydub
+opencv-python-headless
 
 # YouTube / Video discovery
 yt-dlp[default]

@@ -8,6 +8,7 @@ import requests
 
 from app.publishing.base import (
     BasePublisher,
+    MetaGraphTransientError,
     PublishRequest,
     PublishResult,
     get_page_access_token,
@@ -17,6 +18,11 @@ from app.publishing.base import (
 
 GRAPH_VERSION = os.getenv("META_GRAPH_VERSION", "v21.0")
 GRAPH_BASE = f"https://graph.facebook.com/{GRAPH_VERSION}"
+
+# Intervalos (segundos) entre as checagens de processamento do Reels. Usa
+# backoff e poucas checagens (12) em vez de 30 chamadas fixas de 5s, para
+# gastar bem menos o limite de requisicoes do app da Meta. Soma ~3 minutos.
+_IG_STATUS_POLL_DELAYS = (5, 5, 8, 10, 12, 15, 18, 20, 22, 25, 30, 30)
 
 
 class InstagramPublisher(BasePublisher):
@@ -44,7 +50,14 @@ class InstagramPublisher(BasePublisher):
 
         # O Instagram Graph API tambem exige o token da Pagina do Facebook
         # conectada aquela conta do Instagram (nao o token de usuario puro).
-        token = get_page_access_token(page_id)
+        try:
+            token = get_page_access_token(page_id)
+        except MetaGraphTransientError as exc:
+            return PublishResult(
+                status="failed",
+                error=f"Bloqueio temporario do Graph API (Meta): {exc}",
+                detail={"platform": self.platform, "role": role, "market": market},
+            )
 
         video_url = public_media_url(request.video_path)
         if not video_url or video_url.startswith("http://localhost"):
@@ -80,13 +93,28 @@ class InstagramPublisher(BasePublisher):
                 )
             container_id = create_data["id"]
 
-            # 2) Aguarda o processamento do video ficar pronto.
-            for _ in range(30):
+            # 2) Aguarda o processamento do video ficar pronto. Faz poucas
+            #    checagens espacadas (backoff) para nao gastar o limite de
+            #    requisicoes do app da Meta. Se o Graph responder com erro
+            #    TEMPORARIO (ex.: "(#4) Application request limit reached"),
+            #    para de checar na hora e devolve como bloqueio temporario
+            #    (o servico reenvia depois), em vez de insistir dezenas de
+            #    vezes e piorar o rate-limit.
+            for delay in _IG_STATUS_POLL_DELAYS:
                 status = requests.get(
                     f"{GRAPH_BASE}/{container_id}",
                     params={"fields": "status_code", "access_token": token},
                     timeout=30,
                 ).json()
+                if isinstance(status, dict) and "error" in status:
+                    return PublishResult(
+                        status="failed",
+                        error=(
+                            "Bloqueio temporario do Graph API (Meta) ao checar "
+                            f"o processamento do Reels: {status['error']}"
+                        ),
+                        detail={"platform": self.platform},
+                    )
                 code = status.get("status_code")
                 if code == "FINISHED":
                     break
@@ -96,7 +124,7 @@ class InstagramPublisher(BasePublisher):
                         error=f"Instagram falhou ao processar o video: {status}",
                         detail={"platform": self.platform},
                     )
-                time.sleep(5)
+                time.sleep(delay)
             else:
                 return PublishResult(
                     status="failed",

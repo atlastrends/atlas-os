@@ -1,6 +1,342 @@
 {
-  "updated_at": "2026-07-22T13:23:20.779476+00:00",
+  "updated_at": "2026-07-28T21:37:33.370416+00:00",
   "products": [
+    {
+      "keyword": "NIVEA",
+      "title": "NIVEA Sabonete Líquido Óleo de Banho 200ml, Limpeza Corporal, Pele Macia, 55% Óleos Naturais, Sensação Hidratante",
+      "url": "https://www.amazon.com.br/dp/B00XDX9JJY?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1974002776452983"
+    },
+    {
+      "keyword": "COQUETELEIRA",
+      "title": "COQUETELEIRA DUX - FUME",
+      "url": "https://www.amazon.com.br/dp/B08VPS711D?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18608281357022717",
+      "facebook_post_id": "1037775845777343"
+    },
+    {
+      "keyword": "BATERIA",
+      "title": "Bateria de Lítio CR2032 Cartela com 5 unidades 3v Elgin - Moeda",
+      "url": "https://www.amazon.com.br/dp/B0755PWFSN?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "2495639707605566"
+    },
+    {
+      "keyword": "LEITE",
+      "title": "Leite em Pó Integral Ninho 380g",
+      "url": "https://www.amazon.com.br/dp/B0964S52NM?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1529141649009764"
+    },
+    {
+      "keyword": "PENTEL",
+      "title": "Pentel Pastel Oleoso 25 Cores PHN-25",
+      "url": "https://www.amazon.com.br/dp/B005NZZBQK?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1086423853945953"
+    },
+    {
+      "keyword": "COLGATE",
+      "title": "Colgate Creme Dental para sensibilidade Sensitive Pro Alívio Imediato 90 g, 3 Unidades, Alívio da Sensibilidade com Arginina,",
+      "url": "https://www.amazon.com.br/dp/B097NRKZYH?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1729825321422023"
+    },
+    {
+      "keyword": "DOWNY",
+      "title": "Downy Amaciante Concentrado Frescor Da Primavera 500mL Rende 2L",
+      "url": "https://www.amazon.com.br/dp/B08553P1JV?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1381333713954636"
+    },
+    {
+      "keyword": "DANOS",
+      "title": "Danos Vorazes Leave-in 200ml , Lola Cosmetics",
+      "url": "https://www.amazon.com.br/dp/B08PPKQTFB?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1030950612651895"
+    },
+    {
+      "keyword": "CAD",
+      "title": "CAD 160 CD ZIP 305421",
+      "url": "https://www.amazon.com.br/dp/B07VFWFS4P?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1749417179740081"
+    },
+    {
+      "keyword": "SOUNDCORE",
+      "title": "soundcore Q20i da Anker, Fone de Ouvido Bluetooth com Cancelamento de Ruído Híbrido Ativo, Headphone Sem Fio, 60h Bateria, Áu",
+      "url": "https://www.amazon.com.br/dp/B0C3HCD34R?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1622992112609165"
+    },
+    {
+      "keyword": "PATO",
+      "title": "Pato Desodorizador Sanitário Gel Adesivo 2 Refis Marine, 12 Discos",
+      "url": "https://www.amazon.com.br/dp/B07FPT3MSD?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1740901717049865"
+    },
+    {
+      "keyword": "HEINZ",
+      "title": "Heinz Ketchup Tradicional 1,033KG",
+      "url": "https://www.amazon.com.br/dp/B097BYXGXN?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "2003877766933983"
+    },
+    {
+      "keyword": "MONDIAL",
+      "title": "MONDIAL Espremedor Premium, Preto, 30W, 220V - E-02",
+      "url": "https://www.amazon.com.br/dp/B076FGHHNG?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1523421585647605"
+    },
+    {
+      "keyword": "NEXGARD",
+      "title": "NexGard Antipulgas e Carrapatos para Cães de - 3 tabletes",
+      "url": "https://www.amazon.com.br/dp/B07M6KHQKT?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "2169817650598434"
+    },
+    {
+      "keyword": "NEXGARD",
+      "title": "NexGard Antipulgas e Carrapatos para Cães de 4,1 a 10kg, 1 tablete | Antipulgas",
+      "url": "https://www.amazon.com.br/dp/B07XZDZWTG?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18600485836048083",
+      "facebook_post_id": "1392262859450023"
+    },
+    {
+      "keyword": "MASSA",
+      "title": "DAS, Massa para Modelar, Branco, 1Kg",
+      "url": "https://www.amazon.com.br/dp/B001GAP4YA?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17897660370558313",
+      "facebook_post_id": "1419357183580134"
+    },
+    {
+      "keyword": "CHAMEQUINHO",
+      "title": "Chamequinho Papel A4, 75 g, 100 Folhas, Branco Sulfite",
+      "url": "https://www.amazon.com.br/dp/B076X67XSW?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18091680335087601",
+      "facebook_post_id": "839600232569269"
+    },
+    {
+      "keyword": "FONE",
+      "title": "JBL, Fone de Ouvido Bluetooth Over-Ear, Tune 730BT, Sem Fio, Até 76 Horas de Bateria - Preto",
+      "url": "https://www.amazon.com.br/dp/B0GR11L1VP?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18480683224102572",
+      "facebook_post_id": "1016967074546363"
+    },
+    {
+      "keyword": "SOUNDCORE",
+      "title": "soundcore P30i da Anker, Fone de Ouvido Bluetooth 5.4 com Cancelamento de Ruído Adaptativo, Graves Poderosos, 45H de Reproduç",
+      "url": "https://www.amazon.com.br/dp/B0CRTYZG5C?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18013989554874586",
+      "facebook_post_id": "1035789348926387"
+    },
+    {
+      "keyword": "BRAVECTO",
+      "title": "Bravecto® 250mg Antipulgas e Carrapatos para Cães de 4,5 a 10kg – 1 Comprimido Mastigável",
+      "url": "https://www.amazon.com.br/dp/B07J4J9XKZ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18082948787652777",
+      "facebook_post_id": "28756009560655356"
+    },
+    {
+      "keyword": "SAMSUNG",
+      "title": "Samsung Galaxy Buds Core, Fone de Ouvido, sem fio, cancelamento de ruído, interprete inteligente",
+      "url": "https://www.amazon.com.br/dp/B0FP8T2RDC?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18078367250692759",
+      "facebook_post_id": "2097042414212403"
+    },
+    {
+      "keyword": "CELIMAX",
+      "title": "celimax Shot Tightening Booster - 15ml",
+      "url": "https://www.amazon.com.br/dp/B0DK4Y2YP3?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1186799163646452"
+    },
+    {
+      "keyword": "SMART",
+      "title": "Smart TV Samsung 32\" HD Tizen HDR Wi-Fi HDMI Bivolt Preta",
+      "url": "https://www.amazon.com.br/dp/B0FF6FZF9Y?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1306008958031698"
+    },
+    {
+      "keyword": "OMEGA",
+      "title": "Ômega 3 EPA DHA 1g (120 Caps), VitaFor",
+      "url": "https://www.amazon.com.br/dp/B07939CW22?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18091190780530312",
+      "facebook_post_id": "2053394552052408"
+    },
+    {
+      "keyword": "PERSONAL",
+      "title": "Personal VIP - Papel Higiênico, Folha Dupla, 12 unidades (Embalagem pode variar)",
+      "url": "https://www.amazon.com.br/dp/B07D5PH2YJ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18066783362719387",
+      "facebook_post_id": "1018613490574992"
+    },
+    {
+      "keyword": "MONDIAL",
+      "title": "MONDIAL Aspirador de Pó, Turbo Cycle Vermelho/Preto 1100W, 110V, AP-36",
+      "url": "https://www.amazon.com.br/dp/B07JFTS6BS?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18135569101595040",
+      "facebook_post_id": "1771743720493455"
+    },
+    {
+      "keyword": "VERITY",
+      "title": "Verity",
+      "url": "https://www.amazon.com.br/dp/8501117846?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18093087227068575",
+      "facebook_post_id": "2095923004328631"
+    },
+    {
+      "keyword": "COLGATE",
+      "title": "Colgate Escova de Dentes Slim Soft Premium 4 Unidades | Cerdas Finas, Limpeza Profunda, Infusão de Carvão Ativado",
+      "url": "https://www.amazon.com.br/dp/B08K4HMYHH?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "JOHNSON",
+      "title": "Johnson&#x27;s Reach Fio Dental Essencial Menta, 100m",
+      "url": "https://www.amazon.com.br/dp/B07DKJSCBQ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "FONE",
+      "title": "Fone de Ouvido Sem Fio, JBL, Bluetooth, Wave Buds 2, Intra Auricular, Sem Fio, Resistente À Água e Poeira - Preto",
+      "url": "https://www.amazon.com.br/dp/B0DHL63KWK?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "IMPRESSORA",
+      "title": "Impressora Multifuncional Epson Ecotank L3250 Jato de Tinta Colorida Wi-Fi Bivolt",
+      "url": "https://www.amazon.com.br/dp/B098YHFT9S?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "CHINELO",
+      "title": "Chinelo Havaianas Top adulto-unissex",
+      "url": "https://www.amazon.com.br/dp/B000YKIXA0?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18602959756036611",
+      "facebook_post_id": "1607647377664471"
+    },
+    {
+      "keyword": "CREATINA",
+      "title": "Creatina Pura Dark Lab, Monohidratada 100% de Pureza, Sem Glúten, Sem Sabor (500g)",
+      "url": "https://www.amazon.com.br/dp/B0CF71CJ2L?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18153027214440889",
+      "facebook_post_id": "2011043232873757"
+    },
+    {
+      "keyword": "CHAMEX",
+      "title": "Chamex - Papel Sulfite, A4, 75g, 500 folhas",
+      "url": "https://www.amazon.com.br/dp/B01CZXF4XW?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "FONE",
+      "title": "JBL, Fone de Ouvido Sem Fio, JBL, Bluetooth, Wave Beam 2, Intra Auricular, Sem Fio, Resistente À Água e Poeira - Branco | Blu",
+      "url": "https://www.amazon.com.br/dp/B0DHL5V4QT?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "MIXER",
+      "title": "Mixer Vertical Turbo Chef Elgin 3 em 1 200W Preto 110v",
+      "url": "https://www.amazon.com.br/dp/B09VQ39F41?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "SANDUICHEIRA",
+      "title": "Sanduicheira Elétrica Cadence Click - 127V",
+      "url": "https://www.amazon.com.br/dp/B0CDJ4L7CZ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18082868024233149",
+      "facebook_post_id": "2017987212143886"
+    },
+    {
+      "keyword": "PHILIPS",
+      "title": "PHILIPS, Fone de Ouvido com Microfone, TAUE101BK/00, Com fio de 1,2 metros, intra-auricular, Preto",
+      "url": "https://www.amazon.com.br/dp/B084S6BCJN?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18004979426766809",
+      "facebook_post_id": "1508846870483974"
+    },
+    {
+      "keyword": "GARNIER",
+      "title": "Garnier, Gel Creme Hidratante Facial Antimanchas Toque Seco, com Vitamina C, Niacinamida e Ácido Hialurônico, Controla a Oleo",
+      "url": "https://www.amazon.com.br/dp/B0DP82WCWS?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17937768747315644",
+      "facebook_post_id": "1037990268723132"
+    },
+    {
+      "keyword": "CORDA",
+      "title": "Corda de pular sem emaranhados, cabo de corda de salto rápido com rolamentos de esferas para mulheres, homens e crianças, cor",
+      "url": "https://www.amazon.com.br/dp/B09DF9NWC7?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17876515971523302",
+      "facebook_post_id": "1814744043023006"
+    },
+    {
+      "keyword": "LYSOFORM",
+      "title": "Lysoform Lavanda, Desinfetante Líquido, Limpeza Casa, 5L",
+      "url": "https://www.amazon.com.br/dp/B0CVSBKF4N?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "DURACELL",
+      "title": "Duracell Pilhas Alcalinas AA Pequena Pack 24 Unidades – Dura até 10x Mais – Ideal para Controle de Videogame e Brinquedos",
+      "url": "https://www.amazon.com.br/dp/B0C9RVFRZD?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "OREAL",
       "title": "L&#x27;Oréal Professionnel Óleo 10 em 1 Absolut Repair | Multi-benefícios para cabelos secos e danificados | Repara e Promove Bril",
@@ -410,6 +746,462 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "ROSABELLA",
+      "title": "Rosabella Organic Beet Root Capsules - 1300mg Beet Root Powder Aids Healthy Circulation & Vitality, Non-GMO, Beet Root Supple",
+      "url": "https://www.amazon.com/dp/B0F161HQ6C?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18177024016422189",
+      "facebook_post_id": "1936679120342130"
+    },
+    {
+      "keyword": "PLAYHOT",
+      "title": "PlayHot Portable Handheld Turbo Fan, 5 Gear Wind, USB-C Rechargeable Fan, Up to 12 Working Hours, 3 IN 1 Hand Fans with Air T",
+      "url": "https://www.amazon.com/dp/B0D97YVVQ2?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18381162472206659",
+      "facebook_post_id": "1550826990124952"
+    },
+    {
+      "keyword": "OWALA",
+      "title": "Owala FreeSip Sway Insulated Stainless Steel Water Bottle with Two-Way Spout, Built-In Straw and Bucket Handle, Made for Trav",
+      "url": "https://www.amazon.com/dp/B0FK1CDVHB?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17918528565204828",
+      "facebook_post_id": "1057839500333471"
+    },
+    {
+      "keyword": "COOFANDY",
+      "title": "COOFANDY Men&#x27;s Linen Shirts Short Sleeve Casual Shirts Button Down Shirt for Men Beach Summer Wedding Shirt",
+      "url": "https://www.amazon.com/dp/B0BV241H3F?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18228958288316793",
+      "facebook_post_id": "1433909351894834"
+    },
+    {
+      "keyword": "PACK",
+      "title": "6 Pack Extra Heavy Duty Large Moving Bags with Strong Zipper & Comfortable Handles, Sturdy & Durable Clothes Storage Bags Tot",
+      "url": "https://www.amazon.com/dp/B0DGF616XN?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1372494888358004"
+    },
+    {
+      "keyword": "POWCAN",
+      "title": "POWCAN 26 oz Insulated Water Bottle with 2-in-1 Straw and Spout Lid, Keep Cold 24H, Leak-Proof, Fits in Car Cup Holder, Stain",
+      "url": "https://www.amazon.com/dp/B0D8J2ZB8P?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "2347460049117792"
+    },
+    {
+      "keyword": "BLUE",
+      "title": "Blue Buffalo Life Protection Formula Chicken Adult Dry Dog Food, 5 lb",
+      "url": "https://www.amazon.com/dp/B09K8YYVWV?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "2465661667263665"
+    },
+    {
+      "keyword": "PURINA",
+      "title": "Purina Pro Plan Veterinary Supplements FortiFlora Probiotic Powder for Dogs, Daily Support for Digestive and Immune Health an",
+      "url": "https://www.amazon.com/dp/B001650NNW?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "2889468831418385"
+    },
+    {
+      "keyword": "VALVOLINE",
+      "title": "Valvoline Advanced Full Synthetic SAE 0W-20 Motor Oil 5 QT",
+      "url": "https://www.amazon.com/dp/B00GZKC6EW?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1022668683874795"
+    },
+    {
+      "keyword": "PREMIER",
+      "title": "Premier Protein Shake, Chocolate, 30g High Protein, 12 Pack | 160 Calories, 24 Vitamins & Minerals, No Added Sugar, Supports",
+      "url": "https://www.amazon.com/dp/B008JGIZGS?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "2103319066924299"
+    },
+    {
+      "keyword": "VALVOLINE",
+      "title": "Valvoline MaxLife High Mileage 5W-30 Synthetic Blend Motor Oil 5 Quart",
+      "url": "https://www.amazon.com/dp/B00AM1Z67O?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1063911626135731"
+    },
+    {
+      "keyword": "EXPO",
+      "title": "EXPO Dry Erase Markers, Low Odor Ink, Assorted Colors, Chisel Tip, 12 Count",
+      "url": "https://www.amazon.com/dp/B0004F7GUI?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "861154316860408"
+    },
+    {
+      "keyword": "MILK",
+      "title": "Milk-Bone Original Medium Dog Biscuits, 10 lb Box | 280+ treats, classic meaty taste, crunchy dog treats for dogs 20-50lbs, 1",
+      "url": "https://www.amazon.com/dp/B000I82DTU?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1289526686401008"
+    },
+    {
+      "keyword": "ERNIE",
+      "title": "Ernie Ball Regular Slinky Nickel Wound Electric Guitar Strings, 10-46 Gauge (P02221)",
+      "url": "https://www.amazon.com/dp/B0002M6CVC?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1050335231117956"
+    },
+    {
+      "keyword": "FIRE",
+      "title": "Amazon Fire TV Stick HD (newest model), free & live TV, Alexa Voice Remote, powered by the TV, effortless setup, find shows f",
+      "url": "https://www.amazon.com/dp/B0DJGDC3BD?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "2093834321563152"
+    },
+    {
+      "keyword": "APPLE",
+      "title": "Apple iPad 11-inch: A16 chip, 11-inch Model, Liquid Retina Display, 128GB, Wi-Fi 6, 12MP Front/12MP Back Camera, Touch ID, Al",
+      "url": "https://www.amazon.com/dp/B0DZ75TN5F?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "2101303657408198"
+    },
+    {
+      "keyword": "CARL",
+      "title": "Carl&#x27;s Doomsday Scenario (Dungeon Crawler Carl)",
+      "url": "https://www.amazon.com/dp/0593820266?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1577713764029783"
+    },
+    {
+      "keyword": "MEYER",
+      "title": "Mrs. Meyer&#x27;s Clean Day, Hand Soap Refill, Lemon Verbena Scent, 33 Fl Oz",
+      "url": "https://www.amazon.com/dp/B00F1U0YB4?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1783710492660941"
+    },
+    {
+      "keyword": "THEO",
+      "title": "Theo of Golden: A Novel",
+      "url": "https://www.amazon.com/dp/1668236516?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18052141841787353",
+      "facebook_post_id": "1097619289444970"
+    },
+    {
+      "keyword": "PROJECT",
+      "title": "Project Hail Mary: A Novel",
+      "url": "https://www.amazon.com/dp/0593135229?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18125049865825153",
+      "facebook_post_id": "2013825492594610"
+    },
+    {
+      "keyword": "NESPRESSO",
+      "title": "Nespresso Capsules Vertuo, Variety Pack, Medium and Dark Roast Coffee, 30 Count Coffee Pods, Brews 7.8 oz.",
+      "url": "https://www.amazon.com/dp/B01N05APQY?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18137315002587205",
+      "facebook_post_id": "1428983516095794"
+    },
+    {
+      "keyword": "GILDAN",
+      "title": "Gildan Men&#x27;s Crew T-Shirts, Multipack, Style G1100",
+      "url": "https://www.amazon.com/dp/B07JCS8NRC?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1954737085154840"
+    },
+    {
+      "keyword": "MEYER",
+      "title": "MRS. MEYER&#x27;S CLEAN DAY Hand Soap Refill, Rain Water Scent, 33 Fl Oz Bottle",
+      "url": "https://www.amazon.com/dp/B07MFMWFYL?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1710541293544605"
+    },
+    {
+      "keyword": "BAND",
+      "title": "BAND-AID Brand Travel Ready Portable Emergency First Aid Kit, Minor Wound Care, Perfect for Home, Car, Camping, Travel & Outd",
+      "url": "https://www.amazon.com/dp/B0B41MYSGP?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17949825063226755",
+      "facebook_post_id": "2058602401393303"
+    },
+    {
+      "keyword": "BODY",
+      "title": "eos Body Wash, Vanilla, Moisturizing Creamy Gel Formula with Shea Butter, Glycerin, Vitamin E, pH Balanced, Sensitive Skin, V",
+      "url": "https://www.amazon.com/dp/B0DPHQRLJC?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18001893755969077",
+      "facebook_post_id": "1715773299574203"
+    },
+    {
+      "keyword": "ZEVO",
+      "title": "Zevo Flying Insect Trap Official Refill Cartridges - Fits Zevo Trap and MAX Indoor Fly Trap, Trap+Lock Technology Fly Trap Re",
+      "url": "https://www.amazon.com/dp/B0C3FTCYZL?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18092482406309943",
+      "facebook_post_id": "1755967015430934"
+    },
+    {
+      "keyword": "CROCS",
+      "title": "Crocs Kid&#x27;s Classic Clog (Little Kid/Big Kid/Toddler)",
+      "url": "https://www.amazon.com/dp/B096423LXW?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18345585181220857",
+      "facebook_post_id": "903649478875251"
+    },
+    {
+      "keyword": "THORNE",
+      "title": "THORNE Creatine - Micronized Creatine Monohydrate Powder - Support for Muscles & Cognitive Function* - for Women & Men - Unfl",
+      "url": "https://www.amazon.com/dp/B07978VPPH?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18111195982759190",
+      "facebook_post_id": "1047822494330281"
+    },
+    {
+      "keyword": "CROCS",
+      "title": "Crocs Unisex-Adult Classic Clog, Clogs for Women and Men",
+      "url": "https://www.amazon.com/dp/B0014C0LSY?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "OWALA",
+      "title": "Owala FreeSip Insulated Stainless Steel Water Bottle with Straw for Sports and Travel, BPA-Free Sports Water Bottle, 24 oz, P",
+      "url": "https://www.amazon.com/dp/B0DR9GN2PM?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Lightweight Super Soft, Wrinkle-Free, Breathable Luxury Microfiber 4 Piece Bed Sheet Set with 14-Inch Deep Pock",
+      "url": "https://www.amazon.com/dp/B00Q7OAPM6?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "VERY",
+      "title": "The Very Hungry Caterpillar",
+      "url": "https://www.amazon.com/dp/0399226907?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Lightweight Super Soft Breathable Wrinkle-Resistant Microfiber 4-Piece Bed Sheet Set with 14-Inch Deep Pockets,",
+      "url": "https://www.amazon.com/dp/B0154ASID6?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics XLR Male to Female Microphone Cable for Speaker or PA System, Recording Studio, All Copper Conductors, Low Nois",
+      "url": "https://www.amazon.com/dp/B01JNLTTKS?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "FIRE",
+      "title": "Amazon Fire TV Stick HD, free and live TV, Alexa Voice Remote, smart home controls, HD streaming",
+      "url": "https://www.amazon.com/dp/B0CQMRKRV5?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Microfiber Cleaning Cloths, Ultra Absorbent, Lint Free, Streak Free, Non-Abrasive, Reusable and Washable, 16\" x",
+      "url": "https://www.amazon.com/dp/B009FUF6DM?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Digital Kitchen Scale with LCD Display, Tare Function, Multiple Units, Weighs up to 11 Pounds, Batteries Includ",
+      "url": "https://www.amazon.com/dp/B06X9NQ8GX?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Neoprene Dumbbell Hand Weights for Exercise and Muscle Toning",
+      "url": "https://www.amazon.com/dp/B01LR5RG08?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Sturdy File Folders with Reinforced Tabs for Filing and Organization, 1/3-Cut Tab, Assorted Positions, Letter S",
+      "url": "https://www.amazon.com/dp/B01LYHE49W?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18095648600019395",
+      "facebook_post_id": "1700252644592943"
+    },
+    {
+      "keyword": "CROCS",
+      "title": "Crocs Unisex-Adult Classic Clog, Clogs for Women and Men",
+      "url": "https://www.amazon.com/dp/B0014BYHJE?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "DEAL",
+      "title": "The Deal: Now an Original Series on Amazon Prime (Off-Campus, 1)",
+      "url": "https://www.amazon.com/dp/1775293939?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Gentle & Mild Clear Liquid Hand Soap Refill, Triclosan-Free, Dermatologist-Tested, pH Balanced, Cruelty-Free, 5",
+      "url": "https://www.amazon.com/dp/B09HHDHXWX?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Dog Poop Leak Proof Bags with Dispenser and Leash Clip, Unscented, 13\" x 9\" Large Size, 300 Count",
+      "url": "https://www.amazon.com/dp/B00NABTC8M?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1454403816709496"
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Slim Velvet Non-Slip Space Saving Suit Clothes Hangers for Closet Organization, Black/Silver, 30-Pack",
+      "url": "https://www.amazon.com/dp/B00FXNABPI?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18068978135442634",
+      "facebook_post_id": "2348792485905189"
+    },
+    {
+      "keyword": "EXTENSION",
+      "title": "10Ft Extension Cord with Multiple Outlets, Flat Plug Surge Protector Power Strip 10 Ft Long Cord, 8 Outlets & 4 USB Ports (2",
+      "url": "https://www.amazon.com/dp/B0DZ254SSR?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BLINK",
+      "title": "blink plus plan with monthly auto-renewal",
+      "url": "https://www.amazon.com/dp/B08JHCVHTY?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18098873078349195",
+      "facebook_post_id": "4034410693360311"
+    },
+    {
+      "keyword": "BIODANCE",
+      "title": "BIODANCE Bio-Collagen Real Deep Mask, Hydrating Overnight Hydrogel Face Mask, Pore Minimizing, Elasticity, Plumping, Travel E",
+      "url": "https://www.amazon.com/dp/B0B2RM68G2?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17984438298018236",
+      "facebook_post_id": "1419013340283683"
+    },
+    {
+      "keyword": "CHICKEN",
+      "title": "Pur Luv Chicken Jerky Dog Treats, Made with 100% Real Chicken Breast, 16 Ounces, Healthy, Easily Digestible, Long-Lasting, Hi",
+      "url": "https://www.amazon.com/dp/B08P2D95G8?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17896798530487467",
+      "facebook_post_id": "1007136555447549"
+    },
+    {
+      "keyword": "OWALA",
+      "title": "Owala SmoothSip Slider Insulated Stainless Steel Coffee Tumbler, Reusable Iced Coffee Cup, Hot Coffee Travel Mug, BPA Free 12",
+      "url": "https://www.amazon.com/dp/B0DF472VMZ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18417628861149836",
+      "facebook_post_id": "28244582755134663"
+    },
+    {
+      "keyword": "ULTIMA",
+      "title": "Ultima Replenisher Original Variety Electrolyte Packets, 20 Stickpacks | Daily Zero Sugar Powder Hydration Packets with 6 Key",
+      "url": "https://www.amazon.com/dp/B08XQZX9K3?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18547390969076637",
+      "facebook_post_id": "1044423315182956"
+    },
+    {
+      "keyword": "HOMAXY",
+      "title": "Homaxy 100% Cotton Waffle Weave Kitchen Dish Cloths, Ultra Soft Absorbent Quick Drying Dish Towels, 12 x 12 Inches, 6-Pack, D",
+      "url": "https://www.amazon.com/dp/B07WMQP4SF?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18614130289006949",
+      "facebook_post_id": "2269178960562516"
+    },
+    {
+      "keyword": "EARTH",
+      "title": "Earth Rated Pet Wipes for Dogs and Cats, Hypoallergenic, 3-in-1 Cleaning, Deodorizing and Hydrating, for Grooming Paws, Body",
+      "url": "https://www.amazon.com/dp/B07NHL31CC?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18127516261566215",
+      "facebook_post_id": "1380430800817265"
+    },
+    {
+      "keyword": "PANOXYL",
+      "title": "PanOxyl 10% Benzoyl Peroxide Acne Foaming Wash, Maximum Strength, Daily Acne-Fighting Face and Body Cleanser, Face Wash to Cl",
+      "url": "https://www.amazon.com/dp/B081KL2QYJ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18095412152221459",
+      "facebook_post_id": "913852187718556"
+    },
+    {
+      "keyword": "KITCHENAID",
+      "title": "KitchenAid Classic Multifunction Can Opener and Bottle Opener Easy to Use, Razor Sharp Stainless Steel Cutting Wheel, Soft Er",
+      "url": "https://www.amazon.com/dp/B07YP2VH4B?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18010353389935379",
+      "facebook_post_id": "1545642460398519"
+    },
+    {
+      "keyword": "OPTIMUM",
+      "title": "Optimum Nutrition Creatine, Micronized Creatine Monohydrate Powder, Supports Strength & Recovery, Banned Substance Tested, Un",
+      "url": "https://www.amazon.com/dp/B002DYIZEE?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18026865893838585",
+      "facebook_post_id": "2440171563171036"
+    },
+    {
+      "keyword": "ETEKCITY",
+      "title": "Etekcity Food Kitchen Scale, Digital Grams and Ounces, 11lb | Tare function, ideal for baking, weight loss, keto, meal prep,",
+      "url": "https://www.amazon.com/dp/B0113UZJE2?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17964364701135794",
+      "facebook_post_id": "1959739338747040"
+    },
+    {
+      "keyword": "MIGHTY",
+      "title": "Mighty Patch Hero Cosmetics Original Nighttime Acne Pimple Patches, 36 Ct | #1 Hydrocolloid Acne Patches, Shrinking Zits & Wh",
+      "url": "https://www.amazon.com/dp/B074PVTPBW?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18430426726131972",
+      "facebook_post_id": "1372111441679038"
+    },
+    {
       "keyword": "OPTIMUM",
       "title": "Optimum Nutrition Gold Standard 100% Whey Protein Powder, Vanilla Ice Cream, 2 Pound (Packaging May Vary)",
       "url": "https://www.amazon.com/dp/B000GISTZ4?tag=atlasfindsus-20",
@@ -439,6 +1231,14 @@
       "url": "https://www.amazon.com/dp/B0CQVWT2NH?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "18098368325193047",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "AMFILM",
+      "title": "amFilm Auto-Alignment OneTouch for Nintendo Switch 2 Screen Protector 2025 | Tempered Glass Accessories, 30s Install, Bubble",
+      "url": "https://www.amazon.com/dp/B0DRCKDWD1?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18000144959974994",
       "facebook_post_id": ""
     },
     {
@@ -733,14 +1533,6 @@
       "keyword": "BASICS",
       "title": "Amazon Basics Everyday Disposable Paper Plates, 8.62 Inch, Microwave-Safe, Cut Resistant, Soak-Proof, 100 Count, Packaging Ma",
       "url": "https://www.amazon.com/dp/B0C2CY22B8?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "BASICS",
-      "title": "Amazon Basics Dog Poop Leak Proof Bags with Dispenser and Leash Clip, Unscented, 13&quot; x 9&quot; Large Size, 300 Count",
-      "url": "https://www.amazon.com/dp/B00NABTC8M?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""

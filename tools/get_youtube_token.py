@@ -6,11 +6,12 @@ faca login e ESCOLHA O CANAL certo (ex.: "Atlas Trends US").
 
 Como usar (no terminal, dentro da pasta atlas-os):
 
-    .\.venv-dash\Scripts\python.exe tools\get_youtube_token.py
+    .\.venv-dash\Scripts\python.exe tools\get_youtube_token.py BR
+    .\.venv-dash\Scripts\python.exe tools\get_youtube_token.py US
 
-No fim ele imprime a linha pronta para colar no .env, por exemplo:
-
-    YOUTUBE_REFRESH_TOKEN_US=1//0abc...
+(sem argumento ele pergunta 1=BR / 2=US). Ao final ele GRAVA o refresh
+token direto no .env (YOUTUBE_REFRESH_TOKEN_BR ou _US) e NUNCA mostra o
+valor na tela. Depois reinicie o painel para valer.
 
 Requisitos ja instalados no ambiente:
     google-auth-oauthlib, google-api-python-client
@@ -20,12 +21,41 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 
-# Carrega o .env para reaproveitar CLIENT_ID / CLIENT_SECRET ja configurados.
+
+def _active_env_path() -> Path:
+    """O MESMO .env que o app le e escreve (espelha env_loader.active_env_path).
+
+    Ordem: 1) ATLAS_ENV_FILE se existir; 2) %OneDrive%\\ATLAS-OS-SECRETS\\.env
+    se existir; senao 3) o .env na raiz do projeto (pasta acima de tools/).
+    Grava o refresh token no arquivo que o SERVIDOR realmente le - o
+    compartilhado vence o do projeto (env_loader carrega com override=False).
+    """
+    explicit = (os.getenv("ATLAS_ENV_FILE") or "").strip()
+    if explicit and Path(explicit).is_file():
+        return Path(explicit).resolve()
+    for var in ("OneDrive", "OneDriveConsumer", "OneDriveCommercial"):
+        root = (os.getenv(var) or "").strip()
+        if root:
+            candidate = Path(root) / "ATLAS-OS-SECRETS" / ".env"
+            if candidate.is_file():
+                return candidate.resolve()
+    return Path(__file__).resolve().parent.parent / ".env"
+
+
+# .env ATIVO (compartilhado quando existir) = onde gravamos o token novo.
+ENV_PATH = _active_env_path()
+_PROJECT_ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
+
+# Carrega as variaveis como o app faz (o ativo manda, o do projeto completa)
+# para reaproveitar CLIENT_ID / CLIENT_SECRET onde quer que estejam.
 try:
     from dotenv import load_dotenv
 
-    load_dotenv()
+    load_dotenv(ENV_PATH, override=True)
+    if _PROJECT_ENV_PATH != ENV_PATH:
+        load_dotenv(_PROJECT_ENV_PATH, override=False)
 except Exception:  # noqa: BLE001
     pass
 
@@ -41,6 +71,38 @@ REDIRECT_PORT = int((os.getenv("YOUTUBE_OAUTH_PORT") or "8090").strip() or "8090
 REDIRECT_URI = f"http://localhost:{REDIRECT_PORT}/"
 
 
+def _upsert_env_var(key: str, value: str) -> bool:
+    """Cria/atualiza `key=value` no .env preservando o resto do arquivo.
+
+    Retorna True se gravou com sucesso. Nunca imprime o valor secreto.
+    """
+    env_path = str(ENV_PATH)
+    line = f"{key}={value}"
+    try:
+        try:
+            with open(env_path, "r", encoding="utf-8") as fh:
+                lines = fh.read().splitlines()
+        except FileNotFoundError:
+            lines = []
+
+        replaced = False
+        for i, existing in enumerate(lines):
+            stripped = existing.lstrip()
+            if stripped.startswith(f"{key}=") and not stripped.startswith("#"):
+                lines[i] = line
+                replaced = True
+                break
+        if not replaced:
+            lines.append(line)
+
+        with open(env_path, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(lines) + "\n")
+        return True
+    except Exception as exc:  # noqa: BLE001
+        print(f"AVISO: falha ao gravar no .env: {exc}")
+        return False
+
+
 def main() -> int:
     client_id = (os.getenv("YOUTUBE_CLIENT_ID") or "").strip()
     client_secret = (os.getenv("YOUTUBE_CLIENT_SECRET") or "").strip()
@@ -49,24 +111,30 @@ def main() -> int:
         print("ERRO: defina YOUTUBE_CLIENT_ID e YOUTUBE_CLIENT_SECRET no .env antes.")
         return 1
 
-    # Pergunta qual canal esta sendo autorizado, para imprimir a linha certa.
-    choices = {
-        "1": ("YOUTUBE_REFRESH_TOKEN_TREND_BR", "Trends Brasil"),
-        "2": ("YOUTUBE_REFRESH_TOKEN_TREND_US", "Trends US"),
-        "3": ("YOUTUBE_REFRESH_TOKEN_AFFILIATE_BR", "Afiliados Brasil"),
-        "4": ("YOUTUBE_REFRESH_TOKEN_AFFILIATE_US", "Afiliados US"),
+    # O painel resolve o canal do YouTube por MERCADO (BR/US): trends e
+    # afiliados do mesmo pais usam o MESMO canal e o MESMO refresh token.
+    # Por isso so existem duas variaveis, EXATAMENTE as que o app le em
+    # resolve_youtube_channel(): YOUTUBE_REFRESH_TOKEN_BR e YOUTUBE_REFRESH_TOKEN_US.
+    by_market = {
+        "BR": ("YOUTUBE_REFRESH_TOKEN_BR", "Brasil (BR)"),
+        "US": ("YOUTUBE_REFRESH_TOKEN_US", "EUA (US)"),
     }
-    print("Qual canal voce vai autorizar agora?")
-    print("  1) Trends Brasil")
-    print("  2) Trends US")
-    print("  3) Afiliados Brasil")
-    print("  4) Afiliados US")
-    picked = ""
-    try:
-        picked = input("Digite 1, 2, 3 ou 4 e ENTER: ").strip()
-    except EOFError:
+    by_number = {"1": "BR", "2": "US"}
+
+    # O mercado pode vir por argumento (modo nao-interativo), ex.: ... py BR
+    arg = sys.argv[1].strip().upper() if len(sys.argv) > 1 else ""
+    market = arg if arg in by_market else by_number.get(arg, "")
+    if not market:
+        print("Qual canal voce vai autorizar agora?")
+        print("  1) Brasil (BR)")
+        print("  2) EUA (US)")
         picked = ""
-    env_var, channel_label = choices.get(picked, ("YOUTUBE_REFRESH_TOKEN_AFFILIATE_US", "Afiliados US"))
+        try:
+            picked = input("Digite 1 ou 2 e ENTER: ").strip()
+        except EOFError:
+            picked = ""
+        market = by_number.get(picked, "BR")
+    env_var, channel_label = by_market[market]
 
     client_config = {
         "web": {
@@ -102,16 +170,20 @@ def main() -> int:
         print("ERRO: o Google nao retornou refresh_token. Tente de novo com prompt=consent.")
         return 1
 
+    # Grava o token DIRETO no .env (nunca imprime o valor secreto na tela).
+    written = _upsert_env_var(env_var, refresh_token)
+
     print()
     print("=" * 60)
     print(" LOGIN GERADO COM SUCESSO")
     print("=" * 60)
     print(f"Canal autorizado: {channel_label}")
-    print("Cole a linha abaixo no .env:")
-    print()
-    print(f"{env_var}={refresh_token}")
-    print()
-    print("Depois reinicie o painel para valer.")
+    if written:
+        print(f"Gravado no .env: {env_var} (len={len(refresh_token)})")
+        print("Agora reinicie o painel para valer.")
+    else:
+        print("NAO consegui gravar no .env automaticamente.")
+        print(f"Defina manualmente a variavel {env_var} no .env.")
     return 0
 
 

@@ -247,6 +247,13 @@ except ImportError as e:
 load_dotenv()
 
 
+class NoFaithfulBackgroundError(RuntimeError):
+    """Levantado quando NENHUM vídeo real e fiel ao assunto foi encontrado no
+    YouTube para servir de fundo. Nesse caso o worker deve DESCARTAR o
+    assunto (nao gerar o video com fundo generico/desconectado) e tentar o
+    proximo assunto em alta, em vez de usar stock footage ou gradiente."""
+
+
 class MediaService:
     def __init__(self):
         self.output_dir = os.getenv("ATLAS_OUTPUT_DIR", "output_videos")
@@ -661,6 +668,25 @@ class MediaService:
         "full", "best", "top", "vs", "you", "your", "official",
     })
 
+    # Termos GENERICOS de instituicao/orgao publico (PT + EN). Sozinhos NAO
+    # provam que um video e sobre o MESMO evento/assunto da trend — so provam
+    # que fala da MESMA instituicao em geral (ex.: uma formatura de agentes da
+    # Policia Federal NAO tem nada a ver com uma noticia sobre uma "delegacia
+    # falsa da PF"). Usado para penalizar matches que so batem nesses termos.
+    _GENERIC_INSTITUTIONAL_TERMS = frozenset({
+        "policia", "polícia", "federal", "civil", "militar", "delegacia",
+        "delegado", "delegada", "governo", "governamental", "ministerio",
+        "ministério", "receita", "justica", "justiça", "tribunal", "forca",
+        "força", "forcas", "forças", "exercito", "exército", "policial",
+        "policiais", "agente", "agentes", "oficial", "oficiais", "secretaria",
+        "prefeitura", "camara", "câmara", "senado", "congresso",
+        "presidencia", "presidência", "orgao", "órgão", "instituto",
+        "comando", "quartel", "departamento", "corregedoria", "operacao",
+        "operação", "guarda", "corporacao", "corporação", "autoridade",
+        "autoridades", "government", "police", "department", "authority",
+        "authorities", "ministry", "federal", "agency", "officer", "officers",
+    })
+
     def _meaningful_words(self, text: str) -> List[str]:
         """Retorna apenas as palavras que realmente identificam o assunto
         (>= 3 letras e que nao sejam palavras comuns/stopwords)."""
@@ -673,11 +699,16 @@ class MediaService:
 
     def _core_terms(self, topic: str) -> set:
         """Identifica os termos PRINCIPAIS do assunto (o nome do jogo/produto/
-        pessoa). Sao eles que o video de fundo PRECISA conter para ser do tema.
+        pessoa/lugar). Sao eles que o video de fundo PRECISA conter para ser
+        do tema.
 
         Heuristica: a 1a palavra significativa (assuntos de tendencia costumam
         comecar pelo nome do tema) + nomes proprios (palavras em Maiuscula no
-        texto original, ex.: 'Roblox', 'KATSEYE')."""
+        texto original, ex.: 'Roblox', 'KATSEYE'). Quando existem termos
+        ESPECIFICOS (nao-genericos, ex.: 'africa', 'katseye') disponiveis,
+        eles sao priorizados sobre termos institucionais genericos (ex.:
+        'policia', 'federal') — assim, um video so provar que fala da MESMA
+        instituicao generica nao basta para ser considerado "do tema"."""
         cores = set()
         meaningful = self._meaningful_words(topic)
         if meaningful:
@@ -689,7 +720,9 @@ class MediaService:
                 norm = self._normalize_text(raw)
                 if norm and norm not in self._STOPWORDS:
                     cores.add(norm)
-        return cores
+
+        specific = {c for c in cores if c not in self._GENERIC_INSTITUTIONAL_TERMS}
+        return specific or cores
 
     def _keyword_match_score(self, topic: str, candidate_text: str) -> float:
         topic_words = self._meaningful_words(topic)
@@ -698,8 +731,8 @@ class MediaService:
         if not topic_words or not candidate_norm:
             return 0.0
 
-        hits = sum(1 for word in topic_words if word in candidate_norm)
-        score = hits / len(topic_words)
+        hit_words = [word for word in topic_words if word in candidate_norm]
+        score = len(hit_words) / len(topic_words)
 
         # O video PRECISA conter pelo menos um termo principal do assunto
         # (ex.: "roblox"). Se nenhum aparecer, quase certamente NAO e do tema.
@@ -707,6 +740,16 @@ class MediaService:
         core_present = any(c in candidate_norm for c in cores) if cores else True
         if not core_present:
             score *= 0.30
+
+        # Se TODAS as palavras que bateram forem termos genericos de
+        # instituicao/orgao publico (ex.: "policia", "federal", "delegacia"),
+        # o video provavelmente e sobre um evento REAL DIFERENTE da MESMA
+        # instituicao (ex.: uma formatura), e NAO sobre o assunto especifico
+        # da trend (ex.: uma "delegacia falsa"). Penaliza forte para nao
+        # aceitar um fundo desconectado do assunto so por citar o orgao.
+        specific_hits = [w for w in hit_words if w not in self._GENERIC_INSTITUTIONAL_TERMS]
+        if hit_words and not specific_hits:
+            score *= 0.15
 
         # Assunto inteiro presente no titulo/descricao => match perfeito.
         if self._normalize_text(topic) in candidate_norm:
@@ -2149,8 +2192,14 @@ class MediaService:
             )
     
             if not background_path:
-                print("🎬 [MEDIA ENGINE] YouTube sem vídeo utilizável. Buscando fundo em bancos (Pexels/Pixabay)...")
-                background_path = self._download_stock_background(topic=topic, temp_dir=temp_dir)
+                # Sem stock/gradiente como substituto: se nao ha um video
+                # REAL fiel ao assunto, e melhor DESCARTAR este assunto do
+                # que publicar um video com fundo generico/desconectado do
+                # tema. O worker (loop_worker) captura esta excecao e busca
+                # o proximo assunto em alta no lugar deste.
+                raise NoFaithfulBackgroundError(
+                    f"Nenhum vídeo real e fiel ao assunto '{topic}' foi encontrado no YouTube."
+                )
 
             output_path = os.path.join(self.output_dir, f"video_{content_id}.mp4")
 
@@ -2159,8 +2208,8 @@ class MediaService:
                 voice_path=voice_path,
                 topic=topic,
                 script=script,
-                hook_text=hook_text,
                 output_path=output_path,
+                hook_text=hook_text,
             )
     
             return final_path

@@ -38,6 +38,8 @@ export const Api = {
     api.post(`/videos/${id}/approve`, body).then((r) => r.data),
   rejectVideo: (id, body = {}) =>
     api.post(`/videos/${id}/reject`, body).then((r) => r.data),
+  purgeVideoFile: (id) =>
+    api.post(`/videos/${id}/purge-file`).then((r) => r.data),
 
   publications: () => api.get("/publications").then((r) => r.data),
   retryPublication: (id) =>
@@ -104,6 +106,9 @@ export const Api = {
   // ----- TikTok (conexao das contas) -----
   tiktokStatus: () => api.get("/tiktok/status").then((r) => r.data),
   tiktokConnectUrl: (market = "BR") => `/api/tiktok/connect?market=${market}`,
+  tiktokAccounts: () => api.get("/tiktok/accounts").then((r) => r.data),
+  tiktokDisconnect: (id) =>
+    api.delete(`/tiktok/accounts/${id}`).then((r) => r.data),
 
   // ----- Marketing / Anuncios -----
   marketingStatus: () => api.get("/marketing/status").then((r) => r.data),
@@ -155,9 +160,20 @@ export const Api = {
   liveBuild: (body) => api.post("/live/build", body).then((r) => r.data),
   liveBuildStatus: () => api.get("/live/build/status").then((r) => r.data),
   liveRecorded: () => api.get("/live/recorded").then((r) => r.data),
+  liveClearRecorded: () => api.post("/live/recorded/clear").then((r) => r.data),
+  liveDeleteRecorded: (name) =>
+    api.delete(`/live/recorded/${encodeURIComponent(name)}`).then((r) => r.data),
   liveManifest: (name) =>
     api.get(`/live/recorded/${encodeURIComponent(name)}/manifest`).then((r) => r.data),
   liveRecordedUrl: (name) => `/api/live/recorded/${encodeURIComponent(name)}`,
+  // Live montada com os videos de produto JA gerados (sem avatar)
+  liveSources: (market, language) =>
+    api
+      .get("/live/sources", {
+        params: { ...(market ? { market } : {}), ...(language ? { language } : {}) },
+      })
+      .then((r) => r.data),
+  liveBuildMontage: (body) => api.post("/live/build-montage", body).then((r) => r.data),
 };
 
 export default Api;

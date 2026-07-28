@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import subprocess
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -47,6 +49,45 @@ def _safe_json(path: str) -> dict:
         return data if isinstance(data, dict) else {}
     except Exception:
         return {}
+
+
+def _resolve_ffmpeg() -> str:
+    """Localiza o ffmpeg (PATH ou o binario empacotado pelo imageio-ffmpeg)."""
+    exe = shutil.which("ffmpeg")
+    if exe:
+        return exe
+    try:
+        import imageio_ffmpeg
+
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return "ffmpeg"
+
+
+def _extract_frame(video_path: str, out_path: str) -> bool:
+    """Gera uma miniatura (.jpg) extraindo 1 frame do video com ffmpeg.
+    Tenta por volta de 1s (evita o frame preto do inicio); se falhar, tenta do
+    comeco. Escala para 360px de largura para ficar bem leve."""
+    ffmpeg = _resolve_ffmpeg()
+    base = [ffmpeg, "-y", "-loglevel", "error"]
+    tail = ["-frames:v", "1", "-vf", "scale=360:-2", "-q:v", "4", out_path]
+    for pre in (["-ss", "1", "-i", video_path], ["-i", video_path]):
+        try:
+            r = subprocess.run(
+                base + pre + tail,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=30,
+            )
+            if (
+                r.returncode == 0
+                and os.path.isfile(out_path)
+                and os.path.getsize(out_path) > 0
+            ):
+                return True
+        except Exception:
+            continue
+    return False
 
 
 class VideoLibraryService:
@@ -164,6 +205,13 @@ class VideoLibraryService:
 
             for name in sorted(os.listdir(base_dir)):
                 if not name.lower().endswith(".mp4"):
+                    continue
+
+                # A versao ".live.mp4" e a variante feita SO para a montagem de
+                # live (audio de apresentadora, SEM QR/codigo de barras). Ela NAO
+                # e um video de afiliado: nao deve entrar na lista de afiliados
+                # nem ser publicada nas paginas. So aparece na lista da live.
+                if name.lower().endswith(".live.mp4"):
                     continue
 
                 video_path = os.path.join(base_dir, name)
@@ -373,6 +421,57 @@ class VideoLibraryService:
             "freed_mb": round(freed_bytes / (1024 * 1024), 1),
         }
 
+    def purge_published_file(self, asset_id: int) -> dict:
+        """
+        Libera espaco apagando SO O ARQUIVO (.mp4 + miniatura) de UM video
+        JA PUBLICADO especifico.
+
+        IMPORTANTE: NAO apaga o registro no banco, as ESTATISTICAS nem o
+        arquivinho .json ao lado (usado para NAO gerar o mesmo produto de
+        novo). Ou seja, o video continua publicado nas redes, as estatisticas
+        seguem sendo coletadas e, se o produto reaparecer na lista de criar,
+        ele NAO sera recriado (o .json preserva a chave mercado+ASIN).
+        """
+        asset = self.get(asset_id)
+        if asset is None:
+            raise ValueError("Video nao encontrado.")
+
+        status_val = (
+            asset.status.value if hasattr(asset.status, "value") else str(asset.status)
+        )
+        if status_val != VideoStatusEnum.PUBLISHED.value:
+            raise ValueError(
+                "So e possivel apagar o arquivo de videos ja PUBLICADOS."
+            )
+
+        removed_files = 0
+        freed_bytes = 0
+        # So arquivos pesados: video e miniatura. (NAO o .json/metadados.)
+        for rel in (asset.video_path, asset.thumbnail_path):
+            if not rel:
+                continue
+            full = os.path.join(PROJECT_ROOT, rel.replace("/", os.sep))
+            try:
+                if os.path.isfile(full):
+                    freed_bytes += os.path.getsize(full)
+                    os.remove(full)
+                    removed_files += 1
+            except Exception:
+                pass
+
+        # Marca que o arquivo foi removido (estatisticas preservadas). Sem isso
+        # o video apareceria quebrado (player 404) na lista.
+        payload = dict(asset.payload or {})
+        payload["file_purged"] = True
+        asset.payload = payload
+        self.db.commit()
+
+        return {
+            "asset_id": asset.id,
+            "removed_files": removed_files,
+            "freed_mb": round(freed_bytes / (1024 * 1024), 1),
+        }
+
     # ----------------------------------------------------------------
     # CONSULTA
     # ----------------------------------------------------------------
@@ -411,3 +510,36 @@ class VideoLibraryService:
             return False
         full = os.path.join(PROJECT_ROOT, rel.replace("/", os.sep))
         return os.path.isfile(full)
+
+    def ensure_thumbnail(self, asset: VideoAsset) -> Optional[str]:
+        """Garante uma miniatura (.jpg) do video e devolve o caminho ABSOLUTO.
+        Gera 1 frame com ffmpeg na primeira vez (cacheado ao lado do video); nas
+        vezes seguintes serve do cache. Leve — nao carrega o video inteiro."""
+        # 1) Ja existe miniatura registrada e presente no disco?
+        rel = asset.thumbnail_path
+        if rel:
+            full = os.path.join(PROJECT_ROOT, rel.replace("/", os.sep))
+            if os.path.isfile(full):
+                return full
+
+        # 2) Precisa do arquivo de video para extrair o frame.
+        if not asset.video_path:
+            return None
+        video_full = os.path.join(
+            PROJECT_ROOT, asset.video_path.replace("/", os.sep)
+        )
+        if not os.path.isfile(video_full):
+            return None
+
+        thumb_full = os.path.splitext(video_full)[0] + ".thumb.jpg"
+        if not os.path.isfile(thumb_full):
+            if not _extract_frame(video_full, thumb_full):
+                return None
+
+        # Registra o caminho relativo (para servir e para a limpeza apagar junto).
+        asset.thumbnail_path = _rel(thumb_full)
+        try:
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+        return thumb_full

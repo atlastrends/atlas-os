@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Api from "../api/client.js";
-import { StatusBadge } from "./VideoCard.jsx";
+import { StatusBadge, isUploaded, watchInfoOf, thumbOf } from "./VideoCard.jsx";
 import PlatformLogo, { platformName } from "./PlatformLogo.jsx";
 
 const PLATFORMS = ["youtube", "tiktok", "instagram", "facebook"];
@@ -27,6 +27,12 @@ export default function VideoModal({ video, onClose, onChanged, notify }) {
   }, [video]);
 
   if (!video) return null;
+
+  // Video que ja subiu: assistimos onde ele foi publicado (ou busca no
+  // YouTube), sem carregar o arquivo local.
+  const uploaded = isUploaded(video);
+  const watch = uploaded ? watchInfoOf(video) : null;
+  const thumb = thumbOf(video);
 
   const toggle = (p) =>
     setSelected((s) => (s.includes(p) ? s.filter((x) => x !== p) : [...s, p]));
@@ -77,6 +83,37 @@ export default function VideoModal({ video, onClose, onChanged, notify }) {
     }
   };
 
+  const purgeFile = async () => {
+    if (
+      !window.confirm(
+        "Apagar do seu computador SÓ o arquivo deste vídeo já PUBLICADO?\n\n" +
+          "O vídeo continua publicado nas redes, as ESTATÍSTICAS são mantidas " +
+          "e ele NÃO será gerado de novo (as informações do produto são " +
+          "preservadas). Isso só libera espaço no PC."
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      const r = await Api.purgeVideoFile(video.id);
+      notify?.({
+        type: "ok",
+        msg: `Arquivo apagado: ${r?.removed_files ?? 0} arquivo(s), ~${
+          r?.freed_mb ?? 0
+        } MB. Estatísticas mantidas.`,
+      });
+      onChanged?.();
+      onClose();
+    } catch (e) {
+      notify?.({
+        type: "error",
+        msg: e?.response?.data?.detail || "Falha ao apagar o arquivo.",
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -84,7 +121,27 @@ export default function VideoModal({ video, onClose, onChanged, notify }) {
           ✕
         </span>
         <div className="m-video">
-          {video.video_url ? (
+          {watch ? (
+            <a
+              className="m-yt"
+              href={watch.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={watch.label}
+            >
+              {thumb ? (
+                <img
+                  src={thumb}
+                  alt={video.title || "vídeo"}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : null}
+              <span className="m-yt-play">▶</span>
+              <span className="m-yt-label">{watch.label}</span>
+            </a>
+          ) : video.video_url ? (
             <video src={video.video_url} controls autoPlay />
           ) : (
             <div className="placeholder" style={{ padding: 30 }}>
@@ -186,6 +243,16 @@ export default function VideoModal({ video, onClose, onChanged, notify }) {
             <button className="btn danger" disabled={busy} onClick={reject}>
               ✕ Rejeitar
             </button>
+            {video.status === "published" && (
+              <button
+                className="btn ghost"
+                disabled={busy}
+                onClick={purgeFile}
+                title="Apaga só o arquivo do PC (libera espaço). O vídeo segue publicado, as estatísticas ficam e ele não é gerado de novo."
+              >
+                🧹 Apagar arquivo (já publicado)
+              </button>
+            )}
           </div>
         </div>
       </div>

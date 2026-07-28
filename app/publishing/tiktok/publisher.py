@@ -196,7 +196,32 @@ class TikTokPublisher(BasePublisher):
             )
             data = init.json()
             err = (data.get("error") or {})
-            if init.status_code >= 400 or (err.get("code") and err.get("code") != "ok"):
+            err_code = (err.get("code") or "").lower()
+            if init.status_code >= 400 or (err_code and err_code != "ok"):
+                # O TikTok limita quantos videos podem ficar PENDENTES (rascunhos
+                # nao postados) na caixa de entrada do criador. Quando acumulam
+                # muitos sem o usuario finalizar no app do TikTok, ele bloqueia
+                # novos envios com "spam_risk_too_many_pending_share". Isso NAO e
+                # falha permanente: basta abrir o app do TikTok e postar/apagar os
+                # rascunhos pendentes (ou esperar a janela liberar) que volta a
+                # funcionar. Devolvemos uma mensagem que o classificador trata
+                # como bloqueio temporario (aguardando reenvio), nao como erro.
+                if "spam_risk" in err_code or "pending_share" in err_code:
+                    return PublishResult(
+                        status="failed",
+                        error=(
+                            "TikTok bloqueou temporariamente por rascunhos demais "
+                            "pendentes na Caixa de entrada do criador "
+                            "(spam_risk_too_many_pending_share). Abra o app do "
+                            "TikTok e poste ou apague os rascunhos pendentes para "
+                            "liberar novos envios - aguardando reenvio."
+                        ),
+                        detail={
+                            "platform": self.platform,
+                            "market": market,
+                            "code": err_code,
+                        },
+                    )
                 return PublishResult(
                     status="failed",
                     error=f"Falha ao iniciar publicacao no TikTok: {data}",

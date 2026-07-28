@@ -13,8 +13,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import os
+from datetime import datetime, timedelta, timezone
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.dashboard import (
@@ -24,7 +26,7 @@ from app.models.dashboard import (
     VideoKindEnum,
     VideoStatusEnum,
 )
-from app.publishing.base import PublishRequest
+from app.publishing.base import PublishRequest, resolve_video_path
 from app.publishing.registry import PLATFORMS, get_publisher
 from app.services.shortlink_service import ShortLinkService
 
@@ -50,6 +52,21 @@ _RATE_LIMIT_HINTS = (
     "daily limit",
     "limit exceeded",
     "429",
+    # Especificos do Graph API (Meta / Facebook / Instagram): rate limit do
+    # APP inteiro (nao do usuario), costuma se resolver sozinho apos alguns
+    # minutos - ver bloqueio temporario em get_page_access_token().
+    "application request limit",
+    "request limit reached",
+    "(#4)",
+    "bloqueio temporario do graph api",
+    # TikTok: quando acumulam rascunhos pendentes demais na caixa de entrada
+    # do criador, o TikTok bloqueia novos envios (spam_risk). E temporario:
+    # basta o usuario postar/apagar os rascunhos no app (ou esperar) e o
+    # reenvio automatico volta a funcionar - nao e erro permanente.
+    "spam_risk",
+    "too_many_pending",
+    "pending_share",
+    "rascunhos demais pendentes",
 )
 
 
@@ -79,20 +96,44 @@ class PublishingService:
         self.db.refresh(asset)
         return asset
 
-    def retry_pending(self, *, kind: str | None = None) -> dict:
-        """Reenvia os videos que ficaram AGUARDANDO REENVIO (bloqueio temporario
-        da plataforma). Tenta publicar de novo apenas nas plataformas que ainda
-        nao subiram; as que ja publicaram sao preservadas (nao duplica)."""
+    def _awaiting_retry_query(self, kind: str | None = None):
+        """Query dos assets a reenviar: os marcados como RETRY_PENDING E TAMBEM
+        qualquer asset com ALGUMA publicacao em RATE_LIMITED (bloqueio temporario
+        da plataforma), mesmo que outra plataforma ja tenha publicado. Assim o
+        botao "Reenviar pendentes" tambem completa as plataformas que faltaram
+        num video que ja subiu em outra rede (ex.: YouTube publicou, mas o
+        Instagram/TikTok ficaram bloqueados). O status do asset continua honesto
+        (PUBLISHED quando algo subiu), mas as plataformas bloqueadas ainda sao
+        reenviadas ate completarem."""
+        rate_limited_asset_ids = (
+            self.db.query(Publication.video_asset_id)
+            .filter(Publication.status == PublicationStatusEnum.RATE_LIMITED)
+            .distinct()
+        )
         query = self.db.query(VideoAsset).filter(
-            VideoAsset.status == VideoStatusEnum.RETRY_PENDING
+            or_(
+                VideoAsset.status == VideoStatusEnum.RETRY_PENDING,
+                VideoAsset.id.in_(rate_limited_asset_ids),
+            )
         )
         if kind:
             try:
                 query = query.filter(VideoAsset.kind == VideoKindEnum(kind))
             except ValueError:
                 pass
+        return query
 
-        assets = query.all()
+    def retry_pending(self, *, kind: str | None = None) -> dict:
+        """Reenvia os videos que ficaram AGUARDANDO REENVIO (bloqueio temporario
+        da plataforma). Tenta publicar de novo apenas nas plataformas que ainda
+        nao subiram; as que ja publicaram sao preservadas (nao duplica)."""
+        # Antes de reenviar, HIGIENIZA a fila para nao travar:
+        #  1) destrava envios presos em andamento (processo que caiu no meio);
+        #  2) marca como SKIPPED os videos cujo arquivo foi purgado (nunca vao
+        #     subir). Assim o reenvio so tenta o que tem chance real.
+        self.reset_stale_inprogress()
+        self.skip_purged_pending(kind=kind)
+        assets = self._awaiting_retry_query(kind).all()
         retried = 0
         published = 0
         still_pending = 0
@@ -115,16 +156,9 @@ class PublishingService:
         }
 
     def count_pending(self, *, kind: str | None = None) -> int:
-        """Quantos videos estao aguardando reenvio."""
-        query = self.db.query(VideoAsset).filter(
-            VideoAsset.status == VideoStatusEnum.RETRY_PENDING
-        )
-        if kind:
-            try:
-                query = query.filter(VideoAsset.kind == VideoKindEnum(kind))
-            except ValueError:
-                pass
-        return query.count()
+        """Quantos videos estao aguardando reenvio (inclui os que ja publicaram
+        em alguma rede mas ainda tem uma plataforma bloqueada)."""
+        return self._awaiting_retry_query(kind).count()
 
     def approve_and_publish(
         self,
@@ -218,6 +252,19 @@ class PublishingService:
         rate_limited). Nao mexe no status do asset (isso e feito por quem
         chama, via _recompute_asset_status, ja que um asset pode ter varias
         publicacoes)."""
+        # GUARDA DE ARQUIVO PURGADO: se o video foi removido (purgado depois de
+        # publicar), NENHUMA plataforma consegue enviar. Marca SKIPPED (terminal)
+        # e sai - evita retentar para sempre um arquivo inexistente, que era a
+        # causa principal dos travamentos no reenvio.
+        if self._is_video_purged(asset):
+            pub.status = PublicationStatusEnum.SKIPPED
+            pub.error = (
+                "Arquivo do video foi removido (purgado apos publicacao). "
+                "Nada a reenviar nesta plataforma."
+            )
+            self.db.commit()
+            return pub
+
         request = self._build_request(asset, platform)
 
         publisher = get_publisher(platform)
@@ -293,12 +340,111 @@ class PublishingService:
         elif any_failed:
             asset.status = VideoStatusEnum.FAILED
         else:
-            # Nada publicou ainda (ex.: faltam credenciais). Continua na fila.
-            asset.status = VideoStatusEnum.APPROVED
+            # Se TODAS as publicacoes foram SKIPPED (ex.: arquivo purgado, sem
+            # o que enviar), o video nao tem como subir -> estado TERMINAL, sai
+            # do loop de reenvio. Senao (ex.: faltam credenciais), fica na fila.
+            if pubs and all(
+                p.status == PublicationStatusEnum.SKIPPED for p in pubs
+            ):
+                asset.status = VideoStatusEnum.FAILED
+            else:
+                asset.status = VideoStatusEnum.APPROVED
 
         self.db.commit()
         self.db.refresh(asset)
         return asset
+
+    # ----------------------------------------------------------------
+    # MANUTENCAO DA FILA (evita travamentos no reenvio)
+    # ----------------------------------------------------------------
+
+    def _is_video_purged(self, asset: VideoAsset) -> bool:
+        """True se o arquivo de video nao existe mais. O Atlas PURGA o arquivo
+        depois de publicar; sem o arquivo LOCAL nao ha o que enviar em nenhuma
+        plataforma (ate o upload para o Supabase precisa do arquivo local),
+        entao reenviar so geraria falha eterna e travaria a fila."""
+        payload = asset.payload if isinstance(asset.payload, dict) else {}
+        if payload.get("file_purged"):
+            return True
+        path = resolve_video_path(asset.video_path or "")
+        return not (path and os.path.isfile(path))
+
+    def reset_stale_inprogress(self, *, max_age_minutes: int = 30) -> dict:
+        """Destrava publicacoes/videos presos EM ANDAMENTO ha muito tempo
+        (UPLOADING/PUBLISHING orfaos de um processo que caiu no meio do envio).
+        Sem isso o registro fica preso para sempre - nem reenvia, nem conclui.
+        Recoloca na fila de reenvio (marca como bloqueio temporario)."""
+        cutoff = _now() - timedelta(minutes=max_age_minutes)
+        stale_pubs = (
+            self.db.query(Publication)
+            .filter(
+                Publication.status == PublicationStatusEnum.UPLOADING,
+                Publication.updated_at < cutoff,
+            )
+            .all()
+        )
+        touched: set[int] = set()
+        for pub in stale_pubs:
+            pub.status = PublicationStatusEnum.RATE_LIMITED
+            pub.error = (
+                "Envio interrompido (o processo caiu antes de concluir); "
+                "recolocado na fila de reenvio."
+            )
+            touched.add(pub.video_asset_id)
+        if stale_pubs:
+            self.db.commit()
+
+        stale_assets = (
+            self.db.query(VideoAsset)
+            .filter(
+                VideoAsset.status == VideoStatusEnum.PUBLISHING,
+                VideoAsset.updated_at < cutoff,
+            )
+            .all()
+        )
+        for asset in stale_assets:
+            self._recompute_asset_status(asset)
+            touched.add(asset.id)
+
+        return {
+            "publications_reset": len(stale_pubs),
+            "assets_touched": len(touched),
+        }
+
+    def skip_purged_pending(self, *, kind: str | None = None) -> dict:
+        """Marca como SKIPPED (terminal) as publicacoes pendentes cujo arquivo
+        de video foi PURGADO. Elas nunca vao subir e so travam o loop de
+        reenvio. NAO publica nada; apenas limpa a fila para que o reenvio tente
+        somente o que tem chance real de subir."""
+        assets = self._awaiting_retry_query(kind).all()
+        skipped = 0
+        cleaned_assets = 0
+        for asset in assets:
+            if not self._is_video_purged(asset):
+                continue
+            pubs = (
+                self.db.query(Publication)
+                .filter(
+                    Publication.video_asset_id == asset.id,
+                    Publication.status != PublicationStatusEnum.PUBLISHED,
+                )
+                .all()
+            )
+            for pub in pubs:
+                pub.status = PublicationStatusEnum.SKIPPED
+                pub.error = (
+                    "Arquivo do video foi removido (purgado apos publicacao). "
+                    "Nada a reenviar."
+                )
+                skipped += 1
+            if pubs:
+                self.db.commit()
+            self._recompute_asset_status(asset)
+            cleaned_assets += 1
+        return {
+            "publications_skipped": skipped,
+            "assets_cleaned": cleaned_assets,
+        }
 
     def _get_or_create_publication(
         self,

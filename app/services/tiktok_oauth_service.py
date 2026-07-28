@@ -24,6 +24,7 @@ from app.services.env_writer import set_env_vars
 
 AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/"
 TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/"
+USER_INFO_URL = "https://open.tiktokapis.com/v2/user/info/"
 
 # Permissoes necessarias para postar video pelo Content Posting API.
 # Por padrao pedimos apenas os scopes disponiveis no Sandbox
@@ -172,15 +173,186 @@ def save_tokens(market: str, data: dict) -> None:
 
 
 # ---------------------------------------------------------------
+# Perfil da conta (user.info.basic) — nome + avatar para o painel
+# ---------------------------------------------------------------
+def fetch_user_info(access_token: str) -> dict:
+    """Le o perfil basico (open_id, display_name, avatar_url).
+
+    Usa o scope user.info.basic, apenas para o usuario confirmar em qual
+    conta o video sera publicado. Nao guardamos mais nada do perfil.
+    """
+    try:
+        resp = requests.get(
+            USER_INFO_URL,
+            params={"fields": "open_id,display_name,avatar_url"},
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=30,
+        )
+        data = resp.json() or {}
+        return (data.get("data") or {}).get("user") or {}
+    except Exception:
+        return {}
+
+
+def _expires_at(data: dict) -> int:
+    expires_in = int(data.get("expires_in") or 0)
+    return int(time.time()) + expires_in if expires_in else 0
+
+
+# ---------------------------------------------------------------
+# Contas conectadas no BANCO (multiusuario)
+# ---------------------------------------------------------------
+def upsert_account(db, market: str, token_data: dict):
+    """Cria/atualiza a conta do TikTok no banco a partir da resposta de token.
+
+    Cada criador conecta a PROPRIA conta; guardamos os tokens dela (renovaveis)
+    e o perfil basico. Chave estavel = open_id (uma linha por conta).
+    """
+    from app.models.dashboard import TikTokAccount
+
+    access = (token_data.get("access_token") or "").strip()
+    refresh = (token_data.get("refresh_token") or "").strip()
+    open_id = (token_data.get("open_id") or "").strip()
+    scope = (token_data.get("scope") or _scopes()).strip()
+
+    info = fetch_user_info(access) if access else {}
+    if not open_id:
+        open_id = (info.get("open_id") or "").strip()
+    if not open_id:
+        raise ValueError("O TikTok nao retornou o open_id da conta.")
+
+    account = (
+        db.query(TikTokAccount)
+        .filter(TikTokAccount.open_id == open_id)
+        .first()
+    )
+    if account is None:
+        account = TikTokAccount(open_id=open_id)
+        db.add(account)
+
+    account.market = _norm_market(market)
+    if access:
+        account.access_token = access
+    if refresh:
+        account.refresh_token = refresh
+    account.token_expires_at = _expires_at(token_data)
+    account.scopes = scope
+    if info.get("display_name"):
+        account.display_name = info.get("display_name")
+    if info.get("avatar_url"):
+        account.avatar_url = info.get("avatar_url")
+
+    db.commit()
+    db.refresh(account)
+    return account
+
+
+def list_accounts(db) -> list[dict]:
+    """Lista as contas conectadas (para o painel)."""
+    from app.models.dashboard import TikTokAccount
+
+    rows = (
+        db.query(TikTokAccount)
+        .order_by(TikTokAccount.market, TikTokAccount.id)
+        .all()
+    )
+    return [
+        {
+            "id": a.id,
+            "open_id": a.open_id,
+            "display_name": a.display_name or "(sem nome)",
+            "avatar_url": a.avatar_url or "",
+            "market": a.market or "",
+            "connected": bool(a.refresh_token or a.access_token),
+        }
+        for a in rows
+    ]
+
+
+def delete_account(db, account_id: int) -> bool:
+    """Desconecta (apaga) uma conta do TikTok."""
+    from app.models.dashboard import TikTokAccount
+
+    account = (
+        db.query(TikTokAccount)
+        .filter(TikTokAccount.id == account_id)
+        .first()
+    )
+    if account is None:
+        return False
+    db.delete(account)
+    db.commit()
+    return True
+
+
+def _valid_token_for_account(db, account) -> str:
+    """Access_token valido da conta, renovando pelo refresh se preciso."""
+    now = int(time.time())
+    access = (account.access_token or "").strip()
+    refresh = (account.refresh_token or "").strip()
+    expires_at = int(account.token_expires_at or 0)
+    if refresh and (not access or expires_at == 0 or now >= expires_at - 300):
+        data = refresh_access_token(refresh)
+        new_access = (data.get("access_token") or "").strip()
+        if new_access:
+            account.access_token = new_access
+            new_refresh = (data.get("refresh_token") or "").strip()
+            if new_refresh:
+                account.refresh_token = new_refresh
+            account.token_expires_at = _expires_at(data)
+            db.commit()
+            return new_access
+    return access
+
+
+def get_access_token_from_db(market: str) -> str:
+    """Token valido de uma conta conectada (banco) para o mercado.
+
+    Prefere a conta marcada para aquele mercado (BR/US); se nao houver,
+    usa a conta conectada mais recente. Devolve '' se nao houver nenhuma.
+    """
+    from app.core.database import SessionLocal
+    from app.models.dashboard import TikTokAccount
+
+    market = _norm_market(market)
+    db = SessionLocal()
+    try:
+        account = (
+            db.query(TikTokAccount)
+            .filter(TikTokAccount.market == market)
+            .order_by(TikTokAccount.updated_at.desc())
+            .first()
+        )
+        if account is None:
+            account = (
+                db.query(TikTokAccount)
+                .order_by(TikTokAccount.updated_at.desc())
+                .first()
+            )
+        if account is None:
+            return ""
+        return _valid_token_for_account(db, account)
+    except Exception:
+        return ""
+    finally:
+        db.close()
+
+
+# ---------------------------------------------------------------
 # Obter um access_token valido para publicar (renova se preciso)
 # ---------------------------------------------------------------
 def get_access_token(market: str) -> str:
     """Devolve um access_token valido para o mercado.
 
-    Se houver refresh_token e o access_token estiver perto de expirar,
-    renova automaticamente e salva o novo no .env.
+    Primeiro tenta as contas conectadas pelo painel (banco, multiusuario);
+    se nao houver, cai nos tokens antigos do .env (compatibilidade).
     """
     market = _norm_market(market)
+
+    db_token = get_access_token_from_db(market)
+    if db_token:
+        return db_token
+
     refresh = (os.getenv(f"TIKTOK_REFRESH_TOKEN_{market}") or "").strip()
     access = (os.getenv(f"TIKTOK_ACCESS_TOKEN_{market}") or "").strip()
     expires_at = int((os.getenv(f"TIKTOK_TOKEN_EXPIRES_{market}") or "0").strip() or "0")

@@ -8,6 +8,7 @@ import requests
 
 from app.publishing.base import (
     BasePublisher,
+    MetaGraphTransientError,
     PublishRequest,
     PublishResult,
     get_page_access_token,
@@ -44,7 +45,14 @@ class FacebookPublisher(BasePublisher):
 
         # O Graph API exige o token ESPECIFICO da Pagina para publicar
         # (o token de usuario sozinho recebe 403, mesmo com as permissoes).
-        token = get_page_access_token(page_id)
+        try:
+            token = get_page_access_token(page_id)
+        except MetaGraphTransientError as exc:
+            return PublishResult(
+                status="failed",
+                error=f"Bloqueio temporario do Graph API (Meta): {exc}",
+                detail={"platform": self.platform, "role": role, "market": market},
+            )
 
         video_url = public_media_url(request.video_path)
         if not video_url or video_url.startswith("http://localhost"):

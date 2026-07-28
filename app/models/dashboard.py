@@ -488,3 +488,53 @@ class AnsweredComment(Base):
     )
 
     publication = relationship("Publication")
+
+
+class TikTokAccount(Base):
+    """Uma conta do TikTok conectada por OAuth (Login Kit).
+
+    O app e multiusuario: qualquer criador pode conectar a PROPRIA conta do
+    TikTok pelo painel. Cada conta guarda seus proprios tokens (renovados
+    automaticamente) e o perfil basico (nome + avatar), lido via user.info.basic
+    so para o usuario confirmar em qual conta o video sera publicado.
+
+    Desconectar = apagar a linha. O 'market' (BR/US) e um rotulo opcional usado
+    para rotear qual conta publica os videos de cada mercado.
+    """
+
+    __tablename__ = "tiktok_accounts"
+
+    __table_args__ = (
+        UniqueConstraint("open_id", name="uq_tiktok_accounts_open_id"),
+        Index("ix_tiktok_accounts_market", "market"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Identificador estavel da conta no TikTok (vem do OAuth).
+    open_id = Column(String(255), nullable=False)
+
+    # Perfil basico (user.info.basic) para exibir no painel.
+    display_name = Column(String(255), nullable=True)
+    avatar_url = Column(Text, nullable=True)
+
+    # Rotulo de roteamento: BR ou US (qual conta publica cada mercado).
+    market = Column(String(8), nullable=True)
+
+    # Tokens (o access_token expira rapido; renovamos pelo refresh_token).
+    access_token = Column(Text, nullable=True)
+    refresh_token = Column(Text, nullable=True)
+    token_expires_at = Column(BigInteger, nullable=True)  # epoch (segundos)
+    scopes = Column(String(255), nullable=True)
+
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
