@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T19:25:30.230669+00:00",
+  "updated_at": "2026-07-31T19:25:46.902913+00:00",
   "products": [
     {
       "keyword": "LAPIS",
@@ -1008,6 +1008,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "NUGGET",
+      "title": "Nugget Ice Maker Countertop, Silonn Chewable Pellet Ice Machine with Self-Cleaning Function, 36lbs/24H Portable Ice Makers fo",
+      "url": "https://www.amazon.com/dp/B0C9SWH3RC?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18613983655004843",
+      "facebook_post_id": "1018714904256336"
     },
     {
       "keyword": "ROKU",
@@ -2207,14 +2215,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "NUGGET",
-      "title": "Nugget Ice Maker Countertop, Silonn Chewable Pellet Ice Machine with Self-Cleaning Function, 36lbs/24H Portable Ice Makers fo",
-      "url": "https://www.amazon.com/dp/B0C9SWH3RC?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18613983655004843",
       "facebook_post_id": ""
     }
   ]
