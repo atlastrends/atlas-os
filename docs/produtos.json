@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T17:21:09.679922+00:00",
+  "updated_at": "2026-07-31T17:21:46.070282+00:00",
   "products": [
     {
       "keyword": "SOUNDCORE",
@@ -976,6 +976,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "BLACK",
+      "title": "HP 67 Black/Tri-Color Ink Cartridges (2-Pack) | Works with DeskJet 1255, 2700, 4100, Envy 6000, 6400 | Instant Ink Eligible |",
+      "url": "https://www.amazon.com/dp/B08412HXK9?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18143577358565788",
+      "facebook_post_id": "1543875950813479"
     },
     {
       "keyword": "PREMIER",
@@ -2103,14 +2111,6 @@
       "url": "https://www.amazon.com/dp/B08X6VQBGJ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "BLACK",
-      "title": "HP 67 Black/Tri-Color Ink Cartridges (2-Pack) | Works with DeskJet 1255, 2700, 4100, Envy 6000, 6400 | Instant Ink Eligible |",
-      "url": "https://www.amazon.com/dp/B08412HXK9?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18143577358565788",
       "facebook_post_id": ""
     }
   ]
