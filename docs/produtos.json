@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T17:26:17.166012+00:00",
+  "updated_at": "2026-07-31T17:26:35.557993+00:00",
   "products": [
     {
       "keyword": "SOUNDCORE",
@@ -976,6 +976,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "HEETA",
+      "title": "HEETA Dry Bag Waterproof Backpack with Phone Case 5L/10L/20L/30L/40L | Roll Top Lightweight Dry Storage Bag for Women Men, Tr",
+      "url": "https://www.amazon.com/dp/B07PLZP5LN?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18015649397875322",
+      "facebook_post_id": "1070416135418256"
     },
     {
       "keyword": "HONEY",
@@ -2119,14 +2127,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "HEETA",
-      "title": "HEETA Dry Bag Waterproof Backpack with Phone Case 5L/10L/20L/30L/40L | Roll Top Lightweight Dry Storage Bag for Women Men, Tr",
-      "url": "https://www.amazon.com/dp/B07PLZP5LN?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18015649397875322",
       "facebook_post_id": ""
     }
   ]
