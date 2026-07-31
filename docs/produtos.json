@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T15:05:57.100388+00:00",
+  "updated_at": "2026-07-31T15:06:15.760865+00:00",
   "products": [
     {
       "keyword": "NINHO",
@@ -896,6 +896,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "CALAMITY",
+      "title": "The Calamity Club: A Novel",
+      "url": "https://www.amazon.com/dp/1954118813?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18071397716418935",
+      "facebook_post_id": "889869307120976"
     },
     {
       "keyword": "MONSTER",
@@ -1903,14 +1911,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CALAMITY",
-      "title": "The Calamity Club: A Novel",
-      "url": "https://www.amazon.com/dp/1954118813?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18071397716418935",
       "facebook_post_id": ""
     }
   ]
