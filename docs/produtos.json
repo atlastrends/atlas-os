@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T15:38:06.934077+00:00",
+  "updated_at": "2026-07-31T15:38:23.936627+00:00",
   "products": [
     {
       "keyword": "YOPRO",
@@ -920,6 +920,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "ROKU",
+      "title": "Roku Streaming Stick HD with Voice Remote | Compact 4K Streaming Device for TV with Roku Voice Remote & Long-Range Wi-Fi - Fr",
+      "url": "https://www.amazon.com/dp/B0DXXYS4BJ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18121057807758777",
+      "facebook_post_id": "1369754235356992"
     },
     {
       "keyword": "SPARKLING",
@@ -1959,14 +1967,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "ROKU",
-      "title": "Roku Streaming Stick HD with Voice Remote | Compact 4K Streaming Device for TV with Roku Voice Remote & Long-Range Wi-Fi - Fr",
-      "url": "https://www.amazon.com/dp/B0DXXYS4BJ?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18121057807758777",
       "facebook_post_id": ""
     }
   ]
