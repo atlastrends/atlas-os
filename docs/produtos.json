@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-07-31T15:20:06.878667+00:00",
+  "updated_at": "2026-07-31T15:20:21.292830+00:00",
   "products": [
+    {
+      "keyword": "HORA",
+      "title": "A hora da estrela: Edição comemorativa",
+      "url": "https://www.amazon.com.br/dp/6555320354?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18107416058114543",
+      "facebook_post_id": "1388447953351259"
+    },
     {
       "keyword": "NINHO",
       "title": "Ninho Fases 1 - Fórmula Infantil, 1.2 kg (Pacote de 1)",
@@ -895,14 +903,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "HORA",
-      "title": "A hora da estrela: Edição comemorativa",
-      "url": "https://www.amazon.com.br/dp/6555320354?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18107416058114543",
       "facebook_post_id": ""
     },
     {
