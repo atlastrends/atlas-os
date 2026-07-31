@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T19:24:09.803678+00:00",
+  "updated_at": "2026-07-31T19:24:47.468475+00:00",
   "products": [
     {
       "keyword": "LAPIS",
@@ -2205,6 +2205,14 @@
       "keyword": "SPLATOONTM",
       "title": "Splatoon™ Raiders",
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "NUGGET",
+      "title": "Nugget Ice Maker Countertop, Silonn Chewable Pellet Ice Machine with Self-Cleaning Function, 36lbs/24H Portable Ice Makers fo",
+      "url": "https://www.amazon.com/dp/B0C9SWH3RC?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
