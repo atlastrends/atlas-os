@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-07-31T18:01:31.281605+00:00",
+  "updated_at": "2026-07-31T18:01:45.571973+00:00",
   "products": [
+    {
+      "keyword": "ORACAO",
+      "title": "Oração para Desaparecer",
+      "url": "https://www.amazon.com.br/dp/6559215709?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18101379509265300",
+      "facebook_post_id": "2598747480523521"
+    },
     {
       "keyword": "SOUNDCORE",
       "title": "soundcore P20i da Anker, Fone de Ouvido Bluetooth 5.3, Graves Potentes, Drivers de 10mm, 30H de Reprodução, Resistência à Águ",
@@ -975,14 +983,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "ORACAO",
-      "title": "Oração para Desaparecer",
-      "url": "https://www.amazon.com.br/dp/6559215709?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18101379509265300",
       "facebook_post_id": ""
     },
     {
