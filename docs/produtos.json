@@ -1,6 +1,158 @@
 {
-  "updated_at": "2026-07-28T21:37:33.370416+00:00",
+  "updated_at": "2026-07-31T14:43:41.321175+00:00",
   "products": [
+    {
+      "keyword": "NINHO",
+      "title": "Ninho Fases 1 - Fórmula Infantil, 1.2 kg (Pacote de 1)",
+      "url": "https://www.amazon.com.br/dp/B09WTLQ53R?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17894190528570362",
+      "facebook_post_id": "1029856159669058"
+    },
+    {
+      "keyword": "SABONETE",
+      "title": "Kit Sabonete, PHEBO, Amarelo, 720g",
+      "url": "https://www.amazon.com.br/dp/B00N6AKNQW?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1055865426918218"
+    },
+    {
+      "keyword": "APONTADOR",
+      "title": "Apontador com Depósito Minibox, Faber-Castell, SM/MINIBOX, Multicor",
+      "url": "https://www.amazon.com.br/dp/B07FMRC7N7?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18097680269004103",
+      "facebook_post_id": "2291715658314147"
+    },
+    {
+      "keyword": "FIFINE",
+      "title": "FIFINE AM8 Microfone dinâmico USB/XLR para gravação de podcast Streaming | RGB Microfone Gamer para jogos de computador,botão",
+      "url": "https://www.amazon.com.br/dp/B0BMFQP2ZZ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18021799196903283",
+      "facebook_post_id": "1044545107937626"
+    },
+    {
+      "keyword": "BONI",
+      "title": "BONI NATURAL - Creme Dental com óleos naturais de Menta e Melaleuca Vegano e Natural, Sem Flúor, Sem Triclosan, 90g, 3 unidad",
+      "url": "https://www.amazon.com.br/dp/B0FCJ1JZWG?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18065628641737598",
+      "facebook_post_id": "2010777026228902"
+    },
+    {
+      "keyword": "GAMESIR",
+      "title": "GameSir G7 SE Controle com Fio para PC, Xbox One, Xbox Series X|S, Gamepad para Jogos Plug and Play com Joysticks Hall/Gatilh",
+      "url": "https://www.amazon.com.br/dp/B0C7GW9F88?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18210336265345476",
+      "facebook_post_id": "1825701261945017"
+    },
+    {
+      "keyword": "SMART",
+      "title": "Smart Lâmpada Wi-Fi Positivo Casa Inteligente, Iluminação Branca (Quente e Fria) e RGB (Até 16 Milhões de Cores), 9W, 806 Lúm",
+      "url": "https://www.amazon.com.br/dp/B082FTRR76?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18109217660280825",
+      "facebook_post_id": "1520998849339968"
+    },
+    {
+      "keyword": "NEUTROGENA",
+      "title": "Neutrogena Sun Fresh Protetor Solar Facial Derm Care, Pele Oleosa, Sem Cor, FPS 70, 40g",
+      "url": "https://www.amazon.com.br/dp/B08NVMP2YZ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18423006073194751",
+      "facebook_post_id": "2119567215256169"
+    },
+    {
+      "keyword": "CAFE",
+      "title": "Café em Cápsula NESCAFÉ DOLCE GUSTO Mochaccino Canela 10 Cápsulas",
+      "url": "https://www.amazon.com.br/dp/B08KSVQ62G?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17899627170541012",
+      "facebook_post_id": "1426353332703751"
+    },
+    {
+      "keyword": "TITANIUM",
+      "title": "MAX TITANIUM CREATINA 300 GR MONOHIDRATADA",
+      "url": "https://www.amazon.com.br/dp/B07DVJC66X?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18456620356142133",
+      "facebook_post_id": "1276196618911744"
+    },
+    {
+      "keyword": "TORK",
+      "title": "Pro Tork Capacete New Liberty Three, Preto Fosco, Tam. 56",
+      "url": "https://www.amazon.com.br/dp/B07X2TT8ZP?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18084810956274519",
+      "facebook_post_id": "1578357160590741"
+    },
+    {
+      "keyword": "MARCA",
+      "title": "Marca Texto Grifpen Estojo 6 Unidades, Faber-Castell, MT/TP6ZF, Multicor, pacote de 6",
+      "url": "https://www.amazon.com.br/dp/B07QPCB3ZN?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17988342857839709",
+      "facebook_post_id": "3626648860823129"
+    },
+    {
+      "keyword": "APPLE",
+      "title": "Apple iPhone 17 de 256 GB — Preto",
+      "url": "https://www.amazon.com.br/dp/B0GQW2J4SK?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18602766229045667",
+      "facebook_post_id": "2527210447791949"
+    },
+    {
+      "keyword": "FONE",
+      "title": "JBL, Fone de Ouvido Bluetooth Over-Ear, Tune 530BT, Sem Fio, Até 76 Horas de Bateria - Branco",
+      "url": "https://www.amazon.com.br/dp/B0GM1GYWR1?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17899919778483742",
+      "facebook_post_id": "1749999349473554"
+    },
+    {
+      "keyword": "PLAYSTATION",
+      "title": "PlayStation 5 Edição Digital 825GB 1 Controle Branco Sony",
+      "url": "https://www.amazon.com.br/dp/B0GWNKJDCZ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18132542980545004",
+      "facebook_post_id": "1393775435959380"
+    },
+    {
+      "keyword": "CELULAR",
+      "title": "Celular Samsung Galaxy A17, 256GB, 8GB, 50MP Tela 6.7\", IP54 - Cinza",
+      "url": "https://www.amazon.com.br/dp/B0FPYYNQ7Y?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18101009684600423",
+      "facebook_post_id": "1530537945493785"
+    },
+    {
+      "keyword": "ASPIRADOR",
+      "title": "Aspirador Pó Philco Vertical Power Clean 2000W PAS4000V 127V",
+      "url": "https://www.amazon.com.br/dp/B088MVWBM9?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18001682546783575",
+      "facebook_post_id": "2462952564171667"
+    },
+    {
+      "keyword": "NINTENDO",
+      "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
+      "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18115680163833989",
+      "facebook_post_id": "1423017989649563"
+    },
+    {
+      "keyword": "LIQUIDIFICADOR",
+      "title": "Liquidificador 1400 Full Oster Preto 3,2L - 127V",
+      "url": "https://www.amazon.com.br/dp/B08DFCF9HW?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18023227211892533",
+      "facebook_post_id": "1589351102787510"
+    },
     {
       "keyword": "NIVEA",
       "title": "NIVEA Sabonete Líquido Óleo de Banho 200ml, Limpeza Corporal, Pele Macia, 55% Óleos Naturais, Sensação Hidratante",
@@ -744,6 +896,198 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "FRESH",
+      "title": "Fresh Step Advanced Multi Cat Clumping Litter with Febreze Freshness, Low Dust, Control with Ammonia Block Tech, Compatible i",
+      "url": "https://www.amazon.com/dp/B089PM6FRC?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18120449254829139",
+      "facebook_post_id": "1408585948001057"
+    },
+    {
+      "keyword": "SHEA",
+      "title": "eos Shea Better Body Lotion Vanilla Cashmere, 24-Hour Moisture Skin Care, Lightweight & Non-Greasy, Natural Shea, Vegan, Vani",
+      "url": "https://www.amazon.com/dp/B08KT2Z93D?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18085396811557286",
+      "facebook_post_id": "1380096697401013"
+    },
+    {
+      "keyword": "DUNGEON",
+      "title": "Dungeon Crawler Carl",
+      "url": "https://www.amazon.com/dp/059382024X?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18176373127423289",
+      "facebook_post_id": "1357294396561344"
+    },
+    {
+      "keyword": "OWALA",
+      "title": "Owala Princess FreeSip Stainless Steel Water Bottle 24 oz Cinderella",
+      "url": "https://www.amazon.com/dp/B0F2WMS7CC?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18087240533442808",
+      "facebook_post_id": "1046569588244631"
+    },
+    {
+      "keyword": "PEDIGREE",
+      "title": "Pedigree Dentastix Large Breed Dental Dog Treats, Variety, 51 Count | Original, Beef & Fresh Flavors, triple action dental ca",
+      "url": "https://www.amazon.com/dp/B00CU2CMOI?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18105273782131335",
+      "facebook_post_id": "2184948982296382"
+    },
+    {
+      "keyword": "BLUEBERRIES",
+      "title": "Blueberries, 1 Pint",
+      "url": "https://www.amazon.com/dp/B003AYKYIG?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1779160886421243"
+    },
+    {
+      "keyword": "XIIS",
+      "title": "TI-30XIIS Scientific Calculator, Black | Solar and battery powered, Two-line display, Fraction features, One- and two-variabl",
+      "url": "https://www.amazon.com/dp/B00000JBNX?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18130016287727836",
+      "facebook_post_id": "1626517789178404"
+    },
+    {
+      "keyword": "XTRA",
+      "title": "BIC Xtra-Smooth Pastel Mechanical Pencils, Medium Point, 0.7mm, 24-Count | Bulk Pack for School or Office Use | Smooth Writin",
+      "url": "https://www.amazon.com/dp/B09RGH38NZ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18549514444072295",
+      "facebook_post_id": "1715480183038874"
+    },
+    {
+      "keyword": "SONY",
+      "title": "Sony ZX Series Wired On-Ear Headphones, Black MDR-ZX110",
+      "url": "https://www.amazon.com/dp/B00NJ2M33I?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18602761948030685",
+      "facebook_post_id": "1547023656972180"
+    },
+    {
+      "keyword": "SUPERER",
+      "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
+      "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18105058685599881",
+      "facebook_post_id": "1682595086147154"
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Height Adjustable Foldable Guitar Stand with Secure Support, Padded Non-Slip Floor Stand for Acoustic, Electric",
+      "url": "https://www.amazon.com/dp/B0BG7JWCHV?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18063835667733197",
+      "facebook_post_id": "4981574672082875"
+    },
+    {
+      "keyword": "ECHO",
+      "title": "Amazon Echo Dot (newest model) - Vibrant sounding speaker, Designed for Alexa+, Great for bedrooms, dining rooms and offices,",
+      "url": "https://www.amazon.com/dp/B09B8V1LZ3?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18109381444823107",
+      "facebook_post_id": "1499875708494452"
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Slim Velvet Non-Slip Space Saving Suit Clothes Hangers, Closet Organizer, Black, 50-Pack",
+      "url": "https://www.amazon.com/dp/B00FXNAAW2?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17864050983642304",
+      "facebook_post_id": "1515724996994211"
+    },
+    {
+      "keyword": "METAPEN",
+      "title": "Metapen iPad Pencil A8 Stylus Pen for iPad 2018+ Palm Rejection&Magnetic | Metal Barrel Apple Pencil, USB-C Fast Charging, Re",
+      "url": "https://www.amazon.com/dp/B09ZTXVNVD?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18093482117077432",
+      "facebook_post_id": "5050813301811692"
+    },
+    {
+      "keyword": "DAVINCI",
+      "title": "DaVinci Gourmet Classic Blue Raspberry, 25.4 Fluid Ounces (Pack of 1)",
+      "url": "https://www.amazon.com/dp/B0849N8W1M?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1564362308720387"
+    },
+    {
+      "keyword": "FIVE",
+      "title": "The Five-Star Weekend",
+      "url": "https://www.amazon.com/dp/0316259187?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1404575794880130"
+    },
+    {
+      "keyword": "ZEVO",
+      "title": "Zevo Flying Insect Trap for Fruit Flies & Gnats, 2 Bases & 2 Refills | Fly Trap Catches House Flies, Gnats & Fruit Flies 24/7",
+      "url": "https://www.amazon.com/dp/B0C3PDTYYX?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1073133118481280"
+    },
+    {
+      "keyword": "NIPPIES",
+      "title": "Nippies Nipple Covers for Women - Reusable Sticky Silicone Pasties with Travel Case - Original Circle or Lift Style Available",
+      "url": "https://www.amazon.com/dp/B001PU9A9Q?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": "1760889384946908"
+    },
+    {
+      "keyword": "KAISTYLE",
+      "title": "Kaistyle for Magsafe Car Mount【Strong Magnets】Magnetic Phone Holder for Car Phone Holder Mount Dash Mounted Holders Phone Hol",
+      "url": "https://www.amazon.com/dp/B0C1Y8Z6VT?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18065549660551986",
+      "facebook_post_id": "1340218617787681"
+    },
+    {
+      "keyword": "ASTROAI",
+      "title": "AstroAI L7 Tire Inflator Portable Air Compressor,150 PSI Cordless Mini Air Bike Auto Shut-Off Pump with Digital Display Press",
+      "url": "https://www.amazon.com/dp/B0CS3B7MD8?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18437473759123492",
+      "facebook_post_id": "789973640841145"
+    },
+    {
+      "keyword": "WATER",
+      "title": "Water Shoes for Women Men Quick-Dry Aqua Socks Swim Beach Outfits Barefoot | Yoga Exercise Wear Sport Accessories Pool Campin",
+      "url": "https://www.amazon.com/dp/B09Q3MYDQH?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17857160595691913",
+      "facebook_post_id": "1530282514853920"
+    },
+    {
+      "keyword": "ECONOUR",
+      "title": "EcoNour Windshield Sun Shade Compatible for Tesla Model 3 & Model Y Juniper 2017-2024 2025 2026, Sun Visor for EV Front Windo",
+      "url": "https://www.amazon.com/dp/B08RJSWRDV?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18119393824849655",
+      "facebook_post_id": "1616678606555133"
+    },
+    {
+      "keyword": "PURE",
+      "title": "Pure Protein Chocolate Deluxe Protein Bars – 21g Protein, 3g Sugar, 190 Calories (12 count) Low Sugar* High Protein Snack - G",
+      "url": "https://www.amazon.com/dp/B00MNXGSAI?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18475030891106800",
+      "facebook_post_id": "1029836076630699"
+    },
+    {
+      "keyword": "QUEST",
+      "title": "Quest Nutrition Chocolate Chip Cookie Dough Protein Bars, High Protein, Low Carb, Gluten Free, Keto Friendly, 12 Count | 21g",
+      "url": "https://www.amazon.com/dp/B00DLDH1N2?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18327041533261479",
+      "facebook_post_id": "1768421077665584"
     },
     {
       "keyword": "ROSABELLA",
