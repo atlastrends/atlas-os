@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T14:51:56.801448+00:00",
+  "updated_at": "2026-07-31T15:04:13.906498+00:00",
   "products": [
     {
       "keyword": "NINHO",
@@ -1901,6 +1901,14 @@
       "keyword": "SPLATOONTM",
       "title": "Splatoon™ Raiders",
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "CALAMITY",
+      "title": "The Calamity Club: A Novel",
+      "url": "https://www.amazon.com/dp/1954118813?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
