@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T14:49:58.789184+00:00",
+  "updated_at": "2026-07-31T14:50:13.828300+00:00",
   "products": [
     {
       "keyword": "NINHO",
@@ -896,6 +896,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "COOL",
+      "title": "Cool Coolers by Fit & Fresh 4 Pack XL Slim Ice Packs, Quick Freeze Space Saving Reusable Ice Packs for Lunch Boxes or Coolers",
+      "url": "https://www.amazon.com/dp/B07CTXRKH8?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18201915475370592",
+      "facebook_post_id": "1012360294943047"
     },
     {
       "keyword": "FRESH",
@@ -1887,14 +1895,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "COOL",
-      "title": "Cool Coolers by Fit & Fresh 4 Pack XL Slim Ice Packs, Quick Freeze Space Saving Reusable Ice Packs for Lunch Boxes or Coolers",
-      "url": "https://www.amazon.com/dp/B07CTXRKH8?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18201915475370592",
       "facebook_post_id": ""
     }
   ]
