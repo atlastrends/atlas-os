@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T16:47:48.867800+00:00",
+  "updated_at": "2026-07-31T16:48:03.491764+00:00",
   "products": [
     {
       "keyword": "PENTEL",
@@ -968,6 +968,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "TERRO",
+      "title": "Terro, Ant Killer Bait Stations T300B - Liquid Bait to Eliminate Ants - Bait System - Stations for Effective Indoor Ant Contr",
+      "url": "https://www.amazon.com/dp/B00E4GACB8?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17899911534491029",
+      "facebook_post_id": "1032944169602263"
     },
     {
       "keyword": "CORRESPONDENT",
@@ -2055,14 +2063,6 @@
       "url": "https://www.amazon.com/dp/B08X6VQBGJ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "TERRO",
-      "title": "Terro, Ant Killer Bait Stations T300B - Liquid Bait to Eliminate Ants - Bait System - Stations for Effective Indoor Ant Contr",
-      "url": "https://www.amazon.com/dp/B00E4GACB8?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "17899911534491029",
       "facebook_post_id": ""
     }
   ]
