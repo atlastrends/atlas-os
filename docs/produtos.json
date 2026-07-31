@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-07-31T19:23:52.761341+00:00",
+  "updated_at": "2026-07-31T19:24:09.803678+00:00",
   "products": [
+    {
+      "keyword": "LAPIS",
+      "title": "Lapis Preto Sextavado 2=HB, Faber-Castell, EcoLápis, 1205 Max, SM/1205SL6P5, 6 Unidades",
+      "url": "https://www.amazon.com.br/dp/B072PZ99RG?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18278243608289566",
+      "facebook_post_id": "1378465661165275"
+    },
     {
       "keyword": "BLACK",
       "title": "BLACK+DECKER Vaporizador, Ferro de Passar Roupa, Compacto e Portátil, Função Passar a Seco, 3 em 1, modelo BDV3000, Bivolt",
@@ -999,14 +1007,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "LAPIS",
-      "title": "Lapis Preto Sextavado 2=HB, Faber-Castell, EcoLápis, 1205 Max, SM/1205SL6P5, 6 Unidades",
-      "url": "https://www.amazon.com.br/dp/B072PZ99RG?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18278243608289566",
       "facebook_post_id": ""
     },
     {
