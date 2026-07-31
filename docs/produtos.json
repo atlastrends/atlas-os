@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-07-31T15:36:37.911684+00:00",
+  "updated_at": "2026-07-31T15:36:52.541952+00:00",
   "products": [
+    {
+      "keyword": "YOPRO",
+      "title": "YoPRO Bebida Láctea UHT Chocolate Líquida Caixinha 250ml - 15g de Proteínas - Sem Lactose - Pack com 12 Unidades",
+      "url": "https://www.amazon.com.br/dp/B09M2B14V7?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18092227613386323",
+      "facebook_post_id": "28004142109223607"
+    },
     {
       "keyword": "ELECTROLUX",
       "title": "Electrolux Purificador de Água Gelada Fria e Natural Elétrico Compacto Eletronico placa Filtro refil 6 meses ou 3000l Painel",
@@ -911,14 +919,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "YOPRO",
-      "title": "YoPRO Bebida Láctea UHT Chocolate Líquida Caixinha 250ml - 15g de Proteínas - Sem Lactose - Pack com 12 Unidades",
-      "url": "https://www.amazon.com.br/dp/B09M2B14V7?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18092227613386323",
       "facebook_post_id": ""
     },
     {
