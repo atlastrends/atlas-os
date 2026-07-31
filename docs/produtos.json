@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T17:43:34.792347+00:00",
+  "updated_at": "2026-07-31T17:46:35.244567+00:00",
   "products": [
     {
       "keyword": "SOUNDCORE",
@@ -2133,6 +2133,14 @@
       "keyword": "SPLATOONTM",
       "title": "Splatoon™ Raiders",
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "ENSURE",
+      "title": "Ensure Max Protein Milk Chocolate Shake, 30g High Protein, 12 Pack | 30g Protein to Support Muscle Health & Manage Hunger for",
+      "url": "https://www.amazon.com/dp/B0791Y2LMB?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
