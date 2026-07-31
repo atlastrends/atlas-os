@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T17:57:42.794611+00:00",
+  "updated_at": "2026-07-31T17:57:59.149297+00:00",
   "products": [
     {
       "keyword": "SOUNDCORE",
@@ -976,6 +976,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "CARHARTT",
+      "title": "Carhartt Men&#x27;s Iconic K87 Pocket T-Shirt",
+      "url": "https://www.amazon.com/dp/B01BXGKIJM?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18103862447272636",
+      "facebook_post_id": "1078849281319610"
     },
     {
       "keyword": "INCH",
@@ -2151,14 +2159,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CARHARTT",
-      "title": "Carhartt Men&#x27;s Iconic K87 Pocket T-Shirt",
-      "url": "https://www.amazon.com/dp/B01BXGKIJM?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18103862447272636",
       "facebook_post_id": ""
     }
   ]
