@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T15:20:21.292830+00:00",
+  "updated_at": "2026-07-31T15:24:04.267932+00:00",
   "products": [
     {
       "keyword": "HORA",
@@ -1933,6 +1933,14 @@
       "keyword": "SPLATOONTM",
       "title": "Splatoon™ Raiders",
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "SPARKLING",
+      "title": "Sparkling Ice, Black Raspberry Sparkling Water, Zero Sugar Flavored Water, with Vitamins and Antioxidants, Low Calorie Bevera",
+      "url": "https://www.amazon.com/dp/B003P02EGU?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
