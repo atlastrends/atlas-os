@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-07-31T15:59:18.923877+00:00",
+  "updated_at": "2026-07-31T15:59:36.646675+00:00",
   "products": [
+    {
+      "keyword": "SOUNDCORE",
+      "title": "soundcore P40i da Anker, Fone de Ouvido Bluetooth 5.3, Cancelamento de Ruído Adaptativo, Graves Poderosos, Estojo com Suporte",
+      "url": "https://www.amazon.com.br/dp/B0CQXG17RL?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18000303437987511",
+      "facebook_post_id": "2168004940711420"
+    },
     {
       "keyword": "YOPRO",
       "title": "YoPRO Bebida Láctea UHT Chocolate Líquida Caixinha 250ml - 15g de Proteínas - Sem Lactose - Pack com 12 Unidades",
@@ -919,14 +927,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "SOUNDCORE",
-      "title": "soundcore P40i da Anker, Fone de Ouvido Bluetooth 5.3, Cancelamento de Ruído Adaptativo, Graves Poderosos, Estojo com Suporte",
-      "url": "https://www.amazon.com.br/dp/B0CQXG17RL?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18000303437987511",
       "facebook_post_id": ""
     },
     {
