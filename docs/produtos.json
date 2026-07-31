@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T16:40:46.659969+00:00",
+  "updated_at": "2026-07-31T16:41:04.591543+00:00",
   "products": [
     {
       "keyword": "PENTEL",
@@ -968,6 +968,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "CORRESPONDENT",
+      "title": "The Correspondent: A Novel",
+      "url": "https://www.amazon.com/dp/0593798430?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18111765665069332",
+      "facebook_post_id": "1571920930964497"
     },
     {
       "keyword": "GILDAN",
@@ -2047,14 +2055,6 @@
       "url": "https://www.amazon.com/dp/B08X6VQBGJ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CORRESPONDENT",
-      "title": "The Correspondent: A Novel",
-      "url": "https://www.amazon.com/dp/0593798430?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18111765665069332",
       "facebook_post_id": ""
     }
   ]
