@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T14:51:42.769630+00:00",
+  "updated_at": "2026-07-31T14:51:56.801448+00:00",
   "products": [
     {
       "keyword": "NINHO",
@@ -896,6 +896,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "MONSTER",
+      "title": "Monster Energy Zero Ultra, Sugar Free Energy Drink, 16 Ounce | Pack of 15",
+      "url": "https://www.amazon.com/dp/B0BL7316GD?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18105764365862908",
+      "facebook_post_id": "1058567870019759"
     },
     {
       "keyword": "COOL",
@@ -1895,14 +1903,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "MONSTER",
-      "title": "Monster Energy Zero Ultra, Sugar Free Energy Drink, 16 Ounce | Pack of 15",
-      "url": "https://www.amazon.com/dp/B0BL7316GD?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18105764365862908",
       "facebook_post_id": ""
     }
   ]
