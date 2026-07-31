@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-07-31T18:25:31.530593+00:00",
+  "updated_at": "2026-07-31T18:25:46.822099+00:00",
   "products": [
+    {
+      "keyword": "BLACK",
+      "title": "BLACK+DECKER Vaporizador, Ferro de Passar Roupa, Compacto e Portátil, Função Passar a Seco, 3 em 1, modelo BDV3000, Bivolt",
+      "url": "https://www.amazon.com.br/dp/B08B6DLFYD?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17905341243460192",
+      "facebook_post_id": "1755784825424175"
+    },
     {
       "keyword": "DOVER",
       "title": "Dover-Roll Odor Defense Banheiro & Pia Lilás, Rolo com 50 Sacos para Lixo Pure Fresh",
@@ -991,14 +999,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "BLACK",
-      "title": "BLACK+DECKER Vaporizador, Ferro de Passar Roupa, Compacto e Portátil, Função Passar a Seco, 3 em 1, modelo BDV3000, Bivolt",
-      "url": "https://www.amazon.com.br/dp/B08B6DLFYD?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17905341243460192",
       "facebook_post_id": ""
     },
     {
