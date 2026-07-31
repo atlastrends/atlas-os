@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T18:01:45.571973+00:00",
+  "updated_at": "2026-07-31T18:05:32.850354+00:00",
   "products": [
     {
       "keyword": "ORACAO",
@@ -2165,6 +2165,14 @@
       "keyword": "SPLATOONTM",
       "title": "Splatoon™ Raiders",
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "FIFINE",
+      "title": "FIFINE AmpliGame AM8 USB/XLR Dynamic Microphone for Gaming Streaming | Podcast Mic with RGB Light, Mute Button, Headphones Ja",
+      "url": "https://www.amazon.com/dp/B0BMFQP2ZZ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
