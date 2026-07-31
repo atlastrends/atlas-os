@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T15:45:46.776572+00:00",
+  "updated_at": "2026-07-31T15:46:01.766807+00:00",
   "products": [
     {
       "keyword": "YOPRO",
@@ -920,6 +920,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "STANLEY",
+      "title": "STANLEY Quencher ProTour Flipstraw Tumbler, 30 oz, Sorbet Garden | Built-In Straw & Handle | Cupholder Compatible for Travel",
+      "url": "https://www.amazon.com/dp/B0H1YJM5W8?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18620631340052237",
+      "facebook_post_id": "2206766440170641"
     },
     {
       "keyword": "ROKU",
@@ -1967,14 +1975,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "STANLEY",
-      "title": "STANLEY Quencher ProTour Flipstraw Tumbler, 30 oz, Sorbet Garden | Built-In Straw & Handle | Cupholder Compatible for Travel",
-      "url": "https://www.amazon.com/dp/B0H1YJM5W8?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18620631340052237",
       "facebook_post_id": ""
     }
   ]
