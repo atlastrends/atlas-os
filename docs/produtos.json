@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T17:09:40.881282+00:00",
+  "updated_at": "2026-07-31T17:09:59.390774+00:00",
   "products": [
     {
       "keyword": "SOUNDCORE",
@@ -976,6 +976,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "PREMIER",
+      "title": "Premier Protein 30g High Protein Shake, Chocolate, 12 Pack | 160 Calories, 24 Vitamins & Minerals, No Added Sugar, Supports M",
+      "url": "https://www.amazon.com/dp/B07MJL8NXR?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18068664701477985",
+      "facebook_post_id": "1748606639618520"
     },
     {
       "keyword": "ROBLOX",
@@ -2095,14 +2103,6 @@
       "url": "https://www.amazon.com/dp/B08X6VQBGJ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PREMIER",
-      "title": "Premier Protein 30g High Protein Shake, Chocolate, 12 Pack | 160 Calories, 24 Vitamins & Minerals, No Added Sugar, Supports M",
-      "url": "https://www.amazon.com/dp/B07MJL8NXR?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18068664701477985",
       "facebook_post_id": ""
     }
   ]
