@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T18:06:18.831498+00:00",
+  "updated_at": "2026-07-31T18:06:35.354965+00:00",
   "products": [
     {
       "keyword": "ORACAO",
@@ -984,6 +984,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "FIFINE",
+      "title": "FIFINE AmpliGame AM8 USB/XLR Dynamic Microphone for Gaming Streaming | Podcast Mic with RGB Light, Mute Button, Headphones Ja",
+      "url": "https://www.amazon.com/dp/B0BMFQP2ZZ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18101168396460536",
+      "facebook_post_id": "1361040868792344"
     },
     {
       "keyword": "CARHARTT",
@@ -2167,14 +2175,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "FIFINE",
-      "title": "FIFINE AmpliGame AM8 USB/XLR Dynamic Microphone for Gaming Streaming | Podcast Mic with RGB Light, Mute Button, Headphones Ja",
-      "url": "https://www.amazon.com/dp/B0BMFQP2ZZ?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18101168396460536",
       "facebook_post_id": ""
     }
   ]
