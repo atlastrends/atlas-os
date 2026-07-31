@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T14:50:13.828300+00:00",
+  "updated_at": "2026-07-31T14:50:51.059096+00:00",
   "products": [
     {
       "keyword": "NINHO",
@@ -1893,6 +1893,14 @@
       "keyword": "SPLATOONTM",
       "title": "Splatoon™ Raiders",
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "MONSTER",
+      "title": "Monster Energy Zero Ultra, Sugar Free Energy Drink, 16 Ounce | Pack of 15",
+      "url": "https://www.amazon.com/dp/B0BL7316GD?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
