@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-07-31T16:15:24.368110+00:00",
+  "updated_at": "2026-07-31T16:16:18.840872+00:00",
   "products": [
+    {
+      "keyword": "MASSACRE",
+      "title": "O massacre da família Hope",
+      "url": "https://www.amazon.com.br/dp/8551009834?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17944710015050186",
+      "facebook_post_id": "1321090566675726"
+    },
     {
       "keyword": "ORFEU",
       "title": "Orfeu Café Clássico em Grãos, 100% Arabica, Torra Média, 1kg",
@@ -943,14 +951,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "MASSACRE",
-      "title": "O massacre da família Hope",
-      "url": "https://www.amazon.com.br/dp/8551009834?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17944710015050186",
       "facebook_post_id": ""
     },
     {
