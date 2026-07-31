@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T17:52:21.955310+00:00",
+  "updated_at": "2026-07-31T17:55:19.870564+00:00",
   "products": [
     {
       "keyword": "SOUNDCORE",
@@ -2149,6 +2149,14 @@
       "keyword": "SPLATOONTM",
       "title": "Splatoon™ Raiders",
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "CARHARTT",
+      "title": "Carhartt Men&#x27;s Iconic K87 Pocket T-Shirt",
+      "url": "https://www.amazon.com/dp/B01BXGKIJM?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
