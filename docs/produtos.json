@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-31T16:26:22.285064+00:00",
+  "updated_at": "2026-07-31T16:26:44.607385+00:00",
   "products": [
     {
       "keyword": "PENTEL",
@@ -968,6 +968,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "GILDAN",
+      "title": "Gildan Men&#x27;s Crew T-Shirts, Multipack, Style G1100",
+      "url": "https://www.amazon.com/dp/B0787P86ZZ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18119029810845903",
+      "facebook_post_id": "1442421227697473"
     },
     {
       "keyword": "ADDARIO",
@@ -2039,14 +2047,6 @@
       "url": "https://www.amazon.com/dp/B08X6VQBGJ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "GILDAN",
-      "title": "Gildan Men&#x27;s Crew T-Shirts, Multipack, Style G1100",
-      "url": "https://www.amazon.com/dp/B0787P86ZZ?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18119029810845903",
       "facebook_post_id": ""
     }
   ]
