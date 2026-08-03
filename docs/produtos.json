@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T18:14:09.140629+00:00",
+  "updated_at": "2026-08-03T18:14:25.146039+00:00",
   "products": [
     {
       "keyword": "AZEITE",
@@ -896,6 +896,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "EXPO",
+      "title": "EXPO Dry Erase Markers, Low Odor Ink, Black, Chisel Tip, 4 Count - Whiteboard, Calendar, Organization, Essential Supplies for",
+      "url": "https://www.amazon.com/dp/B0019DEBS4?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17987453756845409",
+      "facebook_post_id": "2577990319320755"
     },
     {
       "keyword": "BASICS",
@@ -1855,14 +1863,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "EXPO",
-      "title": "EXPO Dry Erase Markers, Low Odor Ink, Black, Chisel Tip, 4 Count - Whiteboard, Calendar, Organization, Essential Supplies for",
-      "url": "https://www.amazon.com/dp/B0019DEBS4?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "17987453756845409",
       "facebook_post_id": ""
     }
   ]
