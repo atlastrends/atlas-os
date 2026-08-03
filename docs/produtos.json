@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T19:22:31.219270+00:00",
+  "updated_at": "2026-08-03T19:26:43.392765+00:00",
   "products": [
     {
       "keyword": "BORRACHA",
@@ -1991,6 +1991,14 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "EUHOMY",
+      "title": "EUHOMY Countertop Ice Maker Machine with Handle, 26lbs in 24Hrs, 9 Ice Cubes Ready in 6 Mins, Auto-Cleaning Portable Ice Make",
+      "url": "https://www.amazon.com/dp/B0BWHZJHPL?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18129022258670236",
       "facebook_post_id": ""
     }
   ]
