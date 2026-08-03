@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T18:23:41.769037+00:00",
+  "updated_at": "2026-08-03T18:24:02.678079+00:00",
   "products": [
     {
       "keyword": "AZEITE",
@@ -896,6 +896,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "PROPEL",
+      "title": "Propel, Kiwi Strawberry, Zero Calorie Sports Drinking Water with Electrolytes and Vitamins C&E, 16.9 Fl Oz (12 Count)",
+      "url": "https://www.amazon.com/dp/B002U58PRI?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18110207585009748",
+      "facebook_post_id": "4056004501369153"
     },
     {
       "keyword": "THERMOS",
@@ -1871,14 +1879,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PROPEL",
-      "title": "Propel, Kiwi Strawberry, Zero Calorie Sports Drinking Water with Electrolytes and Vitamins C&E, 16.9 Fl Oz (12 Count)",
-      "url": "https://www.amazon.com/dp/B002U58PRI?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18110207585009748",
       "facebook_post_id": ""
     }
   ]
