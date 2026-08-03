@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T13:07:25.013518+00:00",
+  "updated_at": "2026-08-03T13:09:47.099532+00:00",
   "products": [
     {
       "keyword": "PARES",
@@ -1095,6 +1095,14 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "DANONE",
+      "title": "Danone Nutricia - Aptanutri Premium 3, 1-3 anos, Fórmula de Seguimento, 800g",
+      "url": "https://www.amazon.com.br/dp/B07M73V8JD?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18170259478448270",
       "facebook_post_id": ""
     },
     {
