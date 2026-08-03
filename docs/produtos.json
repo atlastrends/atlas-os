@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T18:28:30.117103+00:00",
+  "updated_at": "2026-08-03T18:28:48.143103+00:00",
   "products": [
     {
       "keyword": "AZEITE",
@@ -896,6 +896,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "SHEBA",
+      "title": "Sheba Perfect Portions Cuts Wet Cat Food, Multipack, 2.6 oz, 24 ct | Grain-free, Chicken, Salmon & Turkey flavors, protein-ri",
+      "url": "https://www.amazon.com/dp/B072DTFZHL?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18329140882259543",
+      "facebook_post_id": "1555826576047199"
     },
     {
       "keyword": "PROPEL",
@@ -1879,14 +1887,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "SHEBA",
-      "title": "Sheba Perfect Portions Cuts Wet Cat Food, Multipack, 2.6 oz, 24 ct | Grain-free, Chicken, Salmon & Turkey flavors, protein-ri",
-      "url": "https://www.amazon.com/dp/B072DTFZHL?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18329140882259543",
       "facebook_post_id": ""
     }
   ]
