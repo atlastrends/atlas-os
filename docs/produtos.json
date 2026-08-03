@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T18:56:33.232387+00:00",
+  "updated_at": "2026-08-03T18:56:47.369250+00:00",
   "products": [
     {
       "keyword": "MORTE",
@@ -912,6 +912,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "FAHRENHEIT",
+      "title": "Fahrenheit 451",
+      "url": "https://www.amazon.com/dp/1451673310?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18050204585799321",
+      "facebook_post_id": "1993446171361281"
     },
     {
       "keyword": "CERAKOTE",
@@ -1927,14 +1935,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "FAHRENHEIT",
-      "title": "Fahrenheit 451",
-      "url": "https://www.amazon.com/dp/1451673310?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18050204585799321",
       "facebook_post_id": ""
     }
   ]
