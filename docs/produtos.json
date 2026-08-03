@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T18:56:47.369250+00:00",
+  "updated_at": "2026-08-03T19:01:02.956450+00:00",
   "products": [
     {
       "keyword": "MORTE",
@@ -1935,6 +1935,14 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "MEDICUBE",
+      "title": "medicube Toner Pads Zero Pore Pad 2.0 | Dual-Textured Facial Pad for Exfoliation and Pore Care with 4.5% AHA Lactic Acid, 0.4",
+      "url": "https://www.amazon.com/dp/B09V7Z4TJG?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18107765668843588",
       "facebook_post_id": ""
     }
   ]
