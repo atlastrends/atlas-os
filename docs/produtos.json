@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-03T18:37:07.473992+00:00",
+  "updated_at": "2026-08-03T18:37:23.107232+00:00",
   "products": [
+    {
+      "keyword": "MORTE",
+      "title": "A Morte de Ivan Ilitch (2 ed.)",
+      "url": "https://www.amazon.com.br/dp/655552894X?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18095267318054714",
+      "facebook_post_id": "909860171586484"
+    },
     {
       "keyword": "OREAL",
       "title": "L&#x27;Oréal Paris Protetor Facial Solar Expertise Antioleosidade FPS 60, 40g | com Ácido Salicílico, possui Efeito Matte e Contro",
@@ -903,14 +911,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "MORTE",
-      "title": "A Morte de Ivan Ilitch (2 ed.)",
-      "url": "https://www.amazon.com.br/dp/655552894X?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18095267318054714",
       "facebook_post_id": ""
     },
     {
