@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-03T13:12:59.175057+00:00",
+  "updated_at": "2026-08-03T13:13:11.098561+00:00",
   "products": [
+    {
+      "keyword": "SPORT",
+      "title": "One Sport Luva Fitness Academia Fitness Musculação OSP5",
+      "url": "https://www.amazon.com.br/dp/B09HR3QHL8?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18129974923734062",
+      "facebook_post_id": "1026473400218050"
+    },
     {
       "keyword": "BICICLETA",
       "title": "Bicicleta De Equilibrio Buba, 4 Rodas",
@@ -1111,14 +1119,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "SPORT",
-      "title": "One Sport Luva Fitness Academia Fitness Musculação OSP5",
-      "url": "https://www.amazon.com.br/dp/B09HR3QHL8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18129974923734062",
       "facebook_post_id": ""
     },
     {
