@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-03T17:58:13.710315+00:00",
+  "updated_at": "2026-08-03T17:58:32.619540+00:00",
   "products": [
+    {
+      "keyword": "CELULAR",
+      "title": "Celular Samsung Galaxy A06 5G 128GB, 4GB, IP54, Tela 6.7\" - Preto",
+      "url": "https://www.amazon.com.br/dp/B0DZPGRMKM?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17876168838686784",
+      "facebook_post_id": "4048088212155102"
+    },
     {
       "keyword": "MONDIAL",
       "title": "MONDIAL Cooktop a Gás, 4 Bocas, Preto/Inox, Bivolt - CTG-01",
@@ -863,14 +871,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CELULAR",
-      "title": "Celular Samsung Galaxy A06 5G 128GB, 4GB, IP54, Tela 6.7\" - Preto",
-      "url": "https://www.amazon.com.br/dp/B0DZPGRMKM?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17876168838686784",
       "facebook_post_id": ""
     },
     {
