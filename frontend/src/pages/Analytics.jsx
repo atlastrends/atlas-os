@@ -34,6 +34,7 @@ export default function Analytics() {
   const [platforms, setPlatforms] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [collecting, setCollecting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [msg, setMsg] = useState("");
 
   const load = async () => {
@@ -45,6 +46,17 @@ export default function Analytics() {
     setOv(o);
     setPlatforms(p);
     setAccounts(Array.isArray(a) ? a : []);
+  };
+
+  const refresh = async () => {
+    setRefreshing(true);
+    try {
+      await load();
+    } catch (e) {
+      setMsg("Falha ao atualizar.");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const collect = async () => {
@@ -81,9 +93,9 @@ export default function Analytics() {
   };
 
   useEffect(() => {
+    // Carrega uma vez ao abrir (ligar o ATLAS). Sem auto-refresh:
+    // a tela so atualiza no botao "Atualizar" ou ao reabrir a pagina.
     load().catch(() => {});
-    const t = setInterval(() => load().catch(() => {}), 20000);
-    return () => clearInterval(t);
   }, []);
 
   const followersData = platforms.map((p) => ({
@@ -125,6 +137,13 @@ export default function Analytics() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {msg && <span style={{ color: "#93a1b5", fontSize: 13 }}>{msg}</span>}
+          <button
+            className="btn"
+            onClick={refresh}
+            disabled={refreshing || collecting}
+          >
+            {refreshing ? "Atualizando..." : "Atualizar"}
+          </button>
           <button
             className="btn"
             onClick={collect}

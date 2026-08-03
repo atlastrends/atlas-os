@@ -11,6 +11,7 @@ import sys
 import time
 
 import qrcode
+import requests
 
 
 MIN_DURATION = 30.0
@@ -343,8 +344,8 @@ def product_profile(product: Any) -> dict[str, str]:
             return profile
 
     return {
-        "pain": "você quer resolver um problema da rotina sem gastar dinheiro na opção errada",
-        "benefit": "tornar uma tarefa recorrente mais simples e prática",
+        "pain": "você quer resolver isso logo e do jeito certo",
+        "benefit": "ter exatamente o que você precisa, sem complicação",
         "check": "medidas, compatibilidade, materiais, recursos e condições atuais do anúncio",
     }
 
@@ -528,11 +529,11 @@ def english_product_profile(
 
     return {
         "pain": (
-            "you want to solve an everyday problem without wasting "
+            "you want to get this right without wasting "
             "money on the wrong option"
         ),
         "benefit": (
-            "make a recurring task simpler and more convenient"
+            "get exactly what you need without the hassle"
         ),
         "check": (
             "dimensions, compatibility, materials, included features, "
@@ -558,6 +559,144 @@ def verified_feature(product: Any) -> str:
     return description if len(description) >= 20 else ""
 
 
+_ABOUT_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml",
+    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+}
+
+# Linhas que aparecem no bloco mas nao sao "Sobre este item" de verdade
+# (vem de detalhes/avaliacoes). A gente descarta esse ruido; o usuario NAO
+# quer detalhe minimo tipo peso/dimensao da embalagem.
+_ABOUT_SKIP = re.compile(
+    r"(date first available|best sellers rank|customer reviews"
+    r"|item model number|\basin\b|numero do modelo"
+    r"|avaliacoes de clientes|mais vendidos na"
+    r"|\bpeso\b|\bpesa\b|\bweighs?\b|\bweight\b|\bdimens)",
+    re.IGNORECASE,
+)
+
+
+def _about_dir() -> Path:
+    base = os.getenv("ATLAS_ROOT") or ""
+    root = (
+        Path(base).resolve()
+        if base
+        else Path(__file__).resolve().parents[2]
+    )
+    return root / "storage" / "amazon"
+
+
+def _about_cache_load() -> dict[str, Any]:
+    try:
+        path = _about_dir() / "about_cache.json"
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _about_cache_save(cache: dict[str, Any]) -> None:
+    try:
+        folder = _about_dir()
+        folder.mkdir(parents=True, exist_ok=True)
+        tmp = folder / "about_cache.json.tmp"
+        tmp.write_text(
+            json.dumps(cache, ensure_ascii=False), encoding="utf-8"
+        )
+        tmp.replace(folder / "about_cache.json")
+    except Exception:
+        pass
+
+
+def _parse_about_bullets(html: str) -> list[str]:
+    """Extrai os itens de 'Sobre este item / About this item' (#feature-bullets)."""
+    match = re.search(
+        r'id="feature-bullets".*?</div>\s*</div>', html, re.DOTALL
+    )
+    block = match.group(0) if match else ""
+    raw = re.findall(
+        r'<span[^>]*class="[^"]*a-list-item[^"]*"[^>]*>(.*?)</span>',
+        block,
+        re.DOTALL,
+    )
+    bullets: list[str] = []
+    seen: set[str] = set()
+    for item in raw:
+        text = re.sub(r"<[^>]+>", " ", item)
+        text = _normalize_punct(re.sub(r"\s+", " ", text)).strip()
+        if len(text) < 15 or _ABOUT_SKIP.search(text):
+            continue
+        key = text.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        bullets.append(text)
+        if len(bullets) >= 6:
+            break
+    return bullets
+
+
+def _about_this_item(detail_url: str) -> list[str]:
+    """Le o 'Sobre este item' real da pagina do produto (com cache em disco)."""
+    url = clean(detail_url, 400)
+    asin_match = re.search(r"/dp/([A-Z0-9]{10})", url)
+    if not asin_match:
+        return []
+    asin = asin_match.group(1)
+
+    cache = _about_cache_load()
+    cached = cache.get(asin)
+    if cached:
+        return [str(x) for x in cached]
+
+    bullets: list[str] = []
+    for attempt in range(2):
+        try:
+            res = requests.get(url, headers=_ABOUT_HEADERS, timeout=20)
+            if res.status_code == 200:
+                bullets = _parse_about_bullets(res.text)
+                if bullets:
+                    break
+        except Exception:
+            pass
+        if attempt == 0:
+            time.sleep(1.0)
+
+    if bullets:
+        cache[asin] = bullets
+        _about_cache_save(cache)
+    return bullets
+
+
+def _enrich_about(product: Any) -> None:
+    """Preenche product.features com o 'Sobre este item' real, se estiver vazio."""
+    try:
+        current = getattr(product, "features", None) or []
+        existing = [f for f in current if str(f).strip()]
+    except Exception:
+        existing = []
+    if existing:
+        return
+    detail = (
+        clean(getattr(product, "detail_url", ""), 400)
+        or clean(getattr(product, "affiliate_url", ""), 400)
+    )
+    if not detail:
+        return
+    try:
+        bullets = _about_this_item(detail)
+    except Exception:
+        bullets = []
+    if bullets:
+        try:
+            product.features = bullets
+        except Exception:
+            pass
+
+
 def _product_facts(product: Any) -> str:
     """Junta os dados reais do produto (do anuncio Amazon) para o prompt da IA."""
     lines: list[str] = []
@@ -575,7 +714,7 @@ def _product_facts(product: Any) -> str:
         lines.append(f"Categoria: {category}")
 
     price = clean(getattr(product, "price_display", ""), 60)
-    if price:
+    if price and any(ch.isdigit() for ch in price):
         lines.append(f"Preco anunciado: {price}")
 
     rating = getattr(product, "rating", None)
@@ -592,7 +731,7 @@ def _product_facts(product: Any) -> str:
         if len(text) >= 8:
             clean_features.append(text)
     if clean_features:
-        lines.append("Caracteristicas do anuncio:")
+        lines.append("Sobre este item (destaques reais do anuncio):")
         for item in clean_features[:6]:
             lines.append(f"- {item}")
 
@@ -619,6 +758,11 @@ def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
                 "- Real LIVE tone: warm, natural, talking WITH the customer in "
                 "real time. Explain calmly and give MORE detail (it is live).\n"
                 "- Be specific to THIS product: mention real features and uses.\n"
+                "- Use the 'About this item' highlights as your base, but "
+                "present it like a REAL salesperson: natural, in your own "
+                "words, NOT like you are reading the listing. NEVER say "
+                "'straight from the listing' or 'trademark' (or R/TM symbols) "
+                "and NEVER mention weight, dimensions or packaging.\n"
                 "- Build genuine DESIRE to buy: name the problem it solves, the "
                 "practical benefit, why it is worth owning.\n"
                 "- NO short-video hooks: do NOT say 'stop scrolling', 'three "
@@ -648,6 +792,11 @@ def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
             "detalhes (por ser ao vivo).\n"
             "- Seja especifica DESTE produto: cite caracteristicas e usos "
             "reais.\n"
+            "- Use os itens de 'Sobre este item' como base, mas apresente como "
+            "uma VENDEDORA de verdade: natural, no seu tom, SEM parecer que "
+            "esta lendo o anuncio. NUNCA diga 'direto do anuncio' nem 'marca "
+            "registrada' (nem simbolos R/TM) e NUNCA cite peso, dimensoes ou "
+            "embalagem.\n"
             "- Desperte o DESEJO de compra: mostre o problema que ele resolve, "
             "o beneficio pratico, por que vale a pena ter.\n"
             "- NADA de gancho de reels: NAO diga 'pare de rolar o feed', 'tres "
@@ -669,46 +818,83 @@ def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
     if market == "US":
         return (
             "You are a top-tier short-form video copywriter for an Amazon "
-            "affiliate channel. Write a punchy, SPECIFIC 6-scene script in "
+            "affiliate channel. Write a punchy, SPECIFIC 7-scene script in "
             "ENGLISH for a 45-55 second vertical video about the product "
             "below. The script MUST be about THIS exact product, using its "
             "real details.\n\n"
             f"PRODUCT DATA (from the Amazon listing):\n{facts}\n\n"
             "RULES:\n"
+            "- Scenes 1 to 6 are ONLY about THIS product. Do NOT open with a "
+            "generic line ('stop scrolling', 'almost nobody knows', 'you need "
+            "to see this'). The FINAL scene (7) is the call to action.\n"
+            "- Scene 1 (opening): start WITH the product - name it and the "
+            "problem it solves or what it does. It is the hook, but it MUST be "
+            "about this product.\n"
             "- Be specific to THIS product. Reference its real features/use.\n"
-            "- Strong hook in scene 1 (pattern interrupt, create curiosity).\n"
-            "- Do NOT invent specs that are not in the data above.\n"
+            "- Do NOT invent specs, data or uses that are not in the data "
+            "above. Only say what the listing can back up.\n"
+            "- Use the 'About this item' highlights as your base, but talk "
+            "like a REAL salesperson recommending it: natural, in your own "
+            "words, NOT like you are reading the listing. NEVER say 'straight "
+            "from the listing' or 'trademark' (or R/TM symbols) and NEVER "
+            "mention weight, dimensions or packaging.\n"
             "- Do NOT mention discounts, sales, 'lowest price' or guarantees.\n"
+            "- Do NOT frame it as 'everyday', 'daily', a 'routine' or an "
+            "'everyday problem', and do NOT assume how often they use it. "
+            "Talk ONLY about THIS product's real features and value.\n"
             "- Natural creator tone, not corporate. No emojis in 'voice'.\n"
             "- Scene 5 must tell viewers to scan the QR code to see the full, "
-            "updated listing (mention the price can change).\n"
-            "- Scene 6 is a call to follow for new daily finds.\n"
+            "updated listing for THIS product (mention the price can change).\n"
+            "- Scene 6: close STILL on THIS product - restate the main benefit "
+            "and why it is worth it.\n"
+            "- Scene 7 (closing = CALL TO ACTION): tell viewers the link for "
+            "THIS product is in the bio (tap the link) AND invite them to "
+            "follow the page, because there are new products every day and "
+            "they will not want to miss the next ones.\n"
             "- 'caption' = 3-6 word UPPERCASE on-screen hook for that scene.\n"
             "- 'voice' = 1-2 spoken sentences for that scene.\n"
             "- Return ONLY valid JSON, no markdown, in this exact shape:\n"
-            '{"scenes":[{"caption":"...","voice":"..."}, ... 6 items]}'
+            '{"scenes":[{"caption":"...","voice":"..."}, ... 7 items]}'
         )
 
     return (
         "Voce e um copywriter TOP de video curto para um canal de afiliados "
-        "da Amazon. Escreva um roteiro ESPECIFICO e chamativo, com 6 cenas, "
+        "da Amazon. Escreva um roteiro ESPECIFICO e chamativo, com 7 cenas, "
         "em PORTUGUES DO BRASIL, para um video vertical de 45 a 55 segundos "
         "sobre o produto abaixo. O roteiro TEM que ser sobre ESTE produto "
         "exato, usando os detalhes reais dele.\n\n"
         f"DADOS DO PRODUTO (do anuncio da Amazon):\n{facts}\n\n"
         "REGRAS:\n"
+        "- As cenas 1 a 6 falam SO deste produto. NAO abra com frase generica "
+        "('para de rolar o feed', 'quase ninguem sabe', 'voce precisa ver "
+        "isso'). A cena FINAL (7) e a chamada pra acao.\n"
+        "- Cena 1 (inicio): ja comece pelo PRODUTO - diga o nome dele e o "
+        "problema que ele resolve ou o que ele faz de util. E o gancho, mas "
+        "TEM que ser sobre ESTE produto.\n"
         "- Seja especifico DESTE produto. Cite caracteristicas/usos reais.\n"
-        "- Gancho forte na cena 1 (quebra de padrao, gera curiosidade).\n"
-        "- NAO invente especificacoes que nao estao nos dados acima.\n"
+        "- NAO invente especificacoes, dados ou usos que nao estao nos dados "
+        "acima. Fale apenas o que da pra sustentar com o anuncio.\n"
+        "- Use os itens de 'Sobre este item' como base, mas fale como um "
+        "VENDEDOR de verdade recomendando: natural, no seu tom, SEM parecer "
+        "que esta lendo o anuncio. NUNCA diga 'direto do anuncio' nem 'marca "
+        "registrada' (nem simbolos R/TM) e NUNCA cite peso, dimensoes ou "
+        "embalagem.\n"
         "- NAO fale de desconto, promocao, 'menor preco' nem garantia.\n"
+        "- NAO enquadre como 'dia a dia', 'rotina' nem 'problema do dia a "
+        "dia' e NAO suponha com que frequencia a pessoa usa. Fale SO das "
+        "caracteristicas e do valor reais DESTE produto.\n"
         "- Tom de criador de conteudo, natural. Sem emojis no 'voice'.\n"
         "- A cena 5 deve pedir para escanear o QR Code e ver o anuncio "
-        "completo e atualizado (diga que o preco pode mudar).\n"
-        "- A cena 6 e um convite para seguir e ver achados novos todo dia.\n"
+        "completo e atualizado DESTE produto (diga que o preco pode mudar).\n"
+        "- Cena 6: FECHE ainda falando DESTE produto - retome o principal "
+        "beneficio e por que vale a pena.\n"
+        "- Cena 7 (fim = CHAMADA PRA ACAO): diga que o link DESTE produto esta "
+        "na bio (pra tocar no link) E convide pra seguir a pagina, porque tem "
+        "produto novo todo dia e a pessoa nao vai querer perder os proximos.\n"
         "- 'caption' = gancho de 3 a 6 palavras em MAIUSCULAS para a cena.\n"
         "- 'voice' = 1 a 2 frases faladas para a cena.\n"
         "- Retorne SOMENTE JSON valido, sem markdown, neste formato exato:\n"
-        '{"scenes":[{"caption":"...","voice":"..."}, ... 6 itens]}'
+        '{"scenes":[{"caption":"...","voice":"..."}, ... 7 itens]}'
     )
 
 
@@ -727,6 +913,19 @@ def _normalize_punct(text: str) -> str:
     }
     for old, new in replacements.items():
         text = text.replace(old, new)
+    # Remove marca registrada / trademark: a narracao falada leria "®" como
+    # "marca registrada", e o usuario nao quer isso nos textos.
+    text = text.replace("\u00ae", "").replace("\u2122", "").replace(
+        "\u2120", ""
+    )
+    text = re.sub(
+        r"\(?\s*\b(marcas? registradas?|registered trademarks?|trademarks?)"
+        r"\b\s*\)?",
+        " ",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(r"\s{2,}", " ", text).strip()
     return text
 
 
@@ -832,49 +1031,81 @@ def _content_service() -> Any:
     return _CONTENT_SERVICE
 
 
+# Modelos do Groq em ordem de preferencia. Cada um tem cota diaria SEPARADA,
+# entao quando um bate o limite (429) o proximo ainda funciona.
+_GROQ_MODELS = (
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
+    "qwen/qwen3.6-27b",
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+)
+
+
 def _groq_story_text(prompt: str) -> str | None:
-    """Tenta gerar o roteiro (JSON) com o Groq. Retorna o texto cru ou None."""
+    """Tenta gerar o roteiro (JSON) no Groq passando por varios modelos.
+
+    Cada modelo do Groq tem cota diaria propria; se um bate o limite (429),
+    tenta o proximo modelo, e assim por diante. Retorna o texto cru ou None.
+    """
     service = _content_service()
     if service is None or getattr(service, "client", None) is None:
         return None
 
-    try:
-        model = service._get_best_model()
-    except Exception:
-        model = "llama-3.3-70b-versatile"
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You output ONLY valid JSON, no markdown, no comments. "
+                "You are an elite short-form affiliate video copywriter."
+            ),
+        },
+        {"role": "user", "content": prompt},
+    ]
 
-    try:
-        response = service.client.chat.completions.create(
+    for model in _GROQ_MODELS:
+        request_kwargs: dict[str, Any] = dict(
             model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You output ONLY valid JSON, no markdown, no comments. "
-                        "You are an elite short-form affiliate video copywriter."
-                    ),
-                },
-                {"role": "user", "content": prompt},
-            ],
+            messages=messages,
             temperature=0.8,
             max_tokens=1400,
             response_format={"type": "json_object"},
         )
-    except Exception as exc:
-        print(f"[BROLL] Groq falhou no roteiro: {exc}")
-        return None
+        # Os modelos gpt-oss "pensam" antes de escrever; sem esforco baixo o
+        # texto final pode voltar vazio.
+        if "gpt-oss" in model:
+            request_kwargs["reasoning_effort"] = "low"
 
-    try:
-        return response.choices[0].message.content
-    except Exception:
-        return None
+        try:
+            response = service.client.chat.completions.create(**request_kwargs)
+        except Exception as exc:
+            msg = str(exc).lower()
+            if "429" in msg or "rate limit" in msg or "rate_limit" in msg:
+                print(
+                    f"[BROLL] Groq no limite ({model}); "
+                    "tentando o proximo modelo."
+                )
+            else:
+                print(f"[BROLL] Groq falhou ({model}): {exc}")
+            continue
+
+        try:
+            text = response.choices[0].message.content
+        except Exception:
+            text = None
+        if text and text.strip():
+            return text
+
+    return None
 
 
 def _llm_story(product: Any, market: str, mode: str = "reel") -> list[dict[str, str]] | None:
     """Gera o roteiro com IA a partir dos dados reais do produto Amazon.
 
-    Tenta Gemini e, se faltar cota, cai no Groq. Retorna None se ambos
-    falharem (usa o template). Desligavel com AFFILIATE_LLM_SCRIPT=0.
+    Cadeia de fallback: tenta o Groq (varios modelos, cada um com cota
+    diaria propria) e, se todos baterem o limite, cai no Gemini. So retorna
+    None se tudo falhar (ai usa o template). Desligavel com
+    AFFILIATE_LLM_SCRIPT=0.
     """
     if (os.getenv("AFFILIATE_LLM_SCRIPT") or "1").strip().lower() in {
         "0", "false", "no", "off"
@@ -884,8 +1115,8 @@ def _llm_story(product: Any, market: str, mode: str = "reel") -> list[dict[str, 
     prompt = _story_prompt(product, market, mode)
 
     for provider, generator in (
-        ("gemini", _gemini_story_text),
         ("groq", _groq_story_text),
+        ("gemini", _gemini_story_text),
     ):
         text = generator(prompt)
         if not text:
@@ -900,21 +1131,50 @@ def _llm_story(product: Any, market: str, mode: str = "reel") -> list[dict[str, 
             print(
                 f"[BROLL] Roteiro {label} gerado pela IA ({provider}): {title}"
             )
-            return scenes[:6]
+            return scenes[:7]
 
     print("[BROLL] IA sem cota/indisponivel, usando template especifico.")
     return None
 
 
+# Palavras que, no fim de um rotulo, deixam o destaque incompleto ("Perfect
+# for", "Ideal para") -> nesse caso preferimos a frase inteira.
+_LABEL_TAIL_BAD = {
+    "for", "para", "com", "de", "da", "do", "dos", "das", "e", "and",
+    "with", "the", "a", "o", "to", "of", "por", "em", "que", "seu", "sua",
+}
+
+
+def _feature_line(feature: str) -> str:
+    """Frase curta e natural a partir de um bullet cru do anuncio (fallback)."""
+    text = _normalize_punct(clean(feature, 220)).strip()
+    if not text:
+        return ""
+    # Bullets vem como "Rotulo do ponto: descricao...". Se o rotulo ja e um
+    # destaque curto e completo, ele soa mais natural que a descricao longa.
+    parts = text.split(":", 1)
+    label = parts[0].strip() if len(parts) == 2 else ""
+    words = label.split()
+    if (
+        2 <= len(words) <= 6
+        and 8 <= len(label) <= 60
+        and words[-1].lower() not in _LABEL_TAIL_BAD
+    ):
+        return label.rstrip(".;:, ")
+    # Senao, usa a primeira frase (sem virar ficha tecnica lida em voz alta).
+    text = re.split(r"(?<=[.!?])\s", text, maxsplit=1)[0].strip()
+    if len(text) > 150:
+        text = text[:150].rsplit(" ", 1)[0]
+    return text.rstrip(".;:, ")
+
+
 
 def make_story(product: Any, mode: str = "reel") -> list[dict[str, str]]:
+    _enrich_about(product)
     title = short_title(product)
     profile = product_profile(product)
     feature = verified_feature(product)
-    price = clean(
-        getattr(product, "price_display", ""),
-        60,
-    )
+    feature_line = _feature_line(feature)
 
     market = clean(
         getattr(product, "marketplace_code", ""),
@@ -940,10 +1200,10 @@ def make_story(product: Any, mode: str = "reel") -> list[dict[str, str]]:
                     f"So what is it? It is made to help you {profile['benefit']}, "
                     "and it fits right into your everyday routine.")},
                 {"caption": "real detail", "voice": (
-                    f"Here is a detail straight from the listing: {feature}."
-                    if feature else
-                    "What I love is how it makes something you do every day "
-                    "genuinely easier and more comfortable.")},
+                    f"One thing I really like about it: {feature_line}."
+                    if feature_line else
+                    "The full details are all on the listing - it is worth "
+                    "taking a good look.")},
                 {"caption": "why it is worth it", "voice": (
                     f"If {profile['pain']}, this is exactly the kind of thing "
                     "that solves it without any hassle. That is why it is worth "
@@ -961,10 +1221,10 @@ def make_story(product: Any, mode: str = "reel") -> list[dict[str, str]]:
                 f"Entao, o que e isso? Ele foi feito pra te ajudar a "
                 f"{profile['benefit']}, e encaixa direitinho no seu dia a dia.")},
             {"caption": "detalhe real", "voice": (
-                f"Olha um detalhe direto do anuncio: {feature}."
-                if feature else
-                "O que eu mais gosto e como ele deixa uma coisa que voce faz "
-                "todo dia bem mais facil e confortavel.")},
+                f"Um ponto que eu acho muito bacana nele: {feature_line}."
+                if feature_line else
+                "As informacoes e os detalhes completos estao no anuncio - "
+                "vale conferir com calma.")},
             {"caption": "por que vale", "voice": (
                 f"Se {profile['pain']}, esse aqui resolve exatamente isso, sem "
                 "complicacao. Por isso vale muito a pena ter em casa.")},
@@ -976,107 +1236,70 @@ def make_story(product: Any, mode: str = "reel") -> list[dict[str, str]]:
     if market == "US":
         return [
             {
-                "caption": "STOP — DON'T WASTE YOUR MONEY",
+                "caption": "LOOK AT THIS PRODUCT",
                 "voice": (
-                    f"Stop scrolling for three seconds. If {profile['pain']}, "
-                    "you need to see this before you buy the wrong thing."
+                    f"Let me show you the {title}. Take a good look at "
+                    "this one."
                 ),
             },
             {
-                "caption": "HERE'S WHAT IT ACTUALLY DOES",
+                "caption": "WHAT STANDS OUT",
                 "voice": (
-                    f"This is the {title}. It's built to help you "
-                    f"{profile['benefit']} — simple as that."
-                ),
-            },
-            {
-                "caption": "THE DETAIL THAT CHANGES EVERYTHING",
-                "voice": (
-                    f"Straight from the listing: {feature}."
-                    if feature
+                    f"What really stands out: {feature_line}."
+                    if feature_line
                     else
-                    "The real win isn't a flashy promise. It's making a task "
-                    "you repeat every single day genuinely easier."
-                ),
-            },
-            {
-                "caption": "ALMOST NOBODY CHECKS THIS",
-                "voice": (
-                    f"Before you buy, compare {profile['check']}. "
-                    "That one habit separates a smart buy from a regret."
+                    f"This is the {title}. All the real details are right "
+                    "there on the listing."
                 ),
             },
             {
                 "caption": "SEE THE LISTING BEFORE IT CHANGES",
                 "voice": (
-                    (
-                        f"Right now the listing shows {price}, but price and "
-                        "availability can change fast. "
-                    )
-                    if price
-                    else
                     "Price and availability can change fast. "
-                )
-                + "Scan the QR code and check the full, updated listing now."
+                    "Scan the QR code and check the full, updated listing now."
+                ),
             },
             {
-                "caption": "NEW FINDS EVERY SINGLE DAY",
+                "caption": "LINK IN BIO",
                 "voice": (
-                    "Follow now and turn on notifications — fresh product "
-                    "finds drop every single day."
+                    f"Like the {title}? The link is in my bio - just tap it to "
+                    "see the full listing. And follow the page, because there "
+                    "are new products every day so you never miss one."
                 ),
             },
         ]
 
     return [
         {
-            "caption": "PARA TUDO — NÃO ERRE ESSA COMPRA",
+            "caption": "OLHA ESSE PRODUTO",
             "voice": (
-                f"Para de rolar o feed por três segundos. Se {profile['pain']}, "
-                "você precisa ver isso antes de gastar seu dinheiro à toa."
+                f"Para tudo e olha esse {title}. Presta atenção nesse "
+                "aqui."
             ),
         },
         {
-            "caption": "O QUE ISSO RESOLVE DE VERDADE",
+            "caption": "O QUE CHAMA ATENÇÃO",
             "voice": (
-                f"Esse é o {title}. Ele foi feito pra te ajudar a "
-                f"{profile['benefit']} — sem enrolação."
-            ),
-        },
-        {
-            "caption": "O DETALHE QUE FAZ A DIFERENÇA",
-            "voice": (
-                f"Direto do anúncio: {feature}."
-                if feature
+                f"O que mais chama atenção nele: {feature_line}."
+                if feature_line
                 else
-                "A vantagem de verdade não é uma promessa mirabolante. É deixar "
-                "uma tarefa do seu dia a dia muito mais fácil."
-            ),
-        },
-        {
-            "caption": "QUASE NINGUÉM REPARA NISSO",
-            "voice": (
-                f"Antes de comprar, compare {profile['check']}. "
-                "É esse cuidado que separa quem acerta de quem se arrepende."
+                f"Esse é o {title}. Todos os detalhes reais estão ali "
+                "no anúncio."
             ),
         },
         {
             "caption": "OLHA O ANÚNCIO ANTES QUE MUDE",
             "voice": (
-                (
-                    f"Agora o anúncio mostra {price}, mas preço e "
-                    "disponibilidade podem mudar rápido. "
-                )
-                if price
-                else
-                "Preço e disponibilidade podem mudar rápido. "
-            )
-            + "Escaneia o QR Code e confere o anúncio completo e atualizado."
+                "O preço e a disponibilidade podem mudar rápido. "
+                "Escaneia o QR Code e confere o anúncio completo e atualizado."
+            ),
         },
         {
-            "caption": "ACHADOS NOVOS TODO DIA",
+            "caption": "O LINK TÁ NA BIO",
             "voice": (
-                "Segue a gente e ativa as notificações: tem produto novo todo dia."
+                f"Gostou do {title}? O link tá na bio, é só tocar pra ver o "
+                "anúncio completo. E segue a página, que todo dia tem produto "
+                "novo pra você não perder nenhum."
             ),
         },
     ]
@@ -1554,59 +1777,11 @@ def normalize_audio(
     source: Path,
     work: Path,
 ) -> tuple[Path, float]:
-    original_duration = duration(source)
-
-    if 30 <= original_duration <= 60:
-        return source, original_duration
-
-    output = work / "voice_normalized.m4a"
-
-    if original_duration < 30:
-        speed = max(0.5, original_duration / 34.0)
-    else:
-        speed = original_duration / 54.0
-
-    filters: list[str] = []
-
-    while speed > 2:
-        filters.append("atempo=2.0")
-        speed /= 2
-
-    while speed < 0.5:
-        filters.append("atempo=0.5")
-        speed /= 0.5
-
-    filters.append(
-        "atempo=" + format(speed, ".5f")
-    )
-
-    run(
-        [
-            _FFMPEG,
-            "-y",
-            "-v",
-            "error",
-            "-i",
-            str(source),
-            "-af",
-            ",".join(filters),
-            "-c:a",
-            "aac",
-            "-b:a",
-            "192k",
-            str(output),
-        ],
-        timeout=300,
-    )
-
-    final_duration = duration(output)
-
-    if final_duration < 30 or final_duration > 60:
-        raise BrollError(
-            "A narracao nao pode ser ajustada para 30 a 60 segundos."
-        )
-
-    return output, final_duration
+    # Mantem a narracao no ritmo NATURAL, sem acelerar nem desacelerar.
+    # O tamanho do video passa a acompanhar a narracao; quem controla a
+    # duracao e o tamanho do roteiro, e nao um esticamento/compressao do
+    # audio (que era exatamente o que deixava a voz "acelerada").
+    return source, duration(source)
 
 
 def ass_time(seconds: float) -> str:
@@ -1807,7 +1982,16 @@ def render_authorized_video(
     audio_path: Path,
     output_path: Path,
     work_directory: Path,
+    report: Any = None,
 ) -> dict[str, Any]:
+    def _sub(fraction: float, stage: str) -> None:
+        if not report:
+            return
+        try:
+            report(fraction, stage)
+        except Exception:
+            pass
+
     if not audio_path.is_file():
         raise BrollError("A narracao nao foi criada.")
 
@@ -1819,12 +2003,14 @@ def render_authorized_video(
     # Tenta os candidatos do melhor para o pior, pulando qualquer video que
     # ja tenha um QR code embutido na imagem (atrapalharia o NOSSO QR do
     # produto, que fica sobreposto por cima do b-roll).
+    _sub(0.25, "buscando vídeo de fundo")
     candidates = choose_candidates(product)
 
     broll: dict[str, Any] | None = None
     last_error: Exception | None = None
     max_attempts = min(len(candidates), 5)
 
+    _sub(0.30, "baixando vídeo de fundo")
     for attempt_index in range(max_attempts):
         candidate = candidates[attempt_index]
         try:
@@ -1855,6 +2041,7 @@ def render_authorized_video(
             "barras na imagem; nenhum ficou livre para usar como fundo."
         )
 
+    _sub(0.60, "montando legendas e QR")
     story = make_story(product)
 
     qr_path = work_directory / "product_qr.png"
@@ -1884,6 +2071,8 @@ def render_authorized_video(
         ass_path,
         market,
     )
+
+    _sub(0.65, "renderizando vídeo")
 
     filter_path = work_directory / "filters.txt"
 
@@ -1947,7 +2136,7 @@ def render_authorized_video(
             "[qr]"
             "overlay="
             "x=(W-w)/2:"
-            "y=185:"
+            "y=250:"
             "format=auto"
             "[withqr];"
 
@@ -2026,6 +2215,8 @@ def render_authorized_video(
             "Video final fora de 30 a 60 segundos."
         )
 
+    _sub(0.85, "vídeo renderizado")
+
     return {
         "broll": {
             "source_url": broll["source_url"],
@@ -2039,6 +2230,513 @@ def render_authorized_video(
         "narration": narration_from_story(story),
         "duration_seconds": video_duration,
         "static_image_fallback": False,
+        "original_audio_used": False,
+    }
+
+
+# ---------------------------------------------------------------------------
+# MIDIA REAL DO ANUNCIO (fotos + video da propria Amazon)
+# ---------------------------------------------------------------------------
+# Em vez de buscar um b-roll no YouTube (que mostrava uma pessoa falando e nao
+# o produto), o video de afiliado passa a usar a MIDIA DO PROPRIO ANUNCIO:
+#   1) baixa as fotos do anuncio;
+#   2) se o anuncio tiver video, usa SO o video;
+#   3) se nao tiver video, mostra as fotos em loop (slideshow).
+# A narracao (voz) continua sendo gerada exatamente como hoje.
+
+_LISTING_IMAGE_HOSTS = (
+    "m.media-amazon.com",
+    "images-na.ssl-images-amazon.com",
+    "images.amazon.com",
+    "images-eu.ssl-images-amazon.com",
+)
+
+
+def _listing_headers() -> dict[str, str]:
+    return {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/122.0 Safari/537.36"
+        ),
+        "Accept": (
+            "text/html,application/xhtml+xml,application/xml;q=0.9,"
+            "image/avif,image/webp,*/*;q=0.8"
+        ),
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8",
+    }
+
+
+def _listing_image_host_ok(url: str) -> bool:
+    lowered = url.lower()
+    return any(host in lowered for host in _LISTING_IMAGE_HOSTS)
+
+
+def _clean_image_url(url: str) -> str:
+    # Desescapa as barras que a Amazon poe no JSON do HTML
+    # (https:\/\/m.media-amazon.com\/...) e remove o sufixo de tamanho
+    # (._AC_SL1500_.jpg -> .jpg) para pegar a imagem em alta resolucao.
+    cleaned = (
+        url.replace("\\u002F", "/")
+        .replace("\\/", "/")
+        .replace("\\", "")
+    )
+    cleaned = re.sub(
+        r"\._[^./]+_\.(jpg|jpeg|png)",
+        r".\1",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    return cleaned
+
+
+def _fetch_listing_html(detail_url: str) -> str:
+    last = ""
+    for attempt in range(3):
+        try:
+            response = requests.get(
+                detail_url,
+                headers=_listing_headers(),
+                timeout=25,
+            )
+            last = response.text or ""
+            if response.status_code == 200 and last:
+                return last
+        except Exception:
+            pass
+        time.sleep(2 + attempt)
+    return last
+
+
+def _gallery_scope(html: str) -> str:
+    # Isola o array "initial" da galeria principal do produto (ImageBlockATF),
+    # ignorando os carrosseis de "produtos relacionados" e os blocos de outras
+    # variacoes de cor. A pagina pode ter mais de um array "initial"; escolhe o
+    # que tem mais fotos hiRes (a galeria principal do anuncio selecionado).
+    best = ""
+    best_count = 0
+
+    for marker in re.finditer(r"""['"]initial['"]\s*:\s*\[""", html):
+        start = marker.end() - 1
+        depth = 0
+        end = -1
+        limit = min(len(html), start + 200_000)
+        for index in range(start, limit):
+            char = html[index]
+            if char == "[":
+                depth += 1
+            elif char == "]":
+                depth -= 1
+                if depth == 0:
+                    end = index + 1
+                    break
+
+        if end == -1:
+            continue
+
+        block = html[start:end]
+        count = len(
+            re.findall(r'"hiRes":"https', block, flags=re.IGNORECASE)
+        )
+        if count > best_count:
+            best_count = count
+            best = block
+
+    return best
+
+
+def _extract_listing_image_urls(html: str) -> list[str]:
+    found: list[str] = []
+    seen_ids: set[str] = set()
+
+    def _collect(text: str, patterns: tuple[str, ...]) -> None:
+        for pattern in patterns:
+            for raw in re.findall(pattern, text, flags=re.IGNORECASE):
+                url = _clean_image_url(raw)
+                if not _listing_image_host_ok(url):
+                    continue
+                identity = re.search(r"/images/I/([^./]+)", url)
+                key = identity.group(1) if identity else url
+                if key in seen_ids:
+                    continue
+                seen_ids.add(key)
+                found.append(url)
+
+    # 1) So a galeria principal do anuncio (ordem correta das fotos).
+    gallery = _gallery_scope(html)
+    if gallery:
+        _collect(
+            gallery,
+            (
+                r'"hiRes":"(https:[^"]+?\.(?:jpg|jpeg|png))"',
+                r'"large":"(https:[^"]+?\.(?:jpg|jpeg|png))"',
+            ),
+        )
+
+    # 2) Se nao achou a galeria isolada, usa a foto principal em alta do topo.
+    if not found:
+        _collect(
+            html,
+            (
+                r'data-old-hires="(https:[^"]+?\.(?:jpg|jpeg|png))"',
+                r'"hiRes":"(https:[^"]+?\.(?:jpg|jpeg|png))"',
+            ),
+        )
+
+    return found
+
+
+def _extract_listing_video_url(html: str) -> str | None:
+    # Procura o video DO PRODUTO: um .mp4 hospedado na Amazon perto de uma
+    # marca "isVideo":true (evita pegar video de anuncio/propaganda).
+    for marker in re.finditer(r'"isVideo":\s*true', html):
+        start = max(0, marker.start() - 1500)
+        window = html[start:marker.start() + 1500]
+        match = re.search(r'"url":"(https:[^"]+?\.mp4)"', window)
+        if match:
+            url = (
+                match.group(1)
+                .replace("\\u002F", "/")
+                .replace("\\/", "/")
+            )
+            if "media-amazon" in url.lower():
+                return url
+    return None
+
+
+def _download_listing_image(url: str, destination: Path) -> bool:
+    if not _listing_image_host_ok(url):
+        return False
+    try:
+        response = requests.get(
+            url,
+            headers=_listing_headers(),
+            timeout=45,
+        )
+        response.raise_for_status()
+    except Exception:
+        return False
+    content_type = response.headers.get("content-type", "").lower()
+    if not content_type.startswith("image/"):
+        return False
+    data = response.content
+    if len(data) < 3_000 or len(data) > 15 * 1024 * 1024:
+        return False
+    destination.write_bytes(data)
+    return True
+
+
+def _download_listing_video(url: str, work: Path) -> Path | None:
+    destination = work / "listing_video.mp4"
+    try:
+        with requests.get(
+            url,
+            headers=_listing_headers(),
+            timeout=120,
+            stream=True,
+        ) as response:
+            response.raise_for_status()
+            content_type = response.headers.get("content-type", "").lower()
+            if "video" not in content_type and "octet-stream" not in content_type:
+                return None
+            total = 0
+            with open(destination, "wb") as handle:
+                for chunk in response.iter_content(chunk_size=262_144):
+                    if not chunk:
+                        continue
+                    total += len(chunk)
+                    if total > 80 * 1024 * 1024:
+                        break
+                    handle.write(chunk)
+    except Exception:
+        return None
+    if not destination.is_file() or destination.stat().st_size < 200_000:
+        return None
+    try:
+        if duration(destination) < 2.0:
+            return None
+    except Exception:
+        return None
+    return destination
+
+
+def fetch_listing_media(
+    product: Any,
+    work: Path,
+) -> tuple[Path | None, list[Path]]:
+    """Baixa a midia REAL do anuncio: (video_ou_None, lista_de_fotos)."""
+    detail_url = clean(getattr(product, "detail_url", ""), 1500)
+
+    html = ""
+    if detail_url.startswith(("https://", "http://")):
+        html = _fetch_listing_html(detail_url)
+
+    image_urls: list[str] = []
+    video_url: str | None = None
+
+    if html:
+        image_urls = _extract_listing_image_urls(html)
+        video_url = _extract_listing_video_url(html)
+
+    # Garante pelo menos a foto principal que ja temos do produto.
+    main_image = clean(getattr(product, "image_url", ""), 1500)
+    if main_image.startswith(("https://", "http://")):
+        cleaned_main = _clean_image_url(main_image)
+        if cleaned_main not in image_urls:
+            image_urls.insert(0, cleaned_main)
+
+    images: list[Path] = []
+    for index, url in enumerate(image_urls[:10]):
+        destination = work / f"listing_photo_{index:02d}.jpg"
+        if _download_listing_image(url, destination):
+            images.append(destination)
+
+    video_path: Path | None = None
+    if video_url:
+        video_path = _download_listing_video(video_url, work)
+
+    return video_path, images
+
+
+def _build_listing_slideshow(
+    images: list[Path],
+    work: Path,
+) -> Path:
+    """Monta um slideshow 1080x1920 (fundo borrado + foto nitida) das fotos."""
+    if not images:
+        raise BrollError("O anuncio nao trouxe nenhuma foto utilizavel.")
+
+    # Cada foto fica visivel alguns segundos; o conjunto e repetido depois
+    # (via -stream_loop) para cobrir toda a narracao.
+    per_image = 3.2
+
+    inputs: list[str] = []
+    graph: list[str] = []
+    labels: list[str] = []
+
+    for index, image in enumerate(images):
+        inputs.extend(
+            [
+                "-loop",
+                "1",
+                "-t",
+                format(per_image, ".3f"),
+                "-i",
+                str(image),
+            ]
+        )
+        graph.append(
+            f"[{index}:v]split=2[a{index}][b{index}];"
+            f"[a{index}]scale=1080:1920:force_original_aspect_ratio=increase,"
+            f"crop=1080:1920,gblur=sigma=40:steps=2,"
+            f"eq=brightness=-0.20:saturation=0.85,setsar=1[bg{index}];"
+            f"[b{index}]scale=1040:1560:force_original_aspect_ratio=decrease,"
+            f"setsar=1[fg{index}];"
+            f"[bg{index}][fg{index}]overlay=(W-w)/2:(H-h)/2,"
+            f"fps=30,setsar=1,format=yuv420p[s{index}]"
+        )
+        labels.append(f"[s{index}]")
+
+    graph.append(
+        "".join(labels) + f"concat=n={len(images)}:v=1:a=0[v]"
+    )
+
+    filter_path = work / "slides_filter.txt"
+    filter_path.write_text(";".join(graph), encoding="utf-8")
+
+    slides_path = work / "listing_slides.mp4"
+    run(
+        [
+            _FFMPEG,
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            *inputs,
+            "-filter_complex_script",
+            str(filter_path),
+            "-map",
+            "[v]",
+            "-r",
+            "30",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "medium",
+            "-crf",
+            "20",
+            "-pix_fmt",
+            "yuv420p",
+            str(slides_path),
+        ],
+        timeout=1200,
+    )
+
+    if not slides_path.is_file() or slides_path.stat().st_size < 100_000:
+        raise BrollError(
+            "Nao consegui montar o slideshow das fotos do anuncio."
+        )
+
+    return slides_path
+
+
+def render_listing_video(
+    product: Any,
+    audio_path: Path,
+    output_path: Path,
+    work_directory: Path,
+    report: Any = None,
+) -> dict[str, Any]:
+    """Renderiza o reel de afiliado usando a MIDIA REAL do anuncio da Amazon."""
+    def _sub(fraction: float, stage: str) -> None:
+        if not report:
+            return
+        try:
+            report(fraction, stage)
+        except Exception:
+            pass
+
+    if not audio_path.is_file():
+        raise BrollError("A narracao nao foi criada.")
+
+    audio, final_duration = normalize_audio(
+        audio_path,
+        work_directory,
+    )
+
+    _sub(0.25, "baixando fotos e vídeo do anúncio")
+    video_path, images = fetch_listing_media(product, work_directory)
+
+    used_video = video_path is not None
+    if used_video:
+        visual_source = video_path
+    else:
+        _sub(0.45, "montando as fotos do anúncio")
+        visual_source = _build_listing_slideshow(images, work_directory)
+
+    _sub(0.60, "montando legendas e QR")
+    story = make_story(product)
+
+    qr_path = work_directory / "product_qr.png"
+    detail_url = clean(getattr(product, "detail_url", ""), 1500)
+    if not detail_url.startswith(("https://", "http://")):
+        raise BrollError("Link do produto invalido.")
+    qrcode.make(detail_url).save(qr_path)
+
+    ass_path = work_directory / "captions.ass"
+    market = clean(getattr(product, "marketplace_code", ""), 10).upper()
+    create_ass(story, final_duration, ass_path, market)
+
+    _sub(0.68, "renderizando vídeo")
+    ass_for_filter = str(ass_path).replace("\\", "/").replace(":", "\\:")
+    filter_path = work_directory / "filters.txt"
+
+    if used_video:
+        # Video do anuncio: fundo borrado (preenche) + video nitido no centro.
+        composition = (
+            "[0:v]split=2[background_source][foreground_source];"
+            "[background_source]scale=1080:1920:"
+            "force_original_aspect_ratio=increase,crop=1080:1920,"
+            "gblur=sigma=42:steps=3,eq=brightness=-0.22:saturation=0.82,"
+            "fps=30,setsar=1,format=yuv420p[background];"
+            "[foreground_source]scale=1080:1680:"
+            "force_original_aspect_ratio=decrease,fps=30,setsar=1,"
+            "format=yuv420p[foreground];"
+            "[background]drawbox=x=0:y=0:w=iw:h=ih:color=black@0.12:t=fill"
+            "[dark_background];"
+            "[dark_background][foreground]overlay=x=(W-w)/2:y=(H-h)/2:"
+            "format=auto[composed];"
+        )
+    else:
+        # Slideshow ja vem montado em 1080x1920: so padroniza o formato.
+        composition = (
+            "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,"
+            "crop=1080:1920,fps=30,setsar=1,format=yuv420p[composed];"
+        )
+
+    filter_path.write_text(
+        composition
+        + "[1:v]scale=245:245,format=rgba[qr];"
+        "[composed][qr]overlay=x=(W-w)/2:y=250:format=auto[withqr];"
+        "[withqr]subtitles=filename='" + ass_for_filter + "'[v]",
+        encoding="utf-8",
+    )
+
+    run(
+        [
+            _FFMPEG,
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-stream_loop",
+            "-1",
+            "-i",
+            str(visual_source),
+            "-loop",
+            "1",
+            "-framerate",
+            "30",
+            "-i",
+            str(qr_path),
+            "-i",
+            str(audio),
+            "-filter_complex_script",
+            str(filter_path),
+            "-map",
+            "[v]",
+            "-map",
+            "2:a:0",
+            "-t",
+            format(final_duration, ".3f"),
+            "-c:v",
+            "libx264",
+            "-preset",
+            "medium",
+            "-crf",
+            "19",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            "-ar",
+            "48000",
+            "-movflags",
+            "+faststart",
+            str(output_path),
+        ],
+        timeout=1800,
+    )
+
+    if (
+        not output_path.is_file()
+        or output_path.stat().st_size < 300_000
+    ):
+        raise BrollError("O FFmpeg nao criou um MP4 valido.")
+
+    video_duration = duration(output_path)
+
+    _sub(0.85, "vídeo renderizado")
+
+    return {
+        "broll": {
+            "source_url": detail_url,
+            "title": clean(getattr(product, "title", ""), 300),
+            "channel": "amazon_listing",
+            "source_duration_seconds": video_duration,
+            "license_status": "amazon_product_media",
+            "media_kind": (
+                "listing_video" if used_video else "listing_photos"
+            ),
+            "photo_count": 0 if used_video else len(images),
+        },
+        "broll_path": str(visual_source),
+        "story": story,
+        "narration": narration_from_story(story),
+        "duration_seconds": video_duration,
+        "static_image_fallback": not used_video,
         "original_audio_used": False,
     }
 

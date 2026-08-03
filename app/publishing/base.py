@@ -12,7 +12,9 @@
 
 from __future__ import annotations
 
+import json
 import os
+import threading
 import time
 from dataclasses import dataclass, field
 from typing import Optional
@@ -22,7 +24,12 @@ import requests
 
 def project_root() -> str:
     """Raiz do projeto (usada para resolver caminhos de video)."""
-    return os.path.abspath(os.getenv("ATLAS_ROOT", os.getcwd()))
+    explicit = (os.getenv("ATLAS_ROOT") or "").strip()
+    if explicit:
+        return os.path.abspath(explicit)
+    # Fallback robusto: raiz derivada da localizacao deste arquivo
+    # (independe do diretorio de onde o servidor foi iniciado).
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def resolve_video_path(video_path: str) -> str:
@@ -264,6 +271,112 @@ _PAGE_TOKEN_TTL_SECONDS = 6 * 60 * 60  # 6 horas
 _ME_ACCOUNTS_COOLDOWN_SECONDS = 120
 _ME_ACCOUNTS_STATE: dict[str, float] = {"blocked_until": 0.0}
 
+# Persistencia do cache de tokens de Pagina EM DISCO, para SOBREVIVER a
+# reinicios do servidor. Sem isso, o 1o publish depois de um restart precisa
+# chamar /me/accounts - e e exatamente ai que o (#4) costuma estourar (quando a
+# cota do app ja foi esgotada por outro consumidor, ex.: a coleta de metricas).
+# Com o token em disco, o publish reaproveita o token da Pagina e nem toca no
+# /me/accounts.
+_PAGE_TOKEN_CACHE_FILE = os.path.join(
+    project_root(), "storage", "state", "meta_page_tokens.json"
+)
+_PAGE_TOKEN_LOCK = threading.Lock()
+
+
+def _load_page_token_cache() -> None:
+    """Carrega o cache de tokens de Pagina do disco para a memoria (no import)."""
+    try:
+        with open(_PAGE_TOKEN_CACHE_FILE, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return
+    if not isinstance(data, dict):
+        return
+    for pid, entry in data.items():
+        try:
+            token, ts = entry
+        except (TypeError, ValueError):
+            continue
+        if pid and token:
+            _PAGE_TOKEN_CACHE[str(pid)] = (str(token), float(ts))
+
+
+def _save_page_token_cache() -> None:
+    """Grava o cache de tokens de Pagina no disco (apos atualizar pela API)."""
+    path = _PAGE_TOKEN_CACHE_FILE
+    try:
+        with _PAGE_TOKEN_LOCK:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            snapshot = {
+                pid: [tok, ts] for pid, (tok, ts) in _PAGE_TOKEN_CACHE.items()
+            }
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as fh:
+                json.dump(snapshot, fh)
+            os.replace(tmp, path)
+    except OSError:
+        pass
+
+
+# ---------------------------------------------------------------------------
+# COOLDOWN COMPARTILHADO do limite do APP da Meta ((#4) Application request
+# limit reached). E um limite do APP INTEIRO (IG + FB + metricas + comentarios
+# somados) e some sozinho apos alguns minutos. Fica CENTRALIZADO aqui para que
+# TODOS os consumidores do Graph (publicacao, coleta de metricas, robo de
+# comentarios e a propria resolucao de token) respeitem a MESMA janela e parem
+# de chamar o Graph enquanto ela durar - assim a cota se recupera em vez de ser
+# martelada sem parar. Mesmo arquivo/formato usado pelo publishing_service (o
+# estado e cross-processo: servidor + scripts interoperam).
+# ---------------------------------------------------------------------------
+_META_APP_LIMIT_HINTS = (
+    "application request limit",
+    "request limit reached",
+    "(#4)",
+)
+
+
+def is_meta_app_limit(error_text: object) -> bool:
+    """True se o texto for o rate-limit do APP da Meta (#4) (temporario)."""
+    if not error_text:
+        return False
+    text = str(error_text).lower()
+    return any(h in text for h in _META_APP_LIMIT_HINTS)
+
+
+def _meta_cooldown_file() -> str:
+    return os.path.join(project_root(), "storage", "state", "meta_app_cooldown")
+
+
+def meta_app_cooldown_remaining() -> float:
+    """Segundos restantes do cooldown do app da Meta (0.0 se nao ha)."""
+    try:
+        with open(_meta_cooldown_file(), "r", encoding="utf-8") as fh:
+            expiry = float((fh.read() or "0").strip() or "0")
+    except (OSError, ValueError):
+        return 0.0
+    remaining = expiry - time.time()
+    return remaining if remaining > 0 else 0.0
+
+
+def trip_meta_app_cooldown() -> None:
+    """Abre a janela de cooldown do app da Meta apos um (#4). Duracao em
+    ATLAS_META_COOLDOWN_MINUTES (padrao 20 min)."""
+    try:
+        minutes = int(os.getenv("ATLAS_META_COOLDOWN_MINUTES", "20") or "20")
+    except ValueError:
+        minutes = 20
+    minutes = max(1, minutes)
+    path = _meta_cooldown_file()
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(str(time.time() + minutes * 60))
+    except OSError:
+        pass
+
+
+_load_page_token_cache()
+
 
 class MetaGraphTransientError(RuntimeError):
     """Erro TEMPORARIO do Graph API (ex.: rate limit do app) ao resolver o
@@ -305,8 +418,10 @@ def get_page_access_token(page_id: str) -> str:
     # de novo dentro da janela de cooldown (isso so pioraria o bloqueio quando
     # um lote publica em sequencia). Reaproveita o token da Pagina em cache
     # (mesmo vencido - ele e longevo e quase sempre continua valido) ou, se
-    # nao houver cache, sinaliza erro TEMPORARIO para reenviar depois.
-    if now < _ME_ACCOUNTS_STATE["blocked_until"]:
+    # nao houver cache, sinaliza erro TEMPORARIO para reenviar depois. Alem do
+    # guarda local de 120s, respeita o cooldown COMPARTILHADO do app da Meta
+    # (mesmo (#4) visto por metricas/comentarios) para nao reabrir o buraco.
+    if now < _ME_ACCOUNTS_STATE["blocked_until"] or meta_app_cooldown_remaining() > 0:
         if cached:
             return cached[0]
         raise MetaGraphTransientError(
@@ -337,6 +452,12 @@ def get_page_access_token(page_id: str) -> str:
         # se ja temos o token da Pagina em cache (mesmo vencido), usa-o em vez
         # de falhar por um bloqueio TEMPORARIO - o token da Pagina segue valido.
         _ME_ACCOUNTS_STATE["blocked_until"] = now + _ME_ACCOUNTS_COOLDOWN_SECONDS
+        # Se for o (#4) do app inteiro, abre tambem o cooldown COMPARTILHADO
+        # para que metricas/comentarios/publicacao parem de bater no Graph e a
+        # cota se recupere de verdade (a causa mais comum deste (#4) e uma
+        # rajada de chamadas de OUTRO consumidor esgotando o app).
+        if is_meta_app_limit(resp_json.get("error")):
+            trip_meta_app_cooldown()
         if cached:
             return cached[0]
         raise MetaGraphTransientError(
@@ -355,6 +476,8 @@ def get_page_access_token(page_id: str) -> str:
             _PAGE_TOKEN_CACHE[pid] = (ptok, now)
             if pid == page_id:
                 found_token = ptok
+    # Persiste o cache atualizado em disco para sobreviver a reinicios.
+    _save_page_token_cache()
     if found_token:
         return found_token
 
@@ -372,18 +495,14 @@ def resolve_tiktok_token(
     Afiliados e trends do mesmo pais publicam na MESMA conta do TikTok
     (o TikTok separa so por mercado, igual ao YouTube).
 
-    Ordem de resolucao:
-      1) TIKTOK_ACCESS_TOKEN_{MERCADO}   (conta BR ou conta US)
-      2) TIKTOK_ACCESS_TOKEN             (token unico, quando ha uma conta so)
+    Roteamento ESTRITO: usa SOMENTE o token da conta daquele mercado
+    (TIKTOK_ACCESS_TOKEN_{MERCADO}). Sem esse token -> '' (nao cai no token
+    unico TIKTOK_ACCESS_TOKEN, que misturaria as contas BR e US).
 
     Retorna (access_token, market).
     """
     market = market_code(country_code, language)
-    token = (
-        os.getenv(f"TIKTOK_ACCESS_TOKEN_{market}")
-        or os.getenv("TIKTOK_ACCESS_TOKEN")
-        or ""
-    ).strip()
+    token = (os.getenv(f"TIKTOK_ACCESS_TOKEN_{market}") or "").strip()
     return token, market
 
 

@@ -23,9 +23,11 @@ import requests
 # Importações do novo motor de vídeo autorizado
 from app.automation.authorized_broll_renderer import (
     BrollError,
+    duration as audio_duration,
     make_story,
     narration_from_story,
     render_authorized_video,
+    render_listing_video,
     render_live_variant,
 )
 
@@ -77,6 +79,36 @@ MARKETS = {
         "search_index": "All",
     },
 }
+
+# --- Fish Audio TTS (voz natural, multilingue) --------------------------------
+# Provider primario opcional. Com FISH_API_KEY definido, a narracao usa o Fish
+# (modelo gratuito "s2.1-pro-free"), que pronuncia palavras em ingles dentro do
+# texto em portugues corretamente. Qualquer falha cai automaticamente no Edge.
+FISH_API_BASE = os.getenv("FISH_API_BASE", "https://api.fish.audio").rstrip("/")
+FISH_MODEL = os.getenv("FISH_MODEL", "s2.1-pro-free")
+FISH_STATE_PATH = STORAGE / "fish_voice_state.json"
+
+FISH_LANGUAGE_BY_MARKET: dict[str, tuple[str, ...]] = {
+    "BR": ("pt-BR", "pt", "portuguese"),
+    "US": ("en-US", "en", "english"),
+}
+
+# reference_ids fixos por mercado (opcional). Vazio = descoberta automatica.
+FISH_VOICE_OVERRIDES: dict[str, dict[str, str]] = {
+    "BR": {
+        "female": os.getenv("FISH_VOICE_BR_FEMALE", "").strip(),
+        "male": os.getenv("FISH_VOICE_BR_MALE", "").strip(),
+    },
+    "US": {
+        "female": os.getenv("FISH_VOICE_US_FEMALE", "").strip(),
+        "male": os.getenv("FISH_VOICE_US_MALE", "").strip(),
+    },
+}
+
+# alternate (padrao) | random | female | male
+FISH_VOICE_MODE = os.getenv("AFFILIATE_TTS_VOICE_MODE", "alternate").strip().lower()
+
+_FISH_VOICE_CACHE: dict[str, dict[str, str]] = {}
 
 SERVICE_MODULES = (
     "app.services.amazon_catalog",
@@ -554,6 +586,282 @@ def _resolve_edge_tts_command() -> list[str] | None:
         return None
 
 
+def _fish_enabled() -> bool:
+    return bool(os.getenv("FISH_API_KEY", "").strip())
+
+
+def _fish_headers(extra: dict[str, str] | None = None) -> dict[str, str]:
+    key = os.getenv("FISH_API_KEY", "").strip()
+    headers = {"Authorization": "Bearer " + key}
+    if extra:
+        headers.update(extra)
+    return headers
+
+
+def _fish_classify_gender(title: str, tags: Iterable[str]) -> str:
+    blob = (title or "").lower() + " " + " ".join(
+        str(tag).lower() for tag in (tags or [])
+    )
+    if re.search(
+        r"\b(female|woman|women|feminina|feminino|feminine|girl|mulher)\b",
+        blob,
+    ):
+        return "female"
+    if re.search(
+        r"\b(male|man|men|masculina|masculino|masculine|boy|homem)\b",
+        blob,
+    ):
+        return "male"
+    return "unknown"
+
+
+# Tags de vozes que NAO servem para narracao (personagem/anime/jogo/filme).
+_FISH_BAD_STYLE_TAGS = (
+    "character-voice", "character", "cartoon", "anime", "gaming", "game",
+    "videogame", "video-game", "movie", "film", "celebrity", "meme",
+    "robot", "monster",
+)
+
+# Estilos de PESSOA NORMAL (conversa do dia a dia) - preferidos.
+_FISH_CASUAL_STYLE_TAGS = (
+    "conversational", "social-media", "casual", "natural", "friendly",
+    "warm", "relaxed", "everyday", "chatty", "vlog", "gentle", "soft",
+)
+
+# Estilos de narracao suave (aceitaveis) - 2a opcao.
+_FISH_SOFT_STYLE_TAGS = (
+    "narration", "podcast", "storytelling", "calm", "sincere", "neutral",
+    "audiobook", "educational",
+)
+
+# Estilos de LOCUTOR/propaganda que o usuario NAO quer (voz "de comercial").
+_FISH_AVOID_STYLE_TAGS = (
+    "announcer", "advertisement", "commercial", "cinematic", "authoritative",
+    "dramatic", "epic", "trailer", "promo", "sports commentary",
+    "sports-commentary", "hype",
+)
+
+# Nomes de franquias/personagens conhecidos (defesa extra por nome).
+_FISH_BLOCKED_NAME_HINTS = (
+    "mortal kombat", "smash bros", "super smash", "goku", "dragon ball",
+    "naruto", "one piece", "pokemon", "pok\u00e9mon", "anime", "brainrot",
+    "skibidi", "spongebob", "bob esponja", "capitao nascimento",
+    "capit\u00e3o nascimento", "tropa de elite",
+)
+
+
+def _fish_style_ok(title: str, tags: Iterable[str]) -> bool:
+    """True se a voz NAO parecer personagem/anime/filme/celebridade."""
+    tag_blob = " ".join(str(tag).lower() for tag in (tags or []))
+    if any(bad in tag_blob for bad in _FISH_BAD_STYLE_TAGS):
+        return False
+    name = (title or "").lower()
+    return not any(hint in name for hint in _FISH_BLOCKED_NAME_HINTS)
+
+
+def _fish_voice_rank(title: str, tags: Iterable[str]) -> int:
+    """Prioridade de estilo (menor = melhor). 99 = personagem (descartar).
+
+    0 = pessoa normal/conversa | 1 = narracao suave | 2 = neutra |
+    3 = locutor/propaganda (so em ultimo caso).
+    """
+    if not _fish_style_ok(title, tags):
+        return 99
+    blob = " ".join(str(tag).lower() for tag in (tags or []))
+    if any(avoid in blob for avoid in _FISH_AVOID_STYLE_TAGS):
+        return 3
+    if any(style in blob for style in _FISH_CASUAL_STYLE_TAGS):
+        return 0
+    if any(style in blob for style in _FISH_SOFT_STYLE_TAGS):
+        return 1
+    return 2
+
+
+def _fish_discover_market_voices(market_code: str) -> dict[str, str]:
+    """Descobre as melhores vozes (feminina/masculina) do Fish para o mercado.
+
+    Ordem: overrides por env -> cache em processo -> API do Fish. Retorna
+    {"female": reference_id, "male": reference_id}; ids podem ficar vazios se a
+    API nao devolver vozes utilizaveis.
+    """
+    override = FISH_VOICE_OVERRIDES.get(market_code, {})
+    picked = {
+        "female": (override.get("female") or "").split(",")[0].strip(),
+        "male": (override.get("male") or "").split(",")[0].strip(),
+    }
+    if picked["female"] and picked["male"]:
+        return picked
+
+    if market_code in _FISH_VOICE_CACHE:
+        cached = _FISH_VOICE_CACHE[market_code]
+        return {
+            "female": picked["female"] or cached.get("female", ""),
+            "male": picked["male"] or cached.get("male", ""),
+        }
+
+    languages = FISH_LANGUAGE_BY_MARKET.get(
+        market_code, ("en-US", "en", "english")
+    )
+    items: list[dict[str, Any]] = []
+    for lang in languages:
+        try:
+            response = requests.get(
+                FISH_API_BASE + "/model",
+                headers=_fish_headers(),
+                params={
+                    "language": lang,
+                    "sort_by": "score",
+                    "page_size": 30,
+                },
+                timeout=30,
+            )
+        except Exception:
+            continue
+        if response.status_code == 401:
+            log_event(
+                "FISH_AUTH_FAILED",
+                market=market_code,
+                error="Chave Fish invalida (401).",
+            )
+            return picked
+        if response.status_code != 200:
+            continue
+        try:
+            payload = response.json()
+        except Exception:
+            continue
+        items = payload.get("items") or []
+        if items:
+            break
+
+    female_id = picked["female"]
+    male_id = picked["male"]
+    female_rank = 99
+    male_rank = 99
+    # Escolhe a MELHOR voz por genero: pessoa normal (0) > narracao suave (1) >
+    # neutra (2) > locutor/propaganda (3). Personagem/anime/filme fica de fora.
+    for entry in items:
+        reference = str(entry.get("_id") or "").strip()
+        if not reference:
+            continue
+        title = entry.get("title", "")
+        tags = entry.get("tags", [])
+        rank = _fish_voice_rank(title, tags)
+        if rank >= 99:
+            continue
+        gender = _fish_classify_gender(title, tags)
+        if gender == "female" and not picked["female"] and rank < female_rank:
+            female_id, female_rank = reference, rank
+        elif gender == "male" and not picked["male"] and rank < male_rank:
+            male_id, male_rank = reference, rank
+
+    # Ainda faltou (genero nao identificado): usa as melhores vozes distintas,
+    # preferindo as "limpas" (sem personagem/anime/filme).
+    if (not female_id or not male_id) and items:
+        clean = [
+            str(e.get("_id") or "").strip()
+            for e in items
+            if e.get("_id")
+            and _fish_style_ok(e.get("title", ""), e.get("tags", []))
+        ]
+        pool = clean or [
+            str(e.get("_id") or "").strip() for e in items if e.get("_id")
+        ]
+        pool = [t for t in pool if t]
+        if not female_id and pool:
+            female_id = pool[0]
+        if not male_id:
+            male_id = next((t for t in pool if t != female_id), female_id)
+
+    result = {"female": female_id, "male": male_id}
+    _FISH_VOICE_CACHE[market_code] = result
+    return result
+
+
+def _fish_bump_counter() -> int:
+    try:
+        current = 0
+        if FISH_STATE_PATH.is_file():
+            data = json.loads(FISH_STATE_PATH.read_text(encoding="utf-8"))
+            current = int(data.get("counter", 0))
+        FISH_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        FISH_STATE_PATH.write_text(
+            json.dumps({"counter": current + 1}), encoding="utf-8"
+        )
+        return current
+    except Exception:
+        return 0
+
+
+def _fish_next_voice(market_code: str) -> tuple[str, str]:
+    """Escolhe (reference_id, rotulo) alternando feminino/masculino por video."""
+    voices = _fish_discover_market_voices(market_code)
+    female_id = voices.get("female", "")
+    male_id = voices.get("male", "")
+
+    if FISH_VOICE_MODE == "female" and female_id:
+        return female_id, "fish-feminina"
+    if FISH_VOICE_MODE == "male" and male_id:
+        return male_id, "fish-masculina"
+
+    available: list[tuple[str, str]] = []
+    if female_id:
+        available.append((female_id, "fish-feminina"))
+    if male_id and male_id != female_id:
+        available.append((male_id, "fish-masculina"))
+    if not available:
+        return "", ""
+
+    if FISH_VOICE_MODE == "random":
+        import random
+        return random.choice(available)
+
+    index = _fish_bump_counter()
+    return available[index % len(available)]
+
+
+def _fish_synthesize(
+    text: str, reference_id: str, destination: Path
+) -> tuple[bool, str]:
+    """Gera a narracao via Fish Audio. Retorna (ok, detalhe_do_erro)."""
+    body: dict[str, Any] = {
+        "text": text,
+        "format": "mp3",
+        "mp3_bitrate": 128,
+        "chunk_length": 300,
+        "normalize": True,
+        "latency": "normal",
+        "prosody": {"speed": 1.0},
+    }
+    if reference_id:
+        body["reference_id"] = reference_id
+
+    try:
+        response = requests.post(
+            FISH_API_BASE + "/v1/tts",
+            headers=_fish_headers({"model": FISH_MODEL}),
+            json=body,
+            timeout=180,
+        )
+    except Exception as error:
+        return False, "excecao: " + str(error)
+
+    if response.status_code != 200:
+        try:
+            detail = response.text[-400:]
+        except Exception:
+            detail = ""
+        return False, "http " + str(response.status_code) + " " + detail
+
+    content = response.content or b""
+    if len(content) < 1000:
+        return False, "audio muito pequeno (" + str(len(content)) + " bytes)"
+
+    destination.unlink(missing_ok=True)
+    destination.write_bytes(content)
+    return True, ""
+
+
 def create_voice(
     product: Product,
     text: str,
@@ -616,6 +924,47 @@ def create_voice(
         encoding="utf-8",
     )
 
+    # Provider primario: Fish Audio (voz natural, pronuncia ingles dentro do
+    # portugues). Falhou por qualquer motivo -> cai no Edge TTS abaixo.
+    if _fish_enabled():
+        fish_min_seconds = max(3.0, (len(cleaned_text) / 16.0) * 0.6)
+        reference_id, voice_label = _fish_next_voice(product.marketplace_code)
+        if reference_id or voice_label:
+            fish_ok, fish_detail = _fish_synthesize(
+                cleaned_text, reference_id, destination
+            )
+            if fish_ok:
+                try:
+                    fish_seconds = float(audio_duration(destination))
+                except Exception:
+                    fish_seconds = 0.0
+                if fish_seconds <= 0.0 or fish_seconds >= fish_min_seconds:
+                    log_event(
+                        "VOICE_GENERATED",
+                        asin=product.asin,
+                        market=product.marketplace_code,
+                        voice=voice_label,
+                        provider="fish",
+                        reference_id=reference_id,
+                        size_bytes=destination.stat().st_size,
+                        audio_seconds=round(fish_seconds, 1),
+                    )
+                    return True
+                log_event(
+                    "FISH_AUDIO_TRUNCATED",
+                    asin=product.asin,
+                    market=product.marketplace_code,
+                    audio_seconds=round(fish_seconds, 1),
+                    min_seconds=round(fish_min_seconds, 1),
+                )
+            else:
+                log_event(
+                    "FISH_GENERATION_FAILED",
+                    asin=product.asin,
+                    market=product.marketplace_code,
+                    error=fish_detail[-800:],
+                )
+
     if product.marketplace_code == "BR":
         voices = [
             MARKETS[
@@ -643,68 +992,117 @@ def create_voice(
 
     errors: list[str] = []
 
+    # edge-tts as vezes retorna sucesso (rc=0) mas com o audio TRUNCADO (so
+    # parte da narracao) -> gerava reel curto, sem o pitch final. Exigimos que a
+    # duracao do audio seja compativel com o texto; se vier truncado, tentamos
+    # de novo e guardamos o maior audio como ultimo recurso.
+    expected_seconds = len(cleaned_text) / 16.0  # ~16 caracteres por segundo
+    min_seconds = max(3.0, expected_seconds * 0.6)
+
+    best_backup = destination.with_name(destination.stem + ".best.mp3")
+    best_seconds = 0.0
+
     for voice in unique_voices:
-        destination.unlink(
-            missing_ok=True
-        )
-
-        command = [
-            *edge_tts_command,
-            "--voice",
-            voice,
-            "--rate=+5%",
-            "--pitch=-2Hz",
-            "--file",
-            str(text_path),
-            "--write-media",
-            str(destination),
-        ]
-
-        try:
-            completed = subprocess.run(
-                command,
-                check=False,
-                text=True,
-                capture_output=True,
-                timeout=240,
+        for _attempt in range(2):
+            destination.unlink(
+                missing_ok=True
             )
 
-        except Exception as error:
+            command = [
+                *edge_tts_command,
+                "--voice",
+                voice,
+                "--pitch=-2Hz",
+                "--file",
+                str(text_path),
+                "--write-media",
+                str(destination),
+            ]
+
+            try:
+                completed = subprocess.run(
+                    command,
+                    check=False,
+                    text=True,
+                    capture_output=True,
+                    timeout=240,
+                )
+
+            except Exception as error:
+                errors.append(
+                    voice
+                    + ": "
+                    + str(error)
+                )
+                break
+
+            if not (
+                completed.returncode == 0
+                and destination.is_file()
+                and destination.stat().st_size > 1000
+            ):
+                details = (
+                    completed.stderr
+                    or completed.stdout
+                    or "Sem detalhes."
+                )
+                errors.append(
+                    voice
+                    + ": codigo="
+                    + str(completed.returncode)
+                    + " "
+                    + details[-800:]
+                )
+                break
+
+            try:
+                seconds = float(audio_duration(destination))
+            except Exception:
+                seconds = 0.0
+
+            # Sem medicao (0.0) ou audio completo -> aceita.
+            if seconds <= 0.0 or seconds >= min_seconds:
+                log_event(
+                    "VOICE_GENERATED",
+                    asin=product.asin,
+                    market=product.marketplace_code,
+                    voice=voice,
+                    size_bytes=destination.stat().st_size,
+                    audio_seconds=round(seconds, 1),
+                )
+                best_backup.unlink(missing_ok=True)
+                return True
+
+            # Audio truncado: guarda o maior ate agora e tenta de novo.
+            if seconds > best_seconds:
+                best_seconds = seconds
+                shutil.copyfile(destination, best_backup)
+
             errors.append(
                 voice
-                + ": "
-                + str(error)
-            )
-            continue
-
-        if (
-            completed.returncode == 0
-            and destination.is_file()
-            and destination.stat().st_size > 1000
-        ):
-            log_event(
-                "VOICE_GENERATED",
-                asin=product.asin,
-                market=product.marketplace_code,
-                voice=voice,
-                size_bytes=destination.stat().st_size,
+                + ": audio truncado "
+                + format(seconds, ".1f")
+                + "s (minimo "
+                + format(min_seconds, ".1f")
+                + "s)"
             )
 
-            return True
-
-        details = (
-            completed.stderr
-            or completed.stdout
-            or "Sem detalhes."
+    # Nenhuma voz entregou a narracao completa: usa o maior audio obtido
+    # (melhor um reel um pouco curto do que nenhum), se houver.
+    if best_seconds > 0.0 and best_backup.is_file():
+        shutil.copyfile(best_backup, destination)
+        best_backup.unlink(missing_ok=True)
+        log_event(
+            "VOICE_GENERATED",
+            asin=product.asin,
+            market=product.marketplace_code,
+            voice="melhor_truncado",
+            size_bytes=destination.stat().st_size,
+            audio_seconds=round(best_seconds, 1),
         )
+        return True
 
-        errors.append(
-            voice
-            + ": codigo="
-            + str(completed.returncode)
-            + " "
-            + details[-1200:]
-        )
+    best_backup.unlink(missing_ok=True)
 
     log_event(
         "VOICE_GENERATION_FAILED",
@@ -715,7 +1113,17 @@ def create_voice(
 
     return False
 
-def create_video_for_product(product: Product) -> dict[str, Any]:
+def create_video_for_product(product: Product, report: Any = None) -> dict[str, Any]:
+    def _sub(fraction: float, stage: str) -> None:
+        # Progresso DENTRO deste video (0..1). O run_pipeline converte para a
+        # % global, fazendo a barra andar durante a criacao (nao so no fim).
+        if not report:
+            return
+        try:
+            report(fraction, stage)
+        except Exception:
+            pass
+
     job_id = str(uuid.uuid4())
     work = WORK_DIRECTORY / job_id
     work.mkdir(parents=True, exist_ok=True)
@@ -728,22 +1136,27 @@ def create_video_for_product(product: Product) -> dict[str, Any]:
 
     try:
         # Usa as funcoes do authorized_broll_renderer
+        _sub(0.03, "gerando roteiro")
         story = make_story(product)
         narration = narration_from_story(story)
 
+        _sub(0.12, "gerando narração (voz)")
         audio_path = work / "voice.mp3"
         voice_generated = create_voice(product, narration, audio_path)
 
         if not voice_generated:
             raise PipelineError("A voz IA nao foi gerada. O video nao sera criado sem narracao.")
 
-        broll_metadata = render_authorized_video(
+        _sub(0.20, "baixando mídia do anúncio (fotos/vídeo)")
+        broll_metadata = render_listing_video(
             product=product,
             audio_path=audio_path,
             output_path=video_path,
             work_directory=work,
+            report=_sub,
         )
 
+        _sub(0.88, "salvando vídeo")
         probe = probe_video(video_path)
 
         approval_record = {
@@ -813,6 +1226,7 @@ def create_video_for_product(product: Product) -> dict[str, Any]:
         try:
             broll_path = broll_metadata.get("broll_path")
             if broll_path and Path(broll_path).is_file():
+                _sub(0.90, "gerando versão live")
                 live_story = make_story(product, mode="live")
                 live_narration = narration_from_story(live_story)
                 live_audio = work / "voice_live.mp3"
@@ -1030,15 +1444,28 @@ def run_pipeline(
 
         attempted += 1
 
+        done_before = len(completed)
         _report(
-            int(len(completed) / max(1, target) * 100),
+            int(done_before / max(1, target) * 100),
             product.title,
-            f"Gerando vídeo {len(completed) + 1} de {target}",
+            f"Gerando vídeo {done_before + 1} de {target}",
         )
+
+        def _sub_progress(
+            fraction: float,
+            stage: str,
+            _title: str = product.title,
+            _base: int = done_before,
+        ) -> None:
+            # Converte o progresso DENTRO do video (0..1) em % global, para a
+            # barra andar durante a criacao — e nao ficar parada ate o fim.
+            frac = max(0.0, min(1.0, float(fraction)))
+            overall = (_base + frac) / max(1, target) * 100
+            _report(overall, _title, f"Vídeo {_base + 1} de {target}: {stage}")
 
         try:
             completed.append(
-                create_video_for_product(product)
+                create_video_for_product(product, report=_sub_progress)
             )
             # Assim que ESTE video fica pronto, avisa quem pediu (o
             # job_service) para JA publicar este video — desde que passe

@@ -40,7 +40,10 @@ from app.models.dashboard import AnsweredComment, Publication, PublicationStatus
 from app.publishing.base import (
     MetaGraphTransientError,
     get_page_access_token,
+    is_meta_app_limit,
+    meta_app_cooldown_remaining,
     resolve_meta_targets,
+    trip_meta_app_cooldown,
 )
 from app.services.shortlink_service import ShortLinkService
 
@@ -90,10 +93,34 @@ class CommentWatcherService:
         replied = 0
         errors: list[str] = []
 
+        # O robo de comentarios tambem consome a cota do app da Meta ((#4)).
+        # Se ela ja estourou (cooldown aberto por publicacao/metricas), NAO
+        # batemos no Graph nesta rodada -- deixamos a cota se recuperar.
+        if meta_app_cooldown_remaining() > 0:
+            errors.append(
+                "meta: cooldown do (#4) ativo (~"
+                f"{int(meta_app_cooldown_remaining())}s) - pulei os comentarios "
+                "nesta rodada."
+            )
+            return {
+                "publications_checked": 0,
+                "replies_sent": 0,
+                "errors": errors,
+            }
+
         for pub in publications:
             try:
                 replied += self._watch_publication(pub)
                 checked += 1
+            except MetaGraphTransientError:
+                # (#4) do app inteiro: abre o cooldown e PARA a rodada, para
+                # nao esgotar ainda mais a cota varrendo o resto dos posts.
+                trip_meta_app_cooldown()
+                errors.append(
+                    "meta: (#4) detectado -> abri cooldown e parei os "
+                    "comentarios nesta rodada (retoma sozinho na proxima)."
+                )
+                break
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"{pub.platform}:{pub.external_id} -> {exc}")
 
@@ -120,11 +147,10 @@ class CommentWatcherService:
         if pub.platform == "instagram" and not ig_id:
             return 0
 
-        try:
-            token = get_page_access_token(page_id)
-        except MetaGraphTransientError:
-            # Rate limit temporario do Graph API -- tenta de novo no proximo ciclo.
-            return 0
+        # Se der MetaGraphTransientError (rate limit do app (#4)), deixamos
+        # propagar para run() abrir o cooldown e parar a rodada -- assim a cota
+        # se recupera em vez de continuar apanhando.
+        token = get_page_access_token(page_id)
 
         if pub.platform == "instagram":
             comments = self._fetch_instagram_comments(pub.external_id, token)
@@ -167,6 +193,9 @@ class CommentWatcherService:
                 else:
                     self._send_facebook_private_reply(page_id, comment_id, reply_text, token)
                 sent += 1
+            except MetaGraphTransientError:
+                # (#4) do app: propaga para run() abrir o cooldown e parar tudo.
+                raise
             except Exception as exc:  # noqa: BLE001
                 status = "failed"
                 error = str(exc)
@@ -218,6 +247,8 @@ class CommentWatcherService:
             timeout=30,
         ).json()
         if "error" in resp:
+            if is_meta_app_limit(resp.get("error")):
+                raise MetaGraphTransientError(str(resp.get("error")))
             raise RuntimeError(f"Erro Graph API (IG comments): {resp['error']}")
         return [
             {
@@ -235,6 +266,8 @@ class CommentWatcherService:
             timeout=30,
         ).json()
         if "error" in resp:
+            if is_meta_app_limit(resp.get("error")):
+                raise MetaGraphTransientError(str(resp.get("error")))
             raise RuntimeError(f"Erro Graph API (FB comments): {resp['error']}")
         return [
             {
@@ -263,6 +296,8 @@ class CommentWatcherService:
             timeout=30,
         ).json()
         if "error" in resp:
+            if is_meta_app_limit(resp.get("error")):
+                raise MetaGraphTransientError(str(resp.get("error")))
             raise RuntimeError(f"Erro Graph API (IG DM privada): {resp['error']}")
 
     def _send_facebook_private_reply(
@@ -278,4 +313,6 @@ class CommentWatcherService:
             timeout=30,
         ).json()
         if "error" in resp:
+            if is_meta_app_limit(resp.get("error")):
+                raise MetaGraphTransientError(str(resp.get("error")))
             raise RuntimeError(f"Erro Graph API (FB DM privada): {resp['error']}")

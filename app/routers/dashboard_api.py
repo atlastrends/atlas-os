@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
 from typing import Optional
 
@@ -38,6 +39,18 @@ def _enum(value) -> str:
     return value.value if hasattr(value, "value") else str(value or "")
 
 
+def _thumb_cache_token(asset: VideoAsset) -> str:
+    """Token curto p/ cache-busting da miniatura. Muda quando o video muda
+    (external_key e unico por geracao), evitando que o navegador reaproveite a
+    miniatura de um ID reciclado pelo SQLite depois de apagar rejeitados."""
+    seed = asset.external_key or ""
+    if not seed and asset.created_at:
+        seed = asset.created_at.isoformat()
+    if not seed:
+        return "0"
+    return hashlib.md5(seed.encode("utf-8", "ignore")).hexdigest()[:10]
+
+
 def _serialize_asset(asset: VideoAsset, db: Session) -> dict:
     short_url = None
     if asset.short_code:
@@ -57,7 +70,7 @@ def _serialize_asset(asset: VideoAsset, db: Session) -> dict:
         ),
         "thumbnail_path": asset.thumbnail_path,
         "thumbnail_url": (
-            f"/api/videos/{asset.id}/thumbnail"
+            f"/api/videos/{asset.id}/thumbnail?v={_thumb_cache_token(asset)}"
             if (asset.video_path or asset.thumbnail_path)
             else None
         ),

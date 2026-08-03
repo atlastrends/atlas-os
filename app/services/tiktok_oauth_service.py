@@ -308,8 +308,10 @@ def _valid_token_for_account(db, account) -> str:
 def get_access_token_from_db(market: str) -> str:
     """Token valido de uma conta conectada (banco) para o mercado.
 
-    Prefere a conta marcada para aquele mercado (BR/US); se nao houver,
-    usa a conta conectada mais recente. Devolve '' se nao houver nenhuma.
+    Roteamento ESTRITO: usa SOMENTE a conta marcada para aquele mercado
+    (BR/US). Se nao houver conta daquele mercado, devolve '' (o publisher
+    pede para conectar a conta certa). NUNCA usa a conta de outro mercado
+    como fallback -- era isso que fazia BR e US publicarem na mesma conta.
     """
     from app.core.database import SessionLocal
     from app.models.dashboard import TikTokAccount
@@ -323,12 +325,6 @@ def get_access_token_from_db(market: str) -> str:
             .order_by(TikTokAccount.updated_at.desc())
             .first()
         )
-        if account is None:
-            account = (
-                db.query(TikTokAccount)
-                .order_by(TikTokAccount.updated_at.desc())
-                .first()
-            )
         if account is None:
             return ""
         return _valid_token_for_account(db, account)
@@ -369,8 +365,10 @@ def get_access_token(market: str) -> str:
     if access:
         return access
 
-    # Ultimo recurso: token unico manual.
-    return (os.getenv("TIKTOK_ACCESS_TOKEN") or "").strip()
+    # Sem conta/token para ESTE mercado: retorna '' para NAO publicar na conta
+    # de outro mercado. (Removido o fallback do token unico TIKTOK_ACCESS_TOKEN,
+    # que fazia BR e US caírem na mesma conta.)
+    return ""
 
 
 # ---------------------------------------------------------------

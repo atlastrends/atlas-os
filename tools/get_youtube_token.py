@@ -27,24 +27,21 @@ from pathlib import Path
 def _active_env_path() -> Path:
     """O MESMO .env que o app le e escreve (espelha env_loader.active_env_path).
 
-    Ordem: 1) ATLAS_ENV_FILE se existir; 2) %OneDrive%\\ATLAS-OS-SECRETS\\.env
-    se existir; senao 3) o .env na raiz do projeto (pasta acima de tools/).
-    Grava o refresh token no arquivo que o SERVIDOR realmente le - o
-    compartilhado vence o do projeto (env_loader carrega com override=False).
+    Ordem: 1) ATLAS_ENV_FILE se existir; senao 2) o .env na raiz do projeto
+    (ATLAS_ROOT, ou a pasta acima de tools/). NAO usamos mais o OneDrive: o
+    projeto e local e o refresh token fica no .env LOCAL, para o OneDrive
+    nunca reverter o token e derrubar a conexao.
     """
     explicit = (os.getenv("ATLAS_ENV_FILE") or "").strip()
     if explicit and Path(explicit).is_file():
         return Path(explicit).resolve()
-    for var in ("OneDrive", "OneDriveConsumer", "OneDriveCommercial"):
-        root = (os.getenv(var) or "").strip()
-        if root:
-            candidate = Path(root) / "ATLAS-OS-SECRETS" / ".env"
-            if candidate.is_file():
-                return candidate.resolve()
+    root = (os.getenv("ATLAS_ROOT") or "").strip()
+    if root:
+        return (Path(root) / ".env").resolve()
     return Path(__file__).resolve().parent.parent / ".env"
 
 
-# .env ATIVO (compartilhado quando existir) = onde gravamos o token novo.
+# .env ATIVO (local) = onde gravamos o token novo.
 ENV_PATH = _active_env_path()
 _PROJECT_ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 

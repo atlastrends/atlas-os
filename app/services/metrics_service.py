@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import os
+import time
 
 import requests
 from sqlalchemy.orm import Session
@@ -23,10 +24,58 @@ from app.models.dashboard import (
     PlatformStat,
     VideoMetric,
 )
-from app.publishing.base import list_publishing_accounts
+from app.publishing.base import (
+    MetaGraphTransientError,
+    is_meta_app_limit,
+    list_publishing_accounts,
+    meta_app_cooldown_remaining,
+    project_root,
+    trip_meta_app_cooldown,
+)
 
 GRAPH_VERSION = os.getenv("META_GRAPH_VERSION", "v21.0")
 GRAPH_BASE = f"https://graph.facebook.com/{GRAPH_VERSION}"
+
+# Plataformas que compartilham a MESMA cota do app da Meta ((#4)).
+_META_PLATFORMS = {"instagram", "facebook"}
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)) or default)
+    except (TypeError, ValueError):
+        return default
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on", "sim"}
+
+
+def _meta_offset_file() -> str:
+    """Cursor rotativo (em disco) de qual fatia de posts IG/FB foi coletada por
+    ultimo, para as rodadas cobrirem todos os videos ao longo do tempo."""
+    return os.path.join(project_root(), "storage", "state", "metrics_meta_offset")
+
+
+def _read_meta_offset() -> int:
+    try:
+        with open(_meta_offset_file(), "r", encoding="utf-8") as fh:
+            return max(0, int((fh.read() or "0").strip() or "0"))
+    except (OSError, ValueError):
+        return 0
+
+
+def _write_meta_offset(value: int) -> None:
+    path = _meta_offset_file()
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(str(max(0, int(value))))
+    except OSError:
+        pass
 
 
 class MetricsService:
@@ -38,7 +87,16 @@ class MetricsService:
     # ----------------------------------------------------------------
 
     def collect_all(self) -> dict:
-        """Coleta metricas de todas as publicacoes e contas configuradas."""
+        """Coleta metricas de todas as publicacoes e contas configuradas.
+
+        As chamadas ao Instagram/Facebook (Graph API) compartilham a MESMA cota
+        do app da Meta. Para NAO estourar o (#4) 'Application request limit', a
+        coleta IG/FB aqui: (1) e PULADA enquanto houver cooldown ativo do app;
+        (2) e LIMITADA a um numero de posts por rodada (rotativo, para todos os
+        videos serem cobertos ao longo das rodadas); (3) ESPACA as chamadas; e
+        (4) ao detectar um (#4), abre o cooldown e PARA de bater no Graph nesta
+        rodada. YouTube/TikTok nao entram nesse limite.
+        """
         video_snapshots = 0
         errors: list[str] = []
 
@@ -51,44 +109,75 @@ class MetricsService:
             .all()
         )
 
-        for pub in publications:
-            try:
-                metrics = self._collect_video(
-                    pub.platform, pub.external_id, pub.video_asset_id
-                )
-            except Exception as exc:  # noqa: BLE001
-                errors.append(f"{pub.platform}:{pub.external_id} -> {exc}")
-                metrics = None
+        meta_pubs = [p for p in publications if p.platform in _META_PLATFORMS]
+        other_pubs = [p for p in publications if p.platform not in _META_PLATFORMS]
 
-            if metrics:
-                # Se o coletor descobriu o link publico do video (ex.: TikTok
-                # depois que o rascunho vira post publico), grava/atualiza na
-                # publicacao para aparecer o botao "Abrir" no Analytics.
-                new_url = (metrics.get("external_url") or "").strip()
-                if new_url and pub.external_url != new_url:
-                    pub.external_url = new_url
+        # 1) YouTube / TikTok: fora do limite de app da Meta, coleta tudo.
+        for pub in other_pubs:
+            video_snapshots += self._snapshot_one(pub, errors)
 
-                self.db.add(
-                    VideoMetric(
-                        video_asset_id=pub.video_asset_id,
-                        platform=pub.platform,
-                        views=int(metrics.get("views", 0) or 0),
-                        likes=int(metrics.get("likes", 0) or 0),
-                        comments=int(metrics.get("comments", 0) or 0),
-                        shares=int(metrics.get("shares", 0) or 0),
-                        clicks=int(metrics.get("clicks", 0) or 0),
+        # 2) Instagram / Facebook: so coleta se HABILITADO e sem cooldown do
+        # (#4); limita e espaca. A coleta de metricas IG/FB pode ser DESLIGADA
+        # por completo (ATLAS_METRICS_META_ENABLED=false) para NAO gastar a cota
+        # do app da Meta com varredura horaria - as PUBLICACOES continuam
+        # funcionando normalmente (o link do produto fica na BIO).
+        meta_enabled = _env_bool("ATLAS_METRICS_META_ENABLED", True)
+        meta_blocked = (not meta_enabled) or (meta_app_cooldown_remaining() > 0)
+        if not meta_enabled and meta_pubs:
+            errors.append(
+                "meta: coleta de metricas IG/FB DESATIVADA "
+                "(ATLAS_METRICS_META_ENABLED=false) - nenhuma chamada ao Graph."
+            )
+        elif meta_app_cooldown_remaining() > 0 and meta_pubs:
+            errors.append(
+                "meta: cooldown do (#4) ativo (~"
+                f"{int(meta_app_cooldown_remaining())}s) - pulei metricas IG/FB "
+                "nesta rodada."
+            )
+        elif meta_pubs:
+            cap = max(1, _env_int("ATLAS_METRICS_META_MAX_POSTS", 50))
+            spacing = max(0, _env_int("ATLAS_METRICS_META_SPACING_MS", 400)) / 1000.0
+            meta_pubs.sort(key=lambda p: p.id or 0)
+            total = len(meta_pubs)
+            start = _read_meta_offset() % total
+            attempted = 0
+            for i in range(min(cap, total)):
+                pub = meta_pubs[(start + i) % total]
+                attempted += 1
+                try:
+                    video_snapshots += self._snapshot_one(
+                        pub, errors, raise_app_limit=True
                     )
-                )
-                video_snapshots += 1
+                except MetaGraphTransientError:
+                    trip_meta_app_cooldown()
+                    meta_blocked = True
+                    errors.append(
+                        "meta: (#4) detectado -> abri cooldown e parei a coleta "
+                        "IG/FB nesta rodada (retoma sozinho na proxima)."
+                    )
+                    break
+                if spacing:
+                    time.sleep(spacing)
+            # Avanca o cursor rotativo pelos que TENTAMOS, para a proxima rodada
+            # continuar de onde parou e cobrir todos os videos ao longo do tempo.
+            _write_meta_offset((start + attempted) % total)
 
-        # Estatisticas de conta por CONTA configurada (YouTube BR/US,
-        # Instagram/Facebook Afiliados/Trends BR/US, etc.).
+        # 3) Estatisticas de conta por CONTA configurada (YouTube BR/US,
+        # Instagram/Facebook Afiliados/Trends BR/US, etc.). Pula IG/FB se o
+        # cooldown da Meta estiver ativo.
         platform_snapshots = 0
         for account in list_publishing_accounts():
             if not account.get("external_id"):
                 continue
+            if account.get("platform") in _META_PLATFORMS and meta_blocked:
+                continue
             try:
                 stats = self._collect_account(account)
+            except MetaGraphTransientError:
+                trip_meta_app_cooldown()
+                meta_blocked = True
+                errors.append("meta: (#4) em estatisticas de conta -> cooldown.")
+                stats = None
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"account:{account['key']} -> {exc}")
                 stats = None
@@ -114,6 +203,54 @@ class MetricsService:
             "publications_checked": len(publications),
             "errors": errors,
         }
+
+    def _snapshot_one(
+        self,
+        pub: Publication,
+        errors: list[str],
+        raise_app_limit: bool = False,
+    ) -> int:
+        """Coleta e grava UM snapshot de metricas de uma publicacao.
+
+        Retorna 1 se gravou, 0 caso contrario. Se raise_app_limit=True e o Graph
+        devolver o (#4) do app da Meta, propaga MetaGraphTransientError para o
+        chamador abrir o cooldown e parar a coleta IG/FB da rodada.
+        """
+        try:
+            metrics = self._collect_video(
+                pub.platform, pub.external_id, pub.video_asset_id
+            )
+        except MetaGraphTransientError:
+            if raise_app_limit:
+                raise
+            errors.append(f"{pub.platform}:{pub.external_id} -> (#4) app limit")
+            return 0
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"{pub.platform}:{pub.external_id} -> {exc}")
+            return 0
+
+        if not metrics:
+            return 0
+
+        # Se o coletor descobriu o link publico do video (ex.: TikTok depois que
+        # o rascunho vira post publico), grava/atualiza na publicacao para
+        # aparecer o botao "Abrir" no Analytics.
+        new_url = (metrics.get("external_url") or "").strip()
+        if new_url and pub.external_url != new_url:
+            pub.external_url = new_url
+
+        self.db.add(
+            VideoMetric(
+                video_asset_id=pub.video_asset_id,
+                platform=pub.platform,
+                views=int(metrics.get("views", 0) or 0),
+                likes=int(metrics.get("likes", 0) or 0),
+                comments=int(metrics.get("comments", 0) or 0),
+                shares=int(metrics.get("shares", 0) or 0),
+                clicks=int(metrics.get("clicks", 0) or 0),
+            )
+        )
+        return 1
 
     # ----------------------------------------------------------------
     # COLETORES POR VIDEO
@@ -163,6 +300,10 @@ class MetricsService:
             params={"metric": "views,likes,comments,shares", "access_token": token},
             timeout=30,
         ).json()
+        if isinstance(resp, dict) and "error" in resp:
+            if is_meta_app_limit(resp.get("error")):
+                raise MetaGraphTransientError(str(resp.get("error")))
+            return None
         data = {d["name"]: (d.get("values", [{}])[0].get("value", 0)) for d in resp.get("data", [])}
         if not data:
             return None
@@ -205,7 +346,11 @@ class MetricsService:
                 ).json()
             except Exception:  # noqa: BLE001
                 return {}
-            return {} if "error" in resp else resp
+            if isinstance(resp, dict) and "error" in resp:
+                if is_meta_app_limit(resp.get("error")):
+                    raise MetaGraphTransientError(str(resp.get("error")))
+                return {}
+            return resp
 
         base_resp = _safe_get("views,permalink_url")
         if not base_resp:

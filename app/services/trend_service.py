@@ -5,6 +5,7 @@ import random
 import urllib.request
 import urllib.parse
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 
 import yt_dlp
 from dotenv import load_dotenv
@@ -44,6 +45,38 @@ class TrendService:
 
     def __init__(self):
         self.youtube_api_key = os.getenv("YOUTUBE_API_KEY")
+        # Recencia: so entra video publicado dentro dessa janela (horas). <=0 desliga.
+        try:
+            self.max_age_hours = float(os.getenv("ATLAS_TREND_MAX_AGE_HOURS", "48"))
+        except Exception:
+            self.max_age_hours = 48.0
+        # Fontes com termos FIXOS ficam desligadas por padrao (so trending real ao vivo).
+        self.use_shorts_search = os.getenv("ATLAS_TREND_USE_SHORTS_SEARCH", "false").strip().lower() in ("1", "true", "yes", "on")
+        self.editorial_fallback = os.getenv("ATLAS_TREND_EDITORIAL_FALLBACK", "false").strip().lower() in ("1", "true", "yes", "on")
+
+    def _within_freshness(self, published_at: str) -> bool:
+        """
+        True se o video foi publicado dentro da janela de recencia
+        (ATLAS_TREND_MAX_AGE_HOURS). Sem data legivel -> mantem (nao bloqueia
+        por falta de dado). Filtro desativado (<=0) -> sempre True.
+        """
+        if self.max_age_hours <= 0:
+            return True
+
+        if not published_at:
+            return True
+
+        try:
+            ts = published_at.strip().replace("Z", "+00:00")
+            dt = datetime.fromisoformat(ts)
+
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+
+            age_hours = (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
+            return age_hours <= self.max_age_hours
+        except Exception:
+            return True
 
     def _appeal_adjustment(self, topic: str, geo: str) -> float:
         """
@@ -269,6 +302,10 @@ class TrendService:
                 snippet = item.get("snippet", {})
                 stats = item.get("statistics", {})
 
+                published_at = snippet.get("publishedAt", "")
+                if not self._within_freshness(published_at):
+                    continue
+
                 title = snippet.get("title", "")
                 channel_title = snippet.get("channelTitle", "")
 
@@ -366,6 +403,10 @@ class TrendService:
                 for item in payload.get("items", []):
                     snippet = item.get("snippet", {})
                     stats = item.get("statistics", {})
+
+                    published_at = snippet.get("publishedAt", "")
+                    if not self._within_freshness(published_at):
+                        continue
 
                     title = snippet.get("title", "")
 
@@ -516,17 +557,23 @@ class TrendService:
                 geo=geo
             )
 
-        shorts_signals = self._fetch_youtube_short_signals(geo)
-        for t in shorts_signals:
-            self._add_trend(
-                trends=all_trends,
-                topic=t["topic"],
-                score=t["score"],
-                source=t["source"],
-                geo=geo
-            )
+        # Fonte com termos de busca FIXOS (evergreen). Desligada por padrao:
+        # so entra se ATLAS_TREND_USE_SHORTS_SEARCH=true.
+        if self.use_shorts_search:
+            shorts_signals = self._fetch_youtube_short_signals(geo)
+            for t in shorts_signals:
+                self._add_trend(
+                    trends=all_trends,
+                    topic=t["topic"],
+                    score=t["score"],
+                    source=t["source"],
+                    geo=geo
+                )
 
-        if not all_trends:
+        # Fallback com assunto FIXO. Desligado por padrao: so entra se
+        # ATLAS_TREND_EDITORIAL_FALLBACK=true. Sem ele, ciclo sem trend real
+        # nao gera reel (nada de assunto inventado).
+        if not all_trends and self.editorial_fallback:
             fallback = (
                 "Major viral story everyone is talking about today"
                 if geo == "US"

@@ -256,7 +256,17 @@ class NoFaithfulBackgroundError(RuntimeError):
 
 class MediaService:
     def __init__(self):
-        self.output_dir = os.getenv("ATLAS_OUTPUT_DIR", "output_videos")
+        # Resolve a pasta de saida SEMPRE pela raiz do projeto (ATLAS_ROOT ou a
+        # pasta do codigo), nunca pelo CWD do processo. Se o servidor sobe de
+        # outro diretorio, os reels iam parar numa pasta que o painel/sync nao
+        # le e "sumiam".
+        _root = (os.getenv("ATLAS_ROOT") or "").strip() or os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        _out = (os.getenv("ATLAS_OUTPUT_DIR") or "").strip() or os.path.join(
+            _root, "output_videos"
+        )
+        self.output_dir = _out if os.path.isabs(_out) else os.path.join(_root, _out)
         os.makedirs(self.output_dir, exist_ok=True)
 
         self.video_width = self._env_int("ATLAS_VIDEO_WIDTH", 1080)
@@ -324,6 +334,12 @@ class MediaService:
         self.visual_risk_reduction = self._env_bool("ATLAS_VISUAL_RISK_REDUCTION", True)
 
         self._nvenc_available: Optional[bool] = None
+
+        # Proveniencia da ULTIMA midia de fundo usada (fonte + risco de
+        # direitos autorais). O worker grava isso na metadata do video para o
+        # guard de publicacao decidir se pode enviar. Ver _acquire_safe_background.
+        self.last_media_provenance: Optional[dict] = None
+        self._last_stock_provider: Optional[str] = None
 
     # ============================================================
     # ENV HELPERS
@@ -613,6 +629,76 @@ class MediaService:
         if "gameplay" not in base.lower():
             base = f"{base} gameplay".strip()
         return base
+
+    # ------------------------------------------------------------------
+    # BUSCA FIEL AO ASSUNTO (intencao de "evento")
+    # Quando a narracao/hook/titulo fala de um material ESPECIFICO — um
+    # "trailer", um "clipe oficial", "melhores momentos" — a busca no YouTube
+    # precisa ir atras DESSE material, e nao de clipes genericos do assunto.
+    # Cada item: (sufixo add a busca, gatilhos, termos exigidos no titulo).
+    # ------------------------------------------------------------------
+    _EVENT_INTENTS = (
+        ("trailer", ("trailer", "teaser", "first look", "primeiro trailer",
+                     "novo trailer", "trailer oficial", "official trailer",
+                     "teaser trailer"), ("trailer", "teaser")),
+        ("official video", ("official video", "video oficial", "clipe oficial",
+                            "official music video", "lyric video", "music video"),
+         ("official", "oficial", "clipe", "lyric")),
+        ("highlights", ("highlights", "melhores momentos", "full match",
+                        "full game", "full highlights", "recap", "resumo do jogo"),
+         ("highlights", "recap", "resumo", "full")),
+    )
+
+    def _detect_event_intent(self, text: str):
+        """Descobre se o assunto fala de um material especifico (trailer, clipe
+        oficial, melhores momentos). Retorna (sufixo_de_busca, termos_exigidos)."""
+        norm = self._normalize_text(text or "")
+        if not norm:
+            return "", ()
+        for suffix, triggers, required in self._EVENT_INTENTS:
+            if any(self._normalize_text(t) in norm for t in triggers):
+                return suffix, required
+        return "", ()
+
+    def _extract_qualifiers(self, text: str) -> list:
+        """Extrai qualificadores que deixam a busca ESPECIFICA, como
+        'season 18' / 'temporada 3' / 'part 2' / 'episode 5'."""
+        norm = self._normalize_text(text or "")
+        out = []
+        for m in re.finditer(
+            r"\b(season|temporada|episode|epis[oó]dio|part|parte|cap[ií]tulo|chapter)\s+(\d{1,3})\b",
+            norm,
+        ):
+            token = f"{m.group(1)} {m.group(2)}"
+            if token not in out:
+                out.append(token)
+        return out[:2]
+
+    def _build_focused_query(self, topic: str, script: str = "", hook: str = "", is_game: bool = False):
+        """Monta a query de busca FIEL ao que a narracao promete. Junta o nome
+        do assunto (topic) com o material pedido (ex.: 'trailer') e
+        qualificadores (ex.: 'season 18'), tirados do hook/roteiro/titulo.
+
+        Retorna (query, termos_exigidos). Sem intencao de material e sendo jogo,
+        mantem a busca de gameplay atual."""
+        combined = " ".join([hook or "", script or "", topic or ""]).strip()
+        suffix, required = self._detect_event_intent(combined)
+        qualifiers = self._extract_qualifiers(combined)
+
+        if not suffix and is_game:
+            # Sem pedido de material especifico: mantem o comportamento de jogo.
+            return self._build_game_search_query(topic), []
+
+        base = self._build_search_query(topic)
+        base_low = base.lower()
+        parts = [base]
+        for q in qualifiers:
+            if q and q not in base_low:
+                parts.append(q)
+        if suffix and suffix not in base_low:
+            parts.append(suffix)
+        query = re.sub(r"\s+", " ", " ".join(p for p in parts if p)).strip()
+        return (query or base), list(required)
 
     def _extract_first_sentence(self, script: str) -> str:
         script = self._clean_text(script)
@@ -1267,6 +1353,542 @@ class MediaService:
             return None
 
     # ============================================================
+    # B + C: YOUTUBE POR ASSUNTO (MAIS VISTOS) + MONTAGEM SINCRONIZADA
+    # ============================================================
+
+    def _youtube_ranked_by_views(self, topic: str, trend_source: str = "", focus_query: str = "", required_terms=None):
+        """Procura no YouTube pelo ASSUNTO EXATO e devolve os candidatos
+        ORDENADOS POR VIEWS (mais vistos primeiro), ja filtrando lixo/facecam e
+        exigindo uma relacao minima com o tema (piso de match). O julgamento
+        fino (imagens + narracao) fica por conta do gate de visao depois.
+
+        Se 'focus_query' for dado, ele e a busca (ja focada na intencao, ex.:
+        '<assunto> season 18 trailer'). Se 'required_terms' for dado, damos
+        PREFERENCIA aos candidatos cujo titulo/descricao contem esses termos
+        (fidelidade), caindo para a lista geral so se nenhum for fiel.
+
+        Retorna (lista de dicts {entry,title,views,score}, query_topic)."""
+        safe_topic = self._clean_text(topic)
+        if not safe_topic:
+            return [], ""
+
+        is_game = self._is_game_topic(topic, trend_source)
+        extra_blocked = list(self._GAME_EXTRA_BLOCKED_TERMS) if is_game else None
+        if focus_query:
+            query_topic = focus_query
+        elif is_game:
+            query_topic = self._build_game_search_query(topic)
+        else:
+            query_topic = self._build_search_query(topic)
+
+        print(
+            f"🎥 [MEDIA ENGINE] Procurando no YouTube pelo assunto EXATO: "
+            f"'{query_topic}' (ordenando pelos MAIS VISTOS)..."
+        )
+
+        search_query = f"ytsearch{self.search_result_limit}:{query_topic}"
+        search_opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "extract_flat": True,
+            "noplaylist": True,
+            "default_search": f"ytsearch{self.search_result_limit}",
+            "socket_timeout": 10,
+            "retries": 1,
+            "extractor_retries": 1,
+            "http_headers": {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Accept-Language": "en-US,en;q=0.9,pt-BR;q=0.8",
+            },
+        }
+        _apply_ytdlp_cookies(search_opts)
+        _apply_ytdlp_bot_bypass(search_opts)
+
+        try:
+            with yt_dlp.YoutubeDL(search_opts) as ydl:
+                info = ydl.extract_info(search_query, download=False)
+            entries = info.get("entries", []) if info else []
+        except Exception as e:
+            print(f"⚠️ [MEDIA ENGINE] Busca no YouTube falhou: {e}")
+            return [], query_topic
+
+        candidates = []
+        for entry in entries:
+            if not entry:
+                continue
+            title = entry.get("title", "") or ""
+            description = entry.get("description", "") or ""
+            if self._is_bad_background_candidate(title, entry, extra_blocked=extra_blocked):
+                continue
+            score = self._keyword_match_score(query_topic, f"{title} {description}")
+            if is_game:
+                title_norm = self._normalize_text(title)
+                if any(
+                    kw in title_norm
+                    for kw in ("gameplay", "playthrough", "walkthrough", "no commentary", "sem comentario")
+                ):
+                    score = min(1.0, score + 0.15)
+            if score < self.asset_match_floor:
+                continue
+            try:
+                views = int(entry.get("view_count") or 0)
+            except Exception:
+                views = 0
+            candidates.append({"entry": entry, "title": title, "views": views, "score": score})
+
+        # FIDELIDADE: se a narracao/titulo pede um material especifico (ex.:
+        # "trailer"), preferimos candidatos cujo TITULO/descricao contenham esse
+        # termo. Entre os fieis, seguimos escolhendo os MAIS VISTOS. Se nenhum
+        # candidato for fiel, caimos para a lista geral (nao zeramos a producao).
+        if required_terms:
+            req_norm = [self._normalize_text(t) for t in required_terms if t]
+
+            def _is_faithful(c):
+                blob = self._normalize_text(
+                    f"{c['title']} {c['entry'].get('description', '') or ''}"
+                )
+                return any(t in blob for t in req_norm)
+
+            faithful = [c for c in candidates if _is_faithful(c)]
+            if faithful:
+                print(
+                    f"🎯 [MEDIA ENGINE] {len(faithful)}/{len(candidates)} candidatos "
+                    f"são material '{'/'.join(required_terms)}' — priorizando os fiéis ao assunto."
+                )
+                candidates = faithful
+            else:
+                print(
+                    f"⚠️ [MEDIA ENGINE] Nenhum candidato '{'/'.join(required_terms)}' "
+                    f"no título; usando os mais vistos do assunto."
+                )
+
+        # Ordena pelos MAIS VISTOS (criterio principal); o match resolve empates.
+        candidates.sort(key=lambda c: (c["views"], c["score"]), reverse=True)
+        for c in candidates[:8]:
+            print(
+                f"🔎 [MEDIA ENGINE] Mais visto: '{c['title']}' | "
+                f"views={c['views']:,} | match={c['score']:.2f}"
+            )
+        return candidates, query_topic
+
+    def _fetch_video_meta(self, url: str):
+        """Busca a METADATA REAL de um video do YouTube (titulo + descricao
+        completos), SEM baixar o video. A busca por lista usa extract_flat, que
+        quase nao traz a descricao; aqui pegamos a descricao de verdade para
+        validar se o CONTEUDO do video bate com o assunto/trend."""
+        if not url:
+            return None
+        opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "skip_download": True,
+            "noplaylist": True,
+            "socket_timeout": 12,
+            "retries": 1,
+            "extractor_retries": 1,
+            "http_headers": {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Accept-Language": "en-US,en;q=0.9,pt-BR;q=0.8",
+            },
+        }
+        _apply_ytdlp_cookies(opts)
+        _apply_ytdlp_bot_bypass(opts)
+        try:
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+        except Exception as e:
+            print(f"⚠️ [MEDIA ENGINE] Não li a metadata do vídeo ({e}).")
+            return None
+        if not info:
+            return None
+        return {
+            "title": info.get("title") or "",
+            "description": info.get("description") or "",
+            "duration": info.get("duration"),
+            "channel": info.get("channel") or info.get("uploader") or "",
+            "tags": info.get("tags") or [],
+        }
+
+    def _subject_evidence_ok(self, topic: str, focus_query: str, required_terms, title: str, description: str):
+        """Confere se o CONTEUDO do video (TITULO + DESCRICAO) tem relacao com o
+        assunto/trend. Retorna (ok, motivo, {title_score, desc_score}).
+
+        Regras:
+        - O termo PRINCIPAL do assunto precisa aparecer no titulo+descricao.
+        - Se a trend pede material especifico (ex.: 'trailer'), ele precisa
+          aparecer no titulo OU na descricao.
+        - O TITULO precisa ter relacao minima com o assunto.
+        - A DESCRICAO (quando existe de verdade) precisa ter relacao com o
+          assunto: citar um termo principal ou bater o minimo de match."""
+        query = focus_query or topic
+        title_norm = self._normalize_text(title)
+        desc_norm = self._normalize_text(description)
+        combined_norm = self._normalize_text(f"{title} {description}")
+
+        title_score = self._keyword_match_score(query, title)
+        desc_score = self._keyword_match_score(query, description) if description else 0.0
+        scores = {"title_score": title_score, "desc_score": desc_score}
+
+        cores = self._core_terms(topic)
+        if cores and not any(c in combined_norm for c in cores):
+            return False, "não cita o assunto principal", scores
+
+        if required_terms:
+            req_norm = [self._normalize_text(t) for t in required_terms if t]
+            if req_norm and not any(t in title_norm or t in desc_norm for t in req_norm):
+                return False, f"não é o material pedido ('{'/'.join(required_terms)}')", scores
+
+        if title_score < self.asset_match_floor:
+            return False, f"título com pouca relação (match {title_score:.2f})", scores
+
+        # Relacao da DESCRICAO com a trend (so quando ha descricao de verdade).
+        if self._env_bool("ATLAS_YOUTUBE_REQUIRE_DESC_MATCH", True) and len(desc_norm) >= 15:
+            desc_min = self._env_float("ATLAS_YOUTUBE_DESC_MATCH_MIN", 0.20)
+            desc_core = bool(cores) and any(c in desc_norm for c in cores)
+            if not desc_core and desc_score < desc_min:
+                return False, f"descrição sem relação com o assunto (match {desc_score:.2f})", scores
+
+        return True, "ok", scores
+
+    def _acquire_youtube_montage(self, topic: str, script: str, voice_duration: float, temp_dir: str, trend_source: str = "", hook: str = ""):
+        """B + C juntos: procura no YouTube pelo assunto EXATO, pega os MAIS
+        VISTOS, valida CADA um por PALAVRAS + IMAGENS batendo com a narracao e
+        monta um arquivo de fundo com VARIOS trechos do(s) video(s) aprovado(s).
+
+        Retorna (caminho_da_montagem_ou_None, proveniencia_ou_None)."""
+        try:
+            from app.services import trend_relevance_service
+        except Exception:
+            trend_relevance_service = None
+
+        # Busca FIEL: se o hook/roteiro fala de "trailer" (ou clipe oficial,
+        # melhores momentos...), a busca vai atras DESSE material — e nao de
+        # clipes genericos do assunto — e exige o termo no titulo do escolhido.
+        is_game = self._is_game_topic(topic, trend_source)
+        focus_query, required_terms = self._build_focused_query(
+            topic, script=script, hook=hook, is_game=is_game
+        )
+        if required_terms:
+            print(
+                f"🧭 [MEDIA ENGINE] Assunto pede material específico "
+                f"('{'/'.join(required_terms)}'). Busca focada: '{focus_query}'."
+            )
+
+        candidates, _query = self._youtube_ranked_by_views(
+            topic, trend_source, focus_query=focus_query, required_terms=required_terms,
+        )
+        if not candidates:
+            print("⚠️ [MEDIA ENGINE] Nenhum vídeo do assunto encontrado no YouTube.")
+            return None, None
+
+        max_sources = max(1, self._env_int("ATLAS_MONTAGE_MAX_SOURCE_VIDEOS", 2))
+        max_tries = max(max_sources, self._env_int("ATLAS_MONTAGE_MAX_DOWNLOAD_TRIES", 5))
+
+        download_opts = {
+            "format": (
+                "bv*[height>=1080][vcodec!*=av01]+ba/bv*[height>=1080]+ba/"
+                "bv*[height>=720][vcodec!*=av01]+ba/bv*[height>=720]+ba/"
+                "b[height>=720]/bv*+ba/b"
+            ),
+            "quiet": True,
+            "no_warnings": True,
+            "noplaylist": True,
+            "merge_output_format": "mp4",
+            "socket_timeout": 12,
+            "retries": 1,
+            "fragment_retries": 1,
+            "extractor_retries": 1,
+            "file_access_retries": 1,
+            "continuedl": False,
+            "overwrites": True,
+            "nopart": True,
+            "http_headers": {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Accept-Language": "en-US,en;q=0.9,pt-BR;q=0.8",
+            },
+        }
+        if _BUNDLED_FFMPEG_EXE:
+            download_opts["ffmpeg_location"] = _BUNDLED_FFMPEG_EXE
+        _apply_ytdlp_cookies(download_opts)
+        _apply_ytdlp_bot_bypass(download_opts)
+
+        validated_paths = []
+        tries = 0
+
+        for candidate in candidates:
+            if len(validated_paths) >= max_sources or tries >= max_tries:
+                break
+
+            entry = candidate["entry"]
+            title = candidate["title"]
+            views = candidate["views"]
+
+            video_id = entry.get("id")
+            url = entry.get("url") or entry.get("webpage_url")
+            if video_id and not str(url).startswith("http"):
+                url = f"https://www.youtube.com/watch?v={video_id}"
+            if not url:
+                continue
+
+            # ---- VALIDACAO TITULO + DESCRICAO x ASSUNTO (antes de baixar) ----
+            # Exigencia do usuario: o CONTEUDO do video (titulo E descricao)
+            # tem que ter relacao TOTAL com a trend. A busca rapida
+            # (extract_flat) quase nao traz a descricao; entao lemos a metadata
+            # real do video e so baixamos se titulo E descricao baterem com o
+            # assunto. Assim nao gastamos banda com video fora do tema.
+            meta = self._fetch_video_meta(url)
+            if meta:
+                full_title = meta.get("title") or title
+                description = meta.get("description") or ""
+                ok, why, sc = self._subject_evidence_ok(
+                    topic, focus_query, required_terms, full_title, description,
+                )
+                if not ok:
+                    print(
+                        f"🚫 [MEDIA ENGINE] '{full_title}' descartado ANTES de baixar: "
+                        f"{why} (título/descrição não batem com o assunto)."
+                    )
+                    continue
+                title = full_title
+                candidate["title"] = full_title
+                print(
+                    f"🧾 [MEDIA ENGINE] '{full_title}': título e descrição batem com o "
+                    f"assunto (título {sc.get('title_score', 0.0):.2f}, "
+                    f"descrição {sc.get('desc_score', 0.0):.2f})."
+                )
+            else:
+                print(
+                    "⚠️ [MEDIA ENGINE] Não consegui ler a descrição do vídeo; "
+                    "validando pelo título e pelas imagens."
+                )
+
+            tries += 1
+            base = os.path.join(temp_dir, f"temp_src_{len(validated_paths)}_{tries}")
+            opts = dict(download_opts)
+            opts["outtmpl"] = base + ".%(ext)s"
+
+            for old_file in glob.glob(base + ".*"):
+                self._safe_remove(old_file)
+
+            print(
+                f"⬇️ [MEDIA ENGINE] Baixando o mais visto ({views:,} views) para "
+                f"análise: '{title}'"
+            )
+            try:
+                with yt_dlp.YoutubeDL(opts) as ydl:
+                    ydl.download([url])
+            except Exception as e:
+                print(f"⚠️ [MEDIA ENGINE] Falha ao baixar candidato: {e}")
+                for old_file in glob.glob(base + ".*"):
+                    self._safe_remove(old_file)
+                continue
+
+            downloaded = None
+            for f in glob.glob(base + ".*"):
+                if os.path.splitext(f)[1].lower() in (".mp4", ".mkv", ".webm", ".mov"):
+                    downloaded = f
+                    break
+            if not downloaded or not self._is_hd_video_file(downloaded):
+                print("🗑️ [MEDIA ENGINE] Candidato sem HD válido; descartado.")
+                for old_file in glob.glob(base + ".*"):
+                    self._safe_remove(old_file)
+                continue
+
+            src_path = base + ".mp4"
+            if downloaded != src_path:
+                try:
+                    os.replace(downloaded, src_path)
+                except Exception:
+                    src_path = downloaded
+
+            # ---- Validacao: IMAGENS + PALAVRAS batendo com a narracao ----
+            # Se a IA de visao julgar, respeitamos o veredito. Se a IA estiver
+            # INDISPONIVEL (ex.: cota do Gemini esgotada / 429), NAO jogamos fora
+            # um trailer oficial: como o candidato veio de busca pelo ASSUNTO
+            # EXATO, e o MAIS VISTO e com titulo casando (match >= piso), confiamos
+            # nesse sinal forte. Quando a cota voltar, a IA volta a julgar sozinha.
+            approved = True
+            if trend_relevance_service is not None:
+                try:
+                    print(
+                        f"🔎 [MEDIA ENGINE] Analisando se '{title}' BATE com a "
+                        f"narração (imagens + palavras)…"
+                    )
+                    verdict, detail = trend_relevance_service.passes_gate(
+                        src_path, topic, narration=script, media_words=title,
+                    )
+                    if detail.get("evaluated"):
+                        approved = verdict
+                        if approved:
+                            print(
+                                f"✅ [MEDIA ENGINE] Aprovado pela IA (confiança "
+                                f"{detail.get('confidence', 0)}%): '{title}'"
+                            )
+                        else:
+                            print(
+                                f"🚫 [MEDIA ENGINE] REPROVADO pela IA (confiança "
+                                f"{detail.get('confidence', 0)}%): {detail.get('reason', '') or 'fora do tema'}"
+                            )
+                    else:
+                        # IA indisponivel: confia no sinal assunto-exato + mais
+                        # visto + titulo. Mas se o assunto pede material especifico
+                        # (ex.: "trailer"), so aceita se o TITULO for fiel a esse
+                        # material — assim nao entra clipe generico no lugar do trailer.
+                        strong = float(candidate.get("score", 0.0)) >= self.min_asset_match_score
+                        title_norm = self._normalize_text(title)
+                        faithful = (not required_terms) or any(
+                            self._normalize_text(t) in title_norm for t in required_terms
+                        )
+                        if strong and faithful and self._env_bool("ATLAS_YOUTUBE_TRUST_WHEN_AI_DOWN", True):
+                            approved = True
+                            print(
+                                f"⚠️ [MEDIA ENGINE] IA de visão indisponível "
+                                f"({detail.get('reason', '')}). Aceitando '{title}' pelo sinal "
+                                f"forte: assunto EXATO + {views:,} views + título casando "
+                                f"(match {candidate.get('score', 0.0):.2f})."
+                            )
+                        elif not faithful:
+                            approved = False
+                            print(
+                                f"🚫 [MEDIA ENGINE] '{title}' não é o material pedido "
+                                f"('{'/'.join(required_terms)}'); descartado para manter fidelidade."
+                            )
+                        else:
+                            approved = False
+                            print(
+                                f"🚫 [MEDIA ENGINE] IA indisponível e sinal fraco "
+                                f"(match {candidate.get('score', 0.0):.2f}); descartado."
+                            )
+                except Exception as ge:
+                    print(f"⚠️ [MEDIA ENGINE] Validação falhou ({ge}); mantendo por segurança do fluxo.")
+                    approved = True
+
+            if approved:
+                validated_paths.append(src_path)
+            else:
+                self._safe_remove(src_path)
+
+        if not validated_paths:
+            print("🚫 [MEDIA ENGINE] Nenhum vídeo do assunto passou na análise (imagens + narração).")
+            return None, None
+
+        montage_path = self._build_montage_file(validated_paths, voice_duration, temp_dir)
+        if not montage_path:
+            # Sem montagem: usa o mais visto validado como fundo unico.
+            montage_path = validated_paths[0]
+            print("⚠️ [MEDIA ENGINE] Montagem indisponível; usando o mais visto validado como fundo.")
+
+        allow_pub = self._env_bool("ATLAS_ALLOW_YOUTUBE_REEL_PUBLISH", False)
+        provenance = {
+            "asset_source": "youtube_search",
+            "media_host": "youtube.com",
+            "copyright_risk": "high",
+            "license": "unverified_youtube",
+            "note": (
+                "Footage real do assunto (YouTube, mais vistos; validado por IA "
+                "de visao quando disponivel, senao pelo sinal assunto-exato+views). "
+                "Publicacao "
+                + ("AUTORIZADA pelo usuario." if allow_pub else "retida pelo guard.")
+            ),
+            "youtube_sources": len(validated_paths),
+        }
+        print(
+            f"🎬 [MEDIA ENGINE] Montagem pronta com {len(validated_paths)} vídeo(s) "
+            f"do assunto (mais vistos)."
+        )
+        return montage_path, provenance
+
+    def _build_montage_file(self, source_paths, target_duration, temp_dir):
+        """Corta VARIOS trechos dos videos validados (mais vistos) e concatena
+        num unico arquivo de fundo (landscape 1280x720), com duracao suficiente
+        para cobrir a narracao. Devolve o caminho, ou None se falhar."""
+        try:
+            target = float(target_duration or 0)
+        except Exception:
+            target = 0.0
+        if target <= 0:
+            target = float(self.min_video_duration_seconds or 30)
+
+        seg_len = max(2.5, self._env_float("ATLAS_MONTAGE_SEGMENT_SECONDS", 5.0))
+        mw, mh = 1280, 720
+        out = os.path.join(temp_dir, "temp_background.mp4")
+
+        loaded, segments = [], []
+        try:
+            for p in source_paths:
+                try:
+                    clip = mp.VideoFileClip(p)
+                    if clip.duration and clip.duration > 1.2:
+                        loaded.append(clip)
+                    else:
+                        self._safe_close_clip(clip)
+                except Exception:
+                    pass
+            if not loaded:
+                return None
+
+            cursors = [min(max(0.0, float(c.duration) * 0.03), 3.0) for c in loaded]
+            need = target + seg_len
+            total = 0.0
+            idx = 0
+            guard = 0
+            while total < need and guard < 400:
+                guard += 1
+                si = idx % len(loaded)
+                clip = loaded[si]
+                cd = float(clip.duration or 0)
+                start = cursors[si]
+                if start + 1.0 >= cd:
+                    start = 0.0  # reaproveita do inicio quando esgota a fonte
+                end = min(cd, start + seg_len)
+                if end - start >= 1.0:
+                    try:
+                        sub = clip.subclip(start, end)
+                        sub = self._resize_cover(sub, mw, mh)
+                        segments.append(sub)
+                        total += (end - start)
+                    except Exception:
+                        pass
+                cursors[si] = end + 0.4
+                idx += 1
+
+            if not segments:
+                return None
+
+            montage = mp.concatenate_videoclips(segments, method="compose")
+            try:
+                montage = montage.without_audio()
+            except Exception:
+                pass
+            if montage.duration and montage.duration > need:
+                montage = montage.subclip(0, need)
+
+            montage.write_videofile(
+                out,
+                fps=self.video_fps,
+                codec="libx264",
+                audio=False,
+                preset="ultrafast",
+                bitrate=self.master_bitrate,
+                ffmpeg_params=["-pix_fmt", "yuv420p"],
+                logger=None,
+                threads=self._env_int("ATLAS_RENDER_THREADS", 4),
+            )
+            self._safe_close_clip(montage)
+
+            if os.path.exists(out) and os.path.getsize(out) > 50 * 1024:
+                return out
+            return None
+        except Exception as e:
+            print(f"⚠️ [MEDIA ENGINE] Falha ao montar b-roll: {e}")
+            return None
+        finally:
+            for s in segments:
+                self._safe_close_clip(s)
+            for c in loaded:
+                self._safe_close_clip(c)
+
+    # ============================================================
     # STOCK VIDEO (PEXELS / PIXABAY) — funciona quando o YouTube é bloqueado
     # ============================================================
 
@@ -1403,13 +2025,16 @@ class MediaService:
 
         for term in self._stock_search_terms(topic):
             print(f"🔎 [STOCK] Procurando vídeo de fundo para '{term}'...")
-            path = None
             if pexels_key:
                 path = self._pexels_video(term, pexels_key, temp_dir, requests)
-            if not path and pixabay_key:
+                if path:
+                    self._last_stock_provider = "stock_pexels"
+                    return path
+            if pixabay_key:
                 path = self._pixabay_video(term, pixabay_key, temp_dir, requests)
-            if path:
-                return path
+                if path:
+                    self._last_stock_provider = "stock_pixabay"
+                    return path
 
         print("⚠️ [STOCK] Nenhum vídeo de fundo encontrado nos bancos.")
         return None
@@ -1500,6 +2125,7 @@ class MediaService:
                             fh.write(chunk)
 
             if os.path.exists(dest) and os.path.getsize(dest) > 100 * 1024:
+                self._last_stock_query = term
                 print(f"⬇️ [STOCK] Vídeo de fundo baixado de {source} (busca '{term}').")
                 return dest
 
@@ -1518,9 +2144,72 @@ class MediaService:
         communicate = edge_tts.Communicate(script, voice_name)
         await communicate.save(output_path)
 
-    def _synthesize_voice(self, script: str, voice_name: str, temp_dir: str):
+    def _try_fish_voice(self, script: str, language: str, output_path: str):
+        """Narra com Fish Audio (mesma voz natural dos afiliados). Retorna
+        (path, duracao) no sucesso; (None, 0.0) para cair no Edge TTS."""
+        from pathlib import Path
+
+        try:
+            from app.automation.real_amazon_pipeline import (
+                _fish_enabled,
+                _fish_next_voice,
+                _fish_synthesize,
+            )
+        except Exception:
+            return None, 0.0
+
+        if not _fish_enabled():
+            return None, 0.0
+
+        market = "BR" if str(language or "").lower().startswith("pt") else "US"
+
+        try:
+            reference_id, voice_label = _fish_next_voice(market)
+        except Exception:
+            return None, 0.0
+
+        if not reference_id and not voice_label:
+            return None, 0.0
+
+        try:
+            ok, detail = _fish_synthesize(script, reference_id, Path(output_path))
+        except Exception as error:
+            print(f"⚠️ [MEDIA ENGINE] Fish indisponível ({error}); usando Edge.")
+            return None, 0.0
+
+        if not ok or not os.path.exists(output_path):
+            print(f"⚠️ [MEDIA ENGINE] Fish não gerou voz ({str(detail)[-160:]}); usando Edge.")
+            return None, 0.0
+
+        try:
+            audio_clip = mp.AudioFileClip(output_path)
+            duration = float(audio_clip.duration or 0)
+            audio_clip.close()
+        except Exception:
+            duration = 0.0
+
+        fish_min_seconds = max(3.0, (len(script) / 16.0) * 0.6)
+        if duration <= 0.0 or duration < fish_min_seconds:
+            print(
+                f"⚠️ [MEDIA ENGINE] Fish curto/truncado ({duration:.1f}s < "
+                f"{fish_min_seconds:.1f}s); usando Edge."
+            )
+            return None, 0.0
+
+        print(
+            f"✅ [MEDIA ENGINE] Voz Fish pronta (mercado {market}, "
+            f"{voice_label or reference_id}). Duração: {duration:.1f}s"
+        )
+        return output_path, duration
+
+    def _synthesize_voice(self, script: str, voice_name: str, temp_dir: str, language: str = ""):
         voice_name = voice_name or self.default_voice
         output_path = os.path.join(temp_dir, "voice.mp3")
+
+        # Fish Audio primeiro (voz natural escolhida pelo usuario); Edge = fallback.
+        fish_path, fish_duration = self._try_fish_voice(script, language, output_path)
+        if fish_path:
+            return fish_path, fish_duration
 
         print(f"🎙️ [MEDIA ENGINE] Sintetizando VOZ NEURAL ({voice_name})...")
 
@@ -2135,6 +2824,62 @@ class MediaService:
     # PRODUÇÃO PRINCIPAL
     # ============================================================
 
+    def _acquire_safe_background(self, topic: str, temp_dir: str, trend_source: str = "", allow_youtube: bool = True):
+        """Obtem um video de FUNDO livre de direitos autorais e devolve tambem a
+        PROVENIENCIA (fonte + risco), para o guard de publicacao decidir.
+
+        Ordem:
+          1) YouTube — SO se ATLAS_ALLOW_YOUTUBE_BROLL estiver ligado (padrao
+             DESLIGADO). Baixar um clipe do YouTube pelo titulo da trend e o que
+             causa reivindicacao de Content ID (ex.: o trailer da NBC no caso
+             "The Five-Star Weekend").
+          2) Banco de video LIVRE de direitos (Pexels/Pixabay) — royalty-free,
+             fora do Content ID. Passa a ser a fonte PRINCIPAL.
+
+        Retorna (caminho_ou_None, proveniencia: dict).
+        """
+        # 1) YouTube (ALTO RISCO) — opt-in explicito no .env. Quando a montagem
+        # (B + C) ja cuidou do YouTube, o chamador passa allow_youtube=False para
+        # nao baixar de novo (cai direto para o banco livre).
+        if allow_youtube and self._env_bool("ATLAS_ALLOW_YOUTUBE_BROLL", False):
+            yt_path = self._download_youtube_background(topic, temp_dir, trend_source)
+            if yt_path:
+                print("⚠️ [MEDIA ENGINE] B-roll do YouTube (ATLAS_ALLOW_YOUTUBE_BROLL=1) — RISCO de Content ID.")
+                return yt_path, {
+                    "asset_source": "youtube_search",
+                    "media_host": "youtube.com",
+                    "copyright_risk": "high",
+                    "license": "unverified_youtube",
+                    "note": "B-roll do YouTube pode conter conteudo protegido (Content ID).",
+                }
+
+        # 2) Banco de video LIVRE de direitos (fonte principal, sem Content ID).
+        self._last_stock_provider = None
+        self._last_stock_query = ""
+        stock_path = self._download_stock_background(topic, temp_dir)
+        if stock_path:
+            provider = self._last_stock_provider or "stock"
+            host = {
+                "stock_pexels": "pexels.com",
+                "stock_pixabay": "pixabay.com",
+            }.get(provider, "stock")
+            return stock_path, {
+                "asset_source": provider,
+                "media_host": host,
+                "copyright_risk": "low",
+                "license": "royalty_free_stock",
+                "note": "Video de banco livre de direitos (sem Content ID).",
+            }
+
+        # 3) Nada seguro encontrado.
+        return None, {
+            "asset_source": "none",
+            "media_host": "",
+            "copyright_risk": "n/a",
+            "license": "none",
+            "note": "Nenhuma midia livre encontrada para o assunto.",
+        }
+
     def produce_video(self, *args, **kwargs):
         data = self._parse_production_args(*args, **kwargs)
         
@@ -2161,6 +2906,7 @@ class MediaService:
                     script=script,
                     voice_name=voice_name,
                     temp_dir=temp_dir,
+                    language=language,
                 )
     
                 if voice_duration >= (self.min_video_duration_seconds - 5.0):
@@ -2187,19 +2933,122 @@ class MediaService:
                     research_context=content_service.last_research_context,
                 )
     
-            background_path = self._download_youtube_background(
-                topic=topic, temp_dir=temp_dir, trend_source=trend_source
+            # === FONTE DE FUNDO (B + C) ===
+            # PRIMEIRO procura no YouTube pelo assunto EXATO, pega os MAIS
+            # VISTOS, valida cada um (imagens + narracao batendo) e monta um
+            # fundo com VARIOS trechos do(s) video(s) aprovado(s). So cai para
+            # banco livre (stock) se o YouTube nao render nada fiel.
+            background_path = None
+            media_provenance = None
+            youtube_validated = False
+
+            montage_attempted = (
+                self._env_bool("ATLAS_ALLOW_YOUTUBE_BROLL", False)
+                and self._env_bool("ATLAS_MONTAGE_ENABLED", True)
             )
-    
-            if not background_path:
-                # Sem stock/gradiente como substituto: se nao ha um video
-                # REAL fiel ao assunto, e melhor DESCARTAR este assunto do
-                # que publicar um video com fundo generico/desconectado do
-                # tema. O worker (loop_worker) captura esta excecao e busca
-                # o proximo assunto em alta no lugar deste.
-                raise NoFaithfulBackgroundError(
-                    f"Nenhum vídeo real e fiel ao assunto '{topic}' foi encontrado no YouTube."
+
+            if montage_attempted:
+                montage_path, yt_prov = self._acquire_youtube_montage(
+                    topic=topic,
+                    script=script,
+                    voice_duration=voice_duration,
+                    temp_dir=temp_dir,
+                    trend_source=trend_source,
+                    hook=hook_text,
                 )
+                if montage_path:
+                    background_path = montage_path
+                    media_provenance = yt_prov
+                    youtube_validated = True
+
+            if background_path is None:
+                background_path, media_provenance = self._acquire_safe_background(
+                    topic=topic,
+                    temp_dir=temp_dir,
+                    trend_source=trend_source,
+                    allow_youtube=not montage_attempted,
+                )
+
+            self.last_media_provenance = media_provenance
+
+            if not background_path:
+                # Nenhuma midia LIVRE de direitos foi encontrada. Em vez de
+                # baixar um clipe do YouTube (o que causa reivindicacao de
+                # Content ID), decidimos pelo .env:
+                #   - ATLAS_SAFE_FALLBACK_BACKGROUND=1 (padrao): usa um FUNDO
+                #     ORIGINAL gerado pelo Atlas (gradiente) — NUNCA da claim.
+                #   - =0: descarta o assunto (comportamento antigo).
+                if self._env_bool("ATLAS_SAFE_FALLBACK_BACKGROUND", True):
+                    print(
+                        "🛡️ [MEDIA ENGINE] Sem video de banco livre; usando FUNDO "
+                        "ORIGINAL gerado (100% livre de direitos autorais)."
+                    )
+                    self.last_media_provenance = {
+                        "asset_source": "procedural_gradient",
+                        "media_host": "generated",
+                        "copyright_risk": "none",
+                        "license": "generated_original",
+                        "note": "Fundo gerado pelo Atlas, sem midia de terceiros.",
+                    }
+                    # background_path continua None -> _compose_vertical_video
+                    # usa _make_fallback_background (gradiente animado).
+                else:
+                    raise NoFaithfulBackgroundError(
+                        f"Nenhuma midia livre de direitos foi encontrada para "
+                        f"'{topic}'. Configure PEXELS_API_KEY/PIXABAY_API_KEY "
+                        f"(gratis) ou ative ATLAS_SAFE_FALLBACK_BACKGROUND=1."
+                    )
+            elif youtube_validated:
+                # A montagem do YouTube JA foi validada clipe a clipe (mais
+                # vistos + imagens + narracao) dentro de _acquire_youtube_montage;
+                # nao precisa repassar pelo portao de stock.
+                print(
+                    "✅ [MEDIA ENGINE] Montagem do YouTube já validada (mais "
+                    "vistos + imagens + narração). Seguindo para composição."
+                )
+            else:
+                # ===== PORTAO DE RELEVANCIA (palavras + imagens do clipe) =====
+                # So aceita o fundo baixado se ele for ~90% REALMENTE sobre o
+                # assunto da trend. O Atlas extrai frames do proprio clipe e usa
+                # o Gemini (visao) para ler imagens e textos na tela. Se reprovar,
+                # DESCARTA o assunto (o worker pula para a proxima trend) em vez
+                # de publicar um video com fundo fora do tema.
+                try:
+                    from app.services import trend_relevance_service
+                    print(
+                        f"🔎 [MEDIA ENGINE] Checando se o fundo BATE com a narração "
+                        f"(assunto: '{topic}')…"
+                    )
+                    approved, detail = trend_relevance_service.passes_gate(
+                        background_path,
+                        topic,
+                        narration=script,
+                        media_words=getattr(self, "_last_stock_query", ""),
+                    )
+                except Exception as gate_exc:
+                    # Falha inesperada no portao nao deve travar a producao.
+                    print(f"⚠️ [MEDIA ENGINE] Portao de relevancia falhou ({gate_exc}); seguindo sem bloquear.")
+                    approved, detail = True, {}
+
+                if not approved:
+                    conf = detail.get("confidence", 0)
+                    thr = detail.get("threshold", 90)
+                    why = detail.get("reason", "")
+                    print(
+                        f"🚫 [MEDIA ENGINE] Fundo REPROVADO na relevancia "
+                        f"(confianca {conf}% < {thr}%). Motivo: {why or 'nao e sobre o assunto'}"
+                    )
+                    raise NoFaithfulBackgroundError(
+                        f"O material de fundo encontrado para '{topic}' nao e ~{thr}% "
+                        f"sobre o assunto (confianca {conf}%). Descartado para nao gerar "
+                        f"video fora do tema."
+                    )
+
+                if detail.get("evaluated"):
+                    print(
+                        f"✅ [MEDIA ENGINE] Fundo APROVADO na relevancia "
+                        f"(confianca {detail.get('confidence', 0)}% >= {detail.get('threshold', 90)}%)."
+                    )
 
             output_path = os.path.join(self.output_dir, f"video_{content_id}.mp4")
 

@@ -111,8 +111,13 @@ class Engine:
             os.getenv("ATLAS_MIN_TREND_SCORE", "80")
         )
 
-        # Arquivo persistente de memória de assuntos usados.
-        self.memory_dir = "output_metadata"
+        # Arquivo persistente de memória de assuntos usados. Ancorado na raiz do
+        # projeto (ATLAS_ROOT ou pasta do codigo), nunca no CWD, senao a memoria
+        # de assuntos usados diverge da que o resto do app le.
+        _root = (os.getenv("ATLAS_ROOT") or "").strip() or os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        self.memory_dir = os.path.join(_root, "output_metadata")
         os.makedirs(self.memory_dir, exist_ok=True)
 
         self.used_topics_memory_path = os.path.join(
@@ -633,6 +638,16 @@ class Engine:
 
                     # 6. Salva metadata JSON junto ao vídeo.
                     if video_path and os.path.exists(video_path):
+                        # Proveniencia da midia de fundo (fonte + risco de
+                        # direitos autorais) usada neste video. O guard de
+                        # publicacao usa isso para reter reels de origem nao
+                        # licenciada (ex.: b-roll do YouTube = Content ID).
+                        prov = getattr(self.media_service, "last_media_provenance", None)
+                        if isinstance(prov, dict):
+                            metadata["asset_source"] = prov.get("asset_source")
+                            metadata["copyright_risk"] = prov.get("copyright_risk")
+                            metadata["media_provenance"] = prov
+
                         self.metadata_storage_service.save_metadata(
                             content_id=new_content.id,
                             topic=topic,

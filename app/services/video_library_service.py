@@ -25,7 +25,9 @@ from app.models.dashboard import (
 )
 from app.services.shortlink_service import ShortLinkService
 
-PROJECT_ROOT = os.getenv("ATLAS_ROOT", os.getcwd())
+PROJECT_ROOT = (os.getenv("ATLAS_ROOT") or "").strip() or os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 
 OUTPUT_METADATA_DIR = os.path.join(PROJECT_ROOT, "output_metadata")
 OUTPUT_VIDEOS_DIR = os.path.join(PROJECT_ROOT, "output_videos")
@@ -182,6 +184,10 @@ class VideoLibraryService:
                 "payload": {
                     "platforms": platforms,
                     "hashtags": (data.get("content", {}) or {}).get("base_hashtags", []),
+                    # Proveniencia/risco de direitos autorais (vem da metadata):
+                    # o guard de publicacao retem reels de origem nao licenciada.
+                    "copyright": data.get("copyright", {}) or {},
+                    "asset_source": (data.get("production", {}) or {}).get("asset_source"),
                 },
             }
 

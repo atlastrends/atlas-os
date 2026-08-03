@@ -9,6 +9,11 @@
 #   ATLAS_SCHEDULER_ENABLED       (default: true)
 #   ATLAS_METRICS_INTERVAL_HOURS  (default: 1)  -> 0 desativa
 #   ATLAS_SCRAPER_INTERVAL_HOURS  (default: 0)  -> 0 desativa
+#   ATLAS_AUTO_RETRY_ENABLED          (default: true)  -> reenvio automatico
+#   ATLAS_AUTO_RETRY_INTERVAL_HOURS   (default: 1)   -> de quanto em quanto tempo
+#   ATLAS_AUTO_RETRY_BATCH            (default: 4)   -> videos por execucao
+#   ATLAS_PUBLISH_SPACING_SECONDS     (default: 30)  -> pausa entre um video e o proximo
+#   ATLAS_AUTO_RETRY_INCLUDE_NEW      (default: true)-> tambem publica os "novos" (CREATED)
 # ============================================================
 
 from __future__ import annotations
@@ -55,6 +60,12 @@ def _watch_comments_job():
     from app.services import job_service
 
     job_service.run_watch_comments()
+
+
+def _auto_retry_job():
+    from app.services import job_service
+
+    job_service.run_auto_retry()
 
 
 def start_scheduler() -> bool:
@@ -121,6 +132,27 @@ def start_scheduler() -> bool:
             )
             print(
                 f"[ATLAS SCHEDULER] Aprovacao automatica por qualidade a cada {approve_hours}h."
+            )
+
+    # Reenvio automatico ESPACADO dos pendentes + publicacao gradual dos novos.
+    # Sobe poucos videos por hora, com pausa entre eles, para NAO estourar o
+    # limite da Meta (#4) nem o spam_risk do TikTok. Ligado por padrao
+    # (ATLAS_AUTO_RETRY_ENABLED=false desativa).
+    if _env_bool("ATLAS_AUTO_RETRY_ENABLED", True):
+        retry_hours = _env_int("ATLAS_AUTO_RETRY_INTERVAL_HOURS", 1)
+        if retry_hours > 0:
+            scheduler.add_job(
+                _auto_retry_job,
+                trigger="interval",
+                hours=retry_hours,
+                id="auto_retry",
+                replace_existing=True,
+                max_instances=1,
+                coalesce=True,
+                next_run_time=datetime.now(timezone.utc) + timedelta(seconds=45),
+            )
+            print(
+                f"[ATLAS SCHEDULER] Reenvio automatico (lote espacado) a cada {retry_hours}h."
             )
 
     # Robo de respostas por comentario (polling via Graph API -- nao depende

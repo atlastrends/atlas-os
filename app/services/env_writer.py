@@ -21,9 +21,8 @@ _LOCK = threading.Lock()
 def _env_path() -> str:
     """Caminho do .env que o app usa para LER/ESCREVER.
 
-    Quando ha um .env compartilhado ativo (ex.: no OneDrive), grava nele,
-    para que os tokens renovados sincronizem para os outros computadores.
-    Senao, usa o .env da raiz do projeto (comportamento padrao).
+    Usa ATLAS_ENV_FILE se definido; senao, o .env LOCAL da raiz do projeto.
+    Os tokens renovados sao gravados nesse arquivo local (fora do OneDrive).
     """
     from app.core.env_loader import active_env_path
 

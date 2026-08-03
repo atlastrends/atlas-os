@@ -11,9 +11,8 @@ from fastapi.staticfiles import StaticFiles
 
 # Carrega as variaveis do .env para o ambiente, para que os publicadores
 # (YouTube/TikTok/Instagram/Facebook) e os coletores de metricas encontrem as
-# credenciais via os.getenv. Alem do .env do projeto, tambem carrega um .env
-# COMPARTILHADO (ex.: %OneDrive%\ATLAS-OS-SECRETS\.env) quando existir, para
-# funcionar em varias maquinas sem copiar segredos e sem coloca-los no Git.
+# credenciais via os.getenv. Usa o .env LOCAL da raiz do projeto (fora do
+# OneDrive); os tokens renovados sao gravados nesse mesmo arquivo.
 from app.core.env_loader import load_env
 
 load_env()

@@ -143,6 +143,55 @@ def list_sources(market: str = "", language: str = "") -> list[dict]:
                 "has_live": has_live,
             }
         )
+
+    # Versoes de LIVE cujo reels .mp4 ja foi PURGADO (arquivo pesado apagado
+    # depois de publicar): o .live.mp4 continua valendo para a montagem. Sem
+    # isto o produto sumiria da live so por ter sido purgado -- exatamente o
+    # que NAO queremos, ja que a versao de live e a que deve ser mantida.
+    seen = {e["id"] for e in out}
+    for live_mp4 in sorted(
+        _AFF_DIR.glob("*.live.mp4"), key=lambda p: p.stat().st_mtime, reverse=True
+    ):
+        stem = live_mp4.name[: -len(".live.mp4")]
+        if stem in seen:
+            continue  # ja entrou pelo reels irmao acima
+        if (_AFF_DIR / f"{stem}.mp4").is_file():
+            continue  # ainda tem reels: tratado pelo loop de cima
+        try:
+            if live_mp4.stat().st_size < 200 * 1024:  # ignora arquivos quebrados
+                continue
+        except OSError:
+            continue
+        # Metadata: o sidecar do reels (.json) e MANTIDO no purge; se faltar,
+        # cai no sidecar da propria live (.live.json).
+        data = _safe_json(_AFF_DIR / f"{stem}.json") or _safe_json(
+            live_mp4.with_suffix(".json")
+        )
+        mk = _market_of(data)
+        lang = _lang_of(data)
+        if want_mk and mk and mk != want_mk:
+            continue
+        if want_lang and lang and lang != want_lang:
+            continue
+        asin = (data.get("asin") or "").upper()
+        title = html.unescape((data.get("title") or stem).strip())
+        seen.add(stem)
+        out.append(
+            {
+                "id": stem,
+                "title": title,
+                "asin": asin,
+                "market": mk,
+                "language": lang,
+                "category_label": data.get("category_label") or "",
+                "affiliate_url": data.get("affiliate_url") or "",
+                "image": _product_image(asin),
+                "video_rel": os.path.relpath(live_mp4, _ATLAS_ROOT).replace("\\", "/"),
+                "size_mb": round(live_mp4.stat().st_size / (1024 * 1024), 1),
+                "variant": "live",
+                "has_live": True,
+            }
+        )
     return out
 
 
@@ -152,12 +201,17 @@ def _source_by_id(stem: str) -> dict | None:
     if base.endswith(".live"):
         base = base[: -len(".live")]
     mp4 = _AFF_DIR / f"{base}.mp4"
-    if not mp4.is_file():
+    live_mp4 = _AFF_DIR / f"{base}.live.mp4"
+    # Aceita o produto se existir o reels OU a versao de live (o reels pode ter
+    # sido PURGADO depois de publicar; a live continua servindo para montar).
+    if not mp4.is_file() and not live_mp4.is_file():
         return None
+    # Metadata: sidecar do reels (.json, mantido no purge) ou o da live (.live.json).
     data = _safe_json(mp4.with_suffix(".json"))
+    if not data:
+        data = _safe_json(live_mp4.with_suffix(".json"))
 
     # Prefere a versao de LIVE (com audio de apresentadora) quando existir.
-    live_mp4 = mp4.with_name(mp4.stem + ".live.mp4")
     if live_mp4.is_file():
         live_data = _safe_json(live_mp4.with_suffix(".json"))
         video_file = live_mp4

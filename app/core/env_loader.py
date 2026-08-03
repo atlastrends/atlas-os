@@ -1,20 +1,15 @@
 # ============================================================
 # ATLAS OS - env_loader.py
-# Carrega o .env de forma robusta e permite CENTRALIZAR os segredos
-# (chaves de API + login do TikTok/Meta) num arquivo unico que
-# SINCRONIZA sozinho entre computadores (ex.: OneDrive).
+# Carrega o .env de forma robusta.
 #
-# Objetivo: funcionar em varias maquinas SEM copiar o .env toda vez e
-# SEM colocar segredos no Git (o repositorio e publico).
+# Os segredos (chaves de API + login do TikTok/Meta) ficam no .env na
+# RAIZ DO PROJETO (local, fora do OneDrive). Os tokens renovados sao
+# gravados nesse mesmo arquivo. Nada e lido/escrito no OneDrive -- isso
+# evitava que o OneDrive revertesse o refresh_token e derrubasse a conexao
+# do TikTok toda semana.
 #
-# Como ATIVAR o modo compartilhado (opcional, feito UMA vez):
-#   - Coloque o seu .env em:  %OneDrive%\ATLAS-OS-SECRETS\.env
-#     (o OneDrive sincroniza esse arquivo para os seus outros PCs)
-#   - OU defina a variavel de ambiente ATLAS_ENV_FILE apontando para
-#     um arquivo .env (caminho completo).
-#
-# Sem nenhuma dessas opcoes, o comportamento e o de sempre: usa o
-# .env que fica na raiz do projeto. Ou seja, nada muda por padrao.
+# Opcional: defina ATLAS_ENV_FILE com o caminho completo de outro .env
+# para usa-lo no lugar. Sem isso, usa o .env da raiz do projeto.
 # ============================================================
 
 from __future__ import annotations
@@ -26,37 +21,27 @@ from dotenv import load_dotenv
 
 def _project_env_path() -> str:
     """Caminho do .env na raiz do projeto (comportamento padrao)."""
-    root = os.path.abspath(os.getenv("ATLAS_ROOT", os.getcwd()))
+    explicit = (os.getenv("ATLAS_ROOT") or "").strip()
+    if explicit:
+        root = os.path.abspath(explicit)
+    else:
+        # Fallback robusto: raiz derivada da localizacao deste arquivo,
+        # independente do diretorio de onde o processo foi iniciado.
+        root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     return os.path.join(root, ".env")
 
 
-def _onedrive_roots() -> list[str]:
-    """Pastas raiz do OneDrive detectadas pelas variaveis do Windows."""
-    roots: list[str] = []
-    for var in ("OneDrive", "OneDriveConsumer", "OneDriveCommercial"):
-        val = (os.getenv(var) or "").strip()
-        if val and val not in roots:
-            roots.append(val)
-    return roots
-
-
 def shared_env_path() -> str | None:
-    """Caminho do .env COMPARTILHADO (sincronizado), se estiver ativo.
+    """Caminho de um .env externo, se ATLAS_ENV_FILE estiver definido.
 
-    Ordem de prioridade:
-      1) ATLAS_ENV_FILE (caminho explicito) — se o arquivo existir.
-      2) %OneDrive%\\ATLAS-OS-SECRETS\\.env — se o arquivo existir.
-    Retorna None quando nenhum existe (ai o app usa o .env do projeto).
+    So usamos um arquivo externo quando ATLAS_ENV_FILE aponta para ele
+    (caminho completo). NAO procuramos mais no OneDrive: os segredos e os
+    tokens renovados ficam no .env LOCAL do projeto, para o OneDrive nunca
+    reverter o refresh_token do TikTok e derrubar a conexao.
     """
     explicit = (os.getenv("ATLAS_ENV_FILE") or "").strip()
     if explicit and os.path.isfile(explicit):
         return os.path.abspath(explicit)
-
-    for root in _onedrive_roots():
-        candidate = os.path.join(root, "ATLAS-OS-SECRETS", ".env")
-        if os.path.isfile(candidate):
-            return candidate
-
     return None
 
 

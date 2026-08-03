@@ -40,7 +40,16 @@ def _language_code(country_code: str | None, language: str | None) -> str:
 
 
 def _project_root() -> str:
-    return os.path.abspath(os.getenv("ATLAS_ROOT", os.getcwd()))
+    explicit = (os.getenv("ATLAS_ROOT") or "").strip()
+    if explicit:
+        return os.path.abspath(explicit)
+    # Fallback robusto: raiz derivada da localizacao deste arquivo,
+    # independente do diretorio de onde o servidor foi iniciado.
+    return os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+    )
 
 
 def _resolve_video_path(video_path: str) -> str:

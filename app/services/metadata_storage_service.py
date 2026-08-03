@@ -5,7 +5,12 @@ from datetime import datetime, timezone
 
 class MetadataStorageService:
     def __init__(self):
-        self.output_dir = "output_metadata"
+        # Grava na raiz do projeto (ATLAS_ROOT ou pasta do codigo), nunca no CWD,
+        # senao a metadata dos reels cai numa pasta que o sync nao le.
+        _root = (os.getenv("ATLAS_ROOT") or "").strip() or os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        self.output_dir = os.path.join(_root, "output_metadata")
         os.makedirs(self.output_dir, exist_ok=True)
 
     def _safe_get(self, data: dict, key: str, default=None):
@@ -146,8 +151,15 @@ class MetadataStorageService:
                 "render_engine": self._safe_get(metadata, "render_engine", "atlas"),
                 "audio_engine": self._safe_get(metadata, "audio_engine", "edge_tts"),
                 "video_engine": self._safe_get(metadata, "video_engine", "moviepy"),
-                "asset_source": self._safe_get(metadata, "asset_source", "youtube_search"),
+                "asset_source": self._safe_get(metadata, "asset_source", "unknown"),
                 "rendered_at_utc": now
+            },
+
+            "copyright": {
+                "asset_source": self._safe_get(metadata, "asset_source", "unknown"),
+                "risk": self._safe_get(metadata, "copyright_risk", "unknown"),
+                "media_provenance": self._safe_get(metadata, "media_provenance", {}) or {},
+                "assessed_at_utc": now
             },
 
             "upload_status": {

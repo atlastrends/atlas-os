@@ -11,6 +11,7 @@ from app.publishing.base import (
     PublishResult,
     market_code,
     resolve_tiktok_token,
+    resolve_video_path,
 )
 from app.services import tiktok_oauth_service
 
@@ -102,11 +103,13 @@ class TikTokPublisher(BasePublisher):
             )
 
         # 2) Le o arquivo de video local (envio direto, sem precisar de URL publica).
-        video_path = request.video_path or ""
+        # Resolve o caminho relativo pela raiz do projeto (independente do
+        # diretorio de onde o servidor foi iniciado).
+        video_path = resolve_video_path(request.video_path)
         if not video_path or not os.path.isfile(video_path):
             return PublishResult(
                 status="failed",
-                error=f"Arquivo de video nao encontrado: {video_path}",
+                error=f"Arquivo de video nao encontrado: {request.video_path}",
                 detail={"platform": self.platform, "market": market},
             )
 

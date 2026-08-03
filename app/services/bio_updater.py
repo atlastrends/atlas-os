@@ -43,11 +43,11 @@ def _do_update() -> None:
         logger.error("Bio: falha ao gerar a pagina: %s", (build.stderr or "").strip())
         return
 
-    # 2) Prepara o commit.
-    _run(["git", "add", "docs/index.html"])
+    # 2) Prepara o commit (pagina + lista que o robo de direct le).
+    _run(["git", "add", "docs/index.html", "docs/produtos.json"])
 
     # 3) Se nada mudou, nao commita (evita commit vazio).
-    diff = _run(["git", "diff", "--cached", "--quiet", "--", "docs/index.html"])
+    diff = _run(["git", "diff", "--cached", "--quiet", "--", "docs/index.html", "docs/produtos.json"])
     if diff.returncode == 0:
         logger.info("Bio: nada mudou, nada a publicar.")
         return

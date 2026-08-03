@@ -236,16 +236,30 @@ def _fetch_amazon_image(product_url: str) -> str | None:
 
 
 def fetch_products() -> dict[str, list[dict]]:
-    """Retorna {'BR': [...], 'US': [...]} com os produtos publicados."""
+    """Retorna {'BR': [...], 'US': [...]}.
+
+    Entra na bio quem ja foi publicado em PELO MENOS UMA rede (>=1 publicacao
+    com sucesso), mesmo com o asset ainda em RETRY_PENDING. A dedup por ASIN
+    garante 1 card por produto, entao reenviar o video nao insere de novo.
+    """
     query = text(
         """
-        SELECT id, title, country_code, affiliate_url
-        FROM video_assets
-        WHERE kind = 'AFFILIATE'
-          AND affiliate_url IS NOT NULL
-          AND affiliate_url <> ''
-          AND (status = 'PUBLISHED' OR status = 'published')
-        ORDER BY published_at DESC
+        SELECT va.id, va.title, va.country_code, va.affiliate_url
+        FROM video_assets va
+        WHERE va.kind = 'AFFILIATE'
+          AND va.affiliate_url IS NOT NULL
+          AND va.affiliate_url <> ''
+          AND (
+                va.status IN ('PUBLISHED', 'published')
+                OR EXISTS (
+                    SELECT 1 FROM publications p
+                    WHERE p.video_asset_id = va.id
+                      AND p.status = 'PUBLISHED'
+                      AND p.external_id IS NOT NULL
+                      AND p.external_id <> ''
+                )
+              )
+        ORDER BY va.published_at DESC
         """
     )
     grouped: dict[str, list[dict]] = {"BR": [], "US": []}

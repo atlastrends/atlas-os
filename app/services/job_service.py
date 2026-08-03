@@ -593,6 +593,64 @@ def run_auto_approval():
 
 
 # ----------------------------------------------------------------
+# JOB: reenvio automatico ESPACADO (lote pequeno de hora em hora)
+# ----------------------------------------------------------------
+
+def run_auto_retry():
+    """Publica um lote pequeno e espacado de videos pendentes/novos, para o
+    reenvio automatico agendado nao estourar o limite da Meta/TikTok."""
+    job = "auto_retry"
+    if is_running(job):
+        return
+    _set_state(job, status="running", started_at=_now_iso(), error=None, result=None)
+
+    def _worker():
+        try:
+            import os
+
+            from app.core.database import SessionLocal
+            from app.services.publishing_service import PublishingService
+
+            def _int(name: str, default: int) -> int:
+                try:
+                    return int(str(os.getenv(name, default)).strip())
+                except (TypeError, ValueError):
+                    return default
+
+            def _bool(name: str, default: bool) -> bool:
+                raw = os.getenv(name)
+                if raw is None:
+                    return default
+                return raw.strip().lower() in {"1", "true", "yes", "on", "sim"}
+
+            limit = _int("ATLAS_AUTO_RETRY_BATCH", 4)
+            spacing = _int("ATLAS_PUBLISH_SPACING_SECONDS", 30)
+            include_new = _bool("ATLAS_AUTO_RETRY_INCLUDE_NEW", True)
+
+            db = SessionLocal()
+            try:
+                summary = PublishingService(db).run_scheduled_batch(
+                    limit=limit,
+                    spacing_seconds=spacing,
+                    include_new=include_new,
+                )
+            finally:
+                db.close()
+
+            _set_state(job, status="done", finished_at=_now_iso(), result=summary)
+        except Exception as exc:  # noqa: BLE001
+            _set_state(
+                job,
+                status="error",
+                finished_at=_now_iso(),
+                error=f"{exc}",
+                traceback=traceback.format_exc()[-2000:],
+            )
+
+    threading.Thread(target=_worker, daemon=True, name="atlas-auto-retry").start()
+
+
+# ----------------------------------------------------------------
 # JOB: robo de respostas por comentario (polling, sem webhook)
 # ----------------------------------------------------------------
 
