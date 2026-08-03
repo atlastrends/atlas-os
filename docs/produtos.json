@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-03T19:35:49.036072+00:00",
+  "updated_at": "2026-08-03T19:36:03.981187+00:00",
   "products": [
+    {
+      "keyword": "LIMPADOR",
+      "title": "Cif Limpador Especialista Derrete Gordura 500 Ml",
+      "url": "https://www.amazon.com.br/dp/B0C2R9DDPJ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18145877605539511",
+      "facebook_post_id": "2303039460230979"
+    },
     {
       "keyword": "TAPETE",
       "title": "Tapete Higiênico Premium para cães Petlike Ultrapads Aroma Lavanda 80cmx60cm 30 unid.",
@@ -935,14 +943,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "LIMPADOR",
-      "title": "Cif Limpador Especialista Derrete Gordura 500 Ml",
-      "url": "https://www.amazon.com.br/dp/B0C2R9DDPJ?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18145877605539511",
       "facebook_post_id": ""
     },
     {
