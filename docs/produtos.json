@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-03T19:08:57.176304+00:00",
+  "updated_at": "2026-08-03T19:09:06.864757+00:00",
   "products": [
+    {
+      "keyword": "TORK",
+      "title": "Pro Tork Capacete New Liberty Three, Preto Fosco, Tam. 58",
+      "url": "https://www.amazon.com.br/dp/B079QL33QH?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18074255663484293",
+      "facebook_post_id": "1026133283617498"
+    },
     {
       "keyword": "MORTE",
       "title": "A Morte de Ivan Ilitch (2 ed.)",
@@ -911,14 +919,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "TORK",
-      "title": "Pro Tork Capacete New Liberty Three, Preto Fosco, Tam. 58",
-      "url": "https://www.amazon.com.br/dp/B079QL33QH?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18074255663484293",
       "facebook_post_id": ""
     },
     {
