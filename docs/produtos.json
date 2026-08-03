@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-03T18:02:03.606873+00:00",
+  "updated_at": "2026-08-03T18:02:18.934318+00:00",
   "products": [
+    {
+      "keyword": "DOWNY",
+      "title": "Downy Amaciante Concentrado Líquido Brisa Intenso 3L – Rende 12L | Fabric Softener com Perfume Intenso de Rosas e Frutas Verm",
+      "url": "https://www.amazon.com.br/dp/B0C6NJWJ11?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18087908456156772",
+      "facebook_post_id": "1358804132895349"
+    },
     {
       "keyword": "CELULAR",
       "title": "Celular Samsung Galaxy A06 5G 128GB, 4GB, IP54, Tela 6.7\" - Preto",
@@ -871,14 +879,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "DOWNY",
-      "title": "Downy Amaciante Concentrado Líquido Brisa Intenso 3L – Rende 12L | Fabric Softener com Perfume Intenso de Rosas e Frutas Verm",
-      "url": "https://www.amazon.com.br/dp/B0C6NJWJ11?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18087908456156772",
       "facebook_post_id": ""
     },
     {
