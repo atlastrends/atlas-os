@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T17:36:05.776097+00:00",
+  "updated_at": "2026-08-03T17:36:24.014521+00:00",
   "products": [
     {
       "keyword": "FINISH",
@@ -840,6 +840,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "BASICS",
+      "title": "Amazon Basics Neoprene Dumbbell Hand Weights for Exercise and Muscle Toning",
+      "url": "https://www.amazon.com/dp/B01LR5S6HK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18027833348666519",
+      "facebook_post_id": "1042445604995874"
     },
     {
       "keyword": "CISILY",
@@ -1791,14 +1799,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "BASICS",
-      "title": "Amazon Basics Neoprene Dumbbell Hand Weights for Exercise and Muscle Toning",
-      "url": "https://www.amazon.com/dp/B01LR5S6HK?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18027833348666519",
       "facebook_post_id": ""
     }
   ]
