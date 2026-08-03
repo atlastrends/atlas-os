@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-03T13:37:33.139521+00:00",
+  "updated_at": "2026-08-03T13:37:48.135160+00:00",
   "products": [
+    {
+      "keyword": "PLAYSTATION",
+      "title": "PlayStation®5 Slim Digital 825GB – Pacote ASTRO BOT e Gran Turismo 7",
+      "url": "https://www.amazon.com.br/dp/B0FPGF9J2J?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18108397379009414",
+      "facebook_post_id": "3291974451191725"
+    },
     {
       "keyword": "SPORT",
       "title": "One Sport Luva Fitness Academia Fitness Musculação OSP5",
@@ -1119,14 +1127,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PLAYSTATION",
-      "title": "PlayStation®5 Slim Digital 825GB – Pacote ASTRO BOT e Gran Turismo 7",
-      "url": "https://www.amazon.com.br/dp/B0FPGF9J2J?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18108397379009414",
       "facebook_post_id": ""
     },
     {
