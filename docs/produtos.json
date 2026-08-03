@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T19:15:25.337360+00:00",
+  "updated_at": "2026-08-03T19:18:54.345488+00:00",
   "products": [
     {
       "keyword": "TORK",
@@ -919,6 +919,14 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "FENDER",
+      "title": "Fender FCT-2 Professional Multi-Instrument Clip-On Tuner for Guitar, Bass, Ukulele, and Violin",
+      "url": "https://www.amazon.com/dp/B074KGZ9Z7?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18109775201076093",
       "facebook_post_id": ""
     },
     {
