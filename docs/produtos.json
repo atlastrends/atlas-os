@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T19:05:25.128424+00:00",
+  "updated_at": "2026-08-03T19:05:38.638944+00:00",
   "products": [
     {
       "keyword": "MORTE",
@@ -912,6 +912,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "XBOX",
+      "title": "XBOX Game Pass Ultimate | 1 Month Membership | Console, PC, Cloud Gaming Devices | Digital Code",
+      "url": "https://www.amazon.com/dp/B07TFP7JFH?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17902117023498076",
+      "facebook_post_id": "2482675745579894"
     },
     {
       "keyword": "MEDICUBE",
@@ -1943,14 +1951,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "XBOX",
-      "title": "XBOX Game Pass Ultimate | 1 Month Membership | Console, PC, Cloud Gaming Devices | Digital Code",
-      "url": "https://www.amazon.com/dp/B07TFP7JFH?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "17902117023498076",
       "facebook_post_id": ""
     }
   ]
