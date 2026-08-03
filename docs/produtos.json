@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T18:14:25.146039+00:00",
+  "updated_at": "2026-08-03T18:18:24.712291+00:00",
   "products": [
     {
       "keyword": "AZEITE",
@@ -1863,6 +1863,14 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "THERMOS",
+      "title": "THERMOS FUNTAINER Water Bottle with Straw, 12oz, Spider-Man | Kids Stainless Steel Insulated Water Bottle, Keeps Drinks Cold",
+      "url": "https://www.amazon.com/dp/B08Z7BBJTT?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18122720110762036",
       "facebook_post_id": ""
     }
   ]
