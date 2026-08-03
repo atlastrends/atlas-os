@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-03T18:51:12.158323+00:00",
+  "updated_at": "2026-08-03T18:51:31.358197+00:00",
   "products": [
     {
       "keyword": "MORTE",
@@ -912,6 +912,14 @@
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
+    },
+    {
+      "keyword": "CERAKOTE",
+      "title": "CERAKOTE® Ceramic Headlight Restoration Kit, No Power Tools, 10 Wipe Kit | Restores clouded, yellowed headlights, ceramic UV",
+      "url": "https://www.amazon.com/dp/B084RQKLV8?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18181029739413245",
+      "facebook_post_id": "1000766326117182"
     },
     {
       "keyword": "HANES",
@@ -1919,14 +1927,6 @@
       "url": "https://www.amazon.com/dp/B0GY1S2VCQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CERAKOTE",
-      "title": "CERAKOTE® Ceramic Headlight Restoration Kit, No Power Tools, 10 Wipe Kit | Restores clouded, yellowed headlights, ceramic UV",
-      "url": "https://www.amazon.com/dp/B084RQKLV8?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18181029739413245",
       "facebook_post_id": ""
     }
   ]
