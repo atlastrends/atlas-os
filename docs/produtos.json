@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-03T18:33:01.619011+00:00",
+  "updated_at": "2026-08-03T18:33:14.632745+00:00",
   "products": [
+    {
+      "keyword": "OREAL",
+      "title": "L&#x27;Oréal Paris Protetor Facial Solar Expertise Antioleosidade FPS 60, 40g | com Ácido Salicílico, possui Efeito Matte e Contro",
+      "url": "https://www.amazon.com.br/dp/B0B695DMC2?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18373106377229667",
+      "facebook_post_id": "4008574532607461"
+    },
     {
       "keyword": "AZEITE",
       "title": "Azeite De Oliva Extra Virgem Andorinha - 500ml",
@@ -895,14 +903,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "OREAL",
-      "title": "L&#x27;Oréal Paris Protetor Facial Solar Expertise Antioleosidade FPS 60, 40g | com Ácido Salicílico, possui Efeito Matte e Contro",
-      "url": "https://www.amazon.com.br/dp/B0B695DMC2?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18373106377229667",
       "facebook_post_id": ""
     },
     {
