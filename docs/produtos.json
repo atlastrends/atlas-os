@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-03T19:48:17.640805+00:00",
+  "updated_at": "2026-08-03T19:48:31.839791+00:00",
   "products": [
+    {
+      "keyword": "HYPERX",
+      "title": "HyperX Teclado Gamer HyperX Alloy Core RGB, ABNT2, PRETO",
+      "url": "https://www.amazon.com.br/dp/B07TV9B7Z3?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18115159333737364",
+      "facebook_post_id": "1374191214658915"
+    },
     {
       "keyword": "TOUCA",
       "title": "Touca de Natação, Speedo, Flat Cap, Silicone Resistente com Encaixe Confortável,Tamanho Único",
@@ -951,14 +959,6 @@
       "url": "https://www.amazon.com.br/dp/B07WZQC1NJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "HYPERX",
-      "title": "HyperX Teclado Gamer HyperX Alloy Core RGB, ABNT2, PRETO",
-      "url": "https://www.amazon.com.br/dp/B07TV9B7Z3?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18115159333737364",
       "facebook_post_id": ""
     },
     {
