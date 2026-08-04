@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-04T22:10:29.846611+00:00",
+  "updated_at": "2026-08-04T22:23:53.724087+00:00",
   "products": [
+    {
+      "keyword": "FIRST",
+      "title": "007 First Light - Specialist Edition (Exclusivo Amazon) - PlayStation 5",
+      "url": "https://www.amazon.com.br/dp/B0FZDSXJMY?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17942483418272878",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "OREAL",
       "title": "L&#x27;Oréal Professionnel Óleo 10 em 1 Absolut Repair | Multi-benefícios para cabelos secos e danificados | Repara e Promove Bril",
@@ -293,14 +301,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "FIRST",
-      "title": "007 First Light - Specialist Edition (Exclusivo Amazon) - PlayStation 5",
-      "url": "https://www.amazon.com.br/dp/B0FZDSXJMY?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
