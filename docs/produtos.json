@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-04T21:43:13.596055+00:00",
+  "updated_at": "2026-08-04T21:43:30.701729+00:00",
   "products": [
+    {
+      "keyword": "CHINELO",
+      "title": "Chinelo Havaianas Top adulto-unissex",
+      "url": "https://www.amazon.com.br/dp/B000YKO2XM?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18000843215993332",
+      "facebook_post_id": "1587028862837056"
+    },
     {
       "keyword": "MULTIPROCESSAD",
       "title": "Multiprocessador, Pmp1600p, 1700W, Preto, 127v, Philco",
@@ -271,14 +279,6 @@
       "url": "https://www.amazon.com.br/dp/B0FZDSXJMY?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CHINELO",
-      "title": "Chinelo Havaianas Top adulto-unissex",
-      "url": "https://www.amazon.com.br/dp/B000YKO2XM?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18000843215993332",
       "facebook_post_id": ""
     },
     {
