@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T22:10:20.154983+00:00",
+  "updated_at": "2026-08-04T22:10:29.846611+00:00",
   "products": [
     {
       "keyword": "OREAL",
@@ -306,6 +306,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "OWALA",
+      "title": "Owala Marvel FreeSip Stainless Steel Water Bottle 24 oz Spiderman",
+      "url": "https://www.amazon.com/dp/B0CBCRC1RK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18179771248414992",
+      "facebook_post_id": "1565701545196930"
+    },
+    {
       "keyword": "ADDARIO",
       "title": "D&#x27;Addario EJ16-3D Phosphor Bronze Acoustic Guitar Strings 12-53, 3 Sets | Phosphor bronze acoustic guitar strings offer warm,",
       "url": "https://www.amazon.com/dp/B000OR2RNM?tag=atlasfindsus-20",
@@ -503,14 +511,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "OWALA",
-      "title": "Owala Marvel FreeSip Stainless Steel Water Bottle 24 oz Spiderman",
-      "url": "https://www.amazon.com/dp/B0CBCRC1RK?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18179771248414992",
       "facebook_post_id": ""
     }
   ]
