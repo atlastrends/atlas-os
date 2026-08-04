@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T21:52:15.625917+00:00",
+  "updated_at": "2026-08-04T21:52:26.760794+00:00",
   "products": [
     {
       "keyword": "VIDAS",
@@ -290,6 +290,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "WILSON",
+      "title": "WILSON Championship Tennis Balls",
+      "url": "https://www.amazon.com/dp/B001FZCVTM?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18130403245727183",
+      "facebook_post_id": "1554880495848763"
+    },
+    {
       "keyword": "CROCS",
       "title": "Crocs Kid&#x27;s Classic Clog (Little Kid/Big Kid/Toddler)",
       "url": "https://www.amazon.com/dp/B09642KTF3?tag=atlasfindsus-20",
@@ -471,14 +479,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "WILSON",
-      "title": "WILSON Championship Tennis Balls",
-      "url": "https://www.amazon.com/dp/B001FZCVTM?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18130403245727183",
       "facebook_post_id": ""
     }
   ]
