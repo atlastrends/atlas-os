@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-04T22:03:39.058748+00:00",
+  "updated_at": "2026-08-04T22:03:59.233718+00:00",
   "products": [
+    {
+      "keyword": "PILHA",
+      "title": "Pilha Alcalina AAA com 16 unidades Elgin Palito",
+      "url": "https://www.amazon.com.br/dp/B0BSVN58JW?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18121596028759552",
+      "facebook_post_id": "1355744669467546"
+    },
     {
       "keyword": "VIDAS",
       "title": "Vidas secas",
@@ -287,14 +295,6 @@
       "url": "https://www.amazon.com.br/dp/B0FZDSXJMY?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PILHA",
-      "title": "Pilha Alcalina AAA com 16 unidades Elgin Palito",
-      "url": "https://www.amazon.com.br/dp/B0BSVN58JW?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18121596028759552",
       "facebook_post_id": ""
     },
     {
