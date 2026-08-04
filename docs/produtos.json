@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T21:59:29.684229+00:00",
+  "updated_at": "2026-08-04T21:59:49.976801+00:00",
   "products": [
     {
       "keyword": "VIDAS",
@@ -290,6 +290,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "ADDARIO",
+      "title": "D&#x27;Addario EJ16-3D Phosphor Bronze Acoustic Guitar Strings 12-53, 3 Sets | Phosphor bronze acoustic guitar strings offer warm,",
+      "url": "https://www.amazon.com/dp/B000OR2RNM?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17900939025508394",
+      "facebook_post_id": "2843916019312824"
+    },
+    {
       "keyword": "WILSON",
       "title": "WILSON Championship Tennis Balls",
       "url": "https://www.amazon.com/dp/B001FZCVTM?tag=atlasfindsus-20",
@@ -479,14 +487,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "ADDARIO",
-      "title": "D&#x27;Addario EJ16-3D Phosphor Bronze Acoustic Guitar Strings 12-53, 3 Sets | Phosphor bronze acoustic guitar strings offer warm,",
-      "url": "https://www.amazon.com/dp/B000OR2RNM?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "17900939025508394",
       "facebook_post_id": ""
     }
   ]
