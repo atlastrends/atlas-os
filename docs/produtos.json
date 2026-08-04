@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T22:46:15.709785+00:00",
+  "updated_at": "2026-08-04T22:46:30.902826+00:00",
   "products": [
     {
       "keyword": "CHINELO",
@@ -330,6 +330,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "CORE",
+      "title": "Core Power Elite High Protein Shake, Chocolate, 42g Bottle, 14oz, 12 Pack",
+      "url": "https://www.amazon.com/dp/B01DDIRDZA?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18092490434374647",
+      "facebook_post_id": "1229861682580030"
+    },
+    {
       "keyword": "CHEMICAL",
       "title": "Chemical Guys, Total Interior Cleaner, Protectant & Car Detailer, 16 oz | Cleans dashboards, seats, door panels, trim and gla",
       "url": "https://www.amazon.com/dp/B071ZTPRJL?tag=atlasfindsus-20",
@@ -543,14 +551,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CORE",
-      "title": "Core Power Elite High Protein Shake, Chocolate, 42g Bottle, 14oz, 12 Pack",
-      "url": "https://www.amazon.com/dp/B01DDIRDZA?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18092490434374647",
       "facebook_post_id": ""
     }
   ]
