@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-04T20:48:24.623555+00:00",
+  "updated_at": "2026-08-04T20:48:42.010894+00:00",
   "products": [
+    {
+      "keyword": "FRITADEIRA",
+      "title": "Fritadeira Philco Air Fryer Oven 12L PFR2200P - 127V",
+      "url": "https://www.amazon.com.br/dp/B08R93TVRG?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18073894964378436",
+      "facebook_post_id": "2361072854300790"
+    },
     {
       "keyword": "APARADOR",
       "title": "Aparador de Pelos Super Groom 10, Mondial, Preto/Azul, 6W, Bivolt - BG-03",
@@ -215,14 +223,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "FRITADEIRA",
-      "title": "Fritadeira Philco Air Fryer Oven 12L PFR2200P - 127V",
-      "url": "https://www.amazon.com.br/dp/B08R93TVRG?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18073894964378436",
       "facebook_post_id": ""
     },
     {
