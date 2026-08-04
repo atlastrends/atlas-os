@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-04T21:08:12.599239+00:00",
+  "updated_at": "2026-08-04T21:08:29.114134+00:00",
   "products": [
+    {
+      "keyword": "LIQUIDIFICADOR",
+      "title": "Liquidificador, Ph900, 3L, Preto, 110V, Philco",
+      "url": "https://www.amazon.com.br/dp/B076BL1265?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18015807215876722",
+      "facebook_post_id": "2368099850680189"
+    },
     {
       "keyword": "FRITADEIRA",
       "title": "Fritadeira Philco Air Fryer Oven 12L PFR2200P - 127V",
@@ -231,14 +239,6 @@
       "url": "https://www.amazon.com.br/dp/B0FZDSXJMY?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "LIQUIDIFICADOR",
-      "title": "Liquidificador, Ph900, 3L, Preto, 110V, Philco",
-      "url": "https://www.amazon.com.br/dp/B076BL1265?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18015807215876722",
       "facebook_post_id": ""
     },
     {
