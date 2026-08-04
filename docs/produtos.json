@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T19:44:49.138681+00:00",
+  "updated_at": "2026-08-04T20:41:51.532324+00:00",
   "products": [
     {
       "keyword": "CUECAS",
@@ -210,6 +210,22 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "APARADOR",
+      "title": "Aparador de Pelos Super Groom 10, Mondial, Preto/Azul, 6W, Bivolt - BG-03",
+      "url": "https://www.amazon.com.br/dp/B07DP2S4PC?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "GAIAM",
+      "title": "Gaiam Yoga Block - Supportive Latex-Free Eva Foam - Soft Non-Slip Surface with Beveled Edges for Yoga, Pilates, Meditation",
+      "url": "https://www.amazon.com/dp/B075W63K67?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
       "keyword": "EUHOMY",
       "title": "EUHOMY Countertop Ice Maker Machine with Handle, 26lbs in 24Hrs, 9 Ice Cubes Ready in 6 Mins, Auto-Cleaning Portable Ice Make",
       "url": "https://www.amazon.com/dp/B0BWHZJHPL?tag=atlasfindsus-20",
@@ -367,14 +383,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "GAIAM",
-      "title": "Gaiam Yoga Block - Supportive Latex-Free Eva Foam - Soft Non-Slip Surface with Beveled Edges for Yoga, Pilates, Meditation",
-      "url": "https://www.amazon.com/dp/B075W63K67?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18121006159832146",
       "facebook_post_id": ""
     }
   ]
