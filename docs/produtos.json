@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T21:19:18.851831+00:00",
+  "updated_at": "2026-08-04T21:22:59.768055+00:00",
   "products": [
     {
       "keyword": "LEGO",
@@ -253,6 +253,14 @@
       "keyword": "FIRST",
       "title": "007 First Light - Specialist Edition (Exclusivo Amazon) - PlayStation 5",
       "url": "https://www.amazon.com.br/dp/B0FZDSXJMY?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "CANETA",
+      "title": "Caneta, Faber-Castell, MT/ESZF, Multicor, pacote de 4",
+      "url": "https://www.amazon.com.br/dp/B07C8NWV2R?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
