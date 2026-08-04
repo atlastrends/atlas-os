@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T21:38:10.632099+00:00",
+  "updated_at": "2026-08-04T21:38:25.649835+00:00",
   "products": [
     {
       "keyword": "MULTIPROCESSAD",
@@ -274,6 +274,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "CROCS",
+      "title": "Crocs Kid&#x27;s Classic Clog (Little Kid/Big Kid/Toddler)",
+      "url": "https://www.amazon.com/dp/B09642KTF3?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18010970165744508",
+      "facebook_post_id": "1817391066090056"
+    },
+    {
       "keyword": "METAPEN",
       "title": "Metapen Pencil Air8 for Apple iPad 2018-2026, 10 Min Faster Charge, Palm Rejection Stylus Pen for iPad a16/11/10/9/8/7/6th Ge",
       "url": "https://www.amazon.com/dp/B0DDPMQJVH?tag=atlasfindsus-20",
@@ -447,14 +455,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CROCS",
-      "title": "Crocs Kid&#x27;s Classic Clog (Little Kid/Big Kid/Toddler)",
-      "url": "https://www.amazon.com/dp/B09642KTF3?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18010970165744508",
       "facebook_post_id": ""
     }
   ]
