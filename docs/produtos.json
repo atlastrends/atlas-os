@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T22:53:24.611814+00:00",
+  "updated_at": "2026-08-04T22:53:39.081905+00:00",
   "products": [
     {
       "keyword": "CHINELO",
@@ -330,6 +330,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "OWALA",
+      "title": "Owala FreeSip Stainless Steel Water Bottle 24 oz Out of the Blue",
+      "url": "https://www.amazon.com/dp/B0GVG9DKJP?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18091091645426363",
+      "facebook_post_id": "1917677719356179"
+    },
+    {
       "keyword": "CORE",
       "title": "Core Power Elite High Protein Shake, Chocolate, 42g Bottle, 14oz, 12 Pack",
       "url": "https://www.amazon.com/dp/B01DDIRDZA?tag=atlasfindsus-20",
@@ -551,14 +559,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "OWALA",
-      "title": "Owala FreeSip Stainless Steel Water Bottle 24 oz Out of the Blue",
-      "url": "https://www.amazon.com/dp/B0GVG9DKJP?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18091091645426363",
       "facebook_post_id": ""
     }
   ]
