@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T21:01:40.151665+00:00",
+  "updated_at": "2026-08-04T21:07:24.332255+00:00",
   "products": [
     {
       "keyword": "FRITADEIRA",
@@ -229,6 +229,14 @@
       "keyword": "FIRST",
       "title": "007 First Light - Specialist Edition (Exclusivo Amazon) - PlayStation 5",
       "url": "https://www.amazon.com.br/dp/B0FZDSXJMY?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "LIQUIDIFICADOR",
+      "title": "Liquidificador, Ph900, 3L, Preto, 110V, Philco",
+      "url": "https://www.amazon.com.br/dp/B076BL1265?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
