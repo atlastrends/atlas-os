@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-04T21:33:09.985391+00:00",
+  "updated_at": "2026-08-04T21:33:25.013440+00:00",
   "products": [
+    {
+      "keyword": "MULTIPROCESSAD",
+      "title": "Multiprocessador, Pmp1600p, 1700W, Preto, 127v, Philco",
+      "url": "https://www.amazon.com.br/dp/B07QN1RW8K?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17859710424680347",
+      "facebook_post_id": "3574673632701695"
+    },
     {
       "keyword": "CANETA",
       "title": "Caneta, Faber-Castell, MT/ESZF, Multicor, pacote de 4",
@@ -263,14 +271,6 @@
       "url": "https://www.amazon.com.br/dp/B0FZDSXJMY?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "MULTIPROCESSAD",
-      "title": "Multiprocessador, Pmp1600p, 1700W, Preto, 127v, Philco",
-      "url": "https://www.amazon.com.br/dp/B07QN1RW8K?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17859710424680347",
       "facebook_post_id": ""
     },
     {
