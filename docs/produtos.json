@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-04T20:42:36.547928+00:00",
+  "updated_at": "2026-08-04T20:42:55.881169+00:00",
   "products": [
+    {
+      "keyword": "APARADOR",
+      "title": "Aparador de Pelos Super Groom 10, Mondial, Preto/Azul, 6W, Bivolt - BG-03",
+      "url": "https://www.amazon.com.br/dp/B07DP2S4PC?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18024678200684704",
+      "facebook_post_id": "1031968649471912"
+    },
     {
       "keyword": "CUECAS",
       "title": "Kit 12 Cuecas Boxer Reebok Masculinas Microfibra Adulto Box Sem Costura",
@@ -207,14 +215,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "APARADOR",
-      "title": "Aparador de Pelos Super Groom 10, Mondial, Preto/Azul, 6W, Bivolt - BG-03",
-      "url": "https://www.amazon.com.br/dp/B07DP2S4PC?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18024678200684704",
       "facebook_post_id": ""
     },
     {
