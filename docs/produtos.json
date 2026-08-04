@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T21:24:07.513040+00:00",
+  "updated_at": "2026-08-04T21:32:21.505295+00:00",
   "products": [
     {
       "keyword": "CANETA",
@@ -261,6 +261,14 @@
       "keyword": "FIRST",
       "title": "007 First Light - Specialist Edition (Exclusivo Amazon) - PlayStation 5",
       "url": "https://www.amazon.com.br/dp/B0FZDSXJMY?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "MULTIPROCESSAD",
+      "title": "Multiprocessador, Pmp1600p, 1700W, Preto, 127v, Philco",
+      "url": "https://www.amazon.com.br/dp/B07QN1RW8K?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
