@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T23:27:02.132467+00:00",
+  "updated_at": "2026-08-04T23:27:19.167610+00:00",
   "products": [
     {
       "keyword": "METAMORFOSE",
@@ -1394,6 +1394,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "DYMATIZE",
+      "title": "Dymatize ISO100 Protein Powder, 100% Whey Isolate, Gourmet Vanilla | 25g Protein, Hydrolyzed, Fast-Absorbing, Supports Muscle",
+      "url": "https://www.amazon.com/dp/B099J2SWXV?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18319746922263227",
+      "facebook_post_id": "2143642209516199"
+    },
+    {
       "keyword": "USANOOKS",
       "title": "USANOOKS Microfiber Cleaning Cloth Grey - 12 Pcs (12.5\"x12.5\") - High Performance - 1200 Washes, Ultra Absorbent Microfiber T",
       "url": "https://www.amazon.com/dp/B08BRJHJF9?tag=atlasfindsus-20",
@@ -1647,14 +1655,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "DYMATIZE",
-      "title": "Dymatize ISO100 Protein Powder, 100% Whey Isolate, Gourmet Vanilla | 25g Protein, Hydrolyzed, Fast-Absorbing, Supports Muscle",
-      "url": "https://www.amazon.com/dp/B099J2SWXV?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18319746922263227",
       "facebook_post_id": ""
     },
     {
