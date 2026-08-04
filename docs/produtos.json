@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-04T20:55:03.169733+00:00",
+  "updated_at": "2026-08-04T20:59:53.000783+00:00",
   "products": [
     {
       "keyword": "FRITADEIRA",
@@ -226,6 +226,22 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "FIRST",
+      "title": "007 First Light - Specialist Edition (Exclusivo Amazon) - PlayStation 5",
+      "url": "https://www.amazon.com.br/dp/B0FZDSXJMY?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "METAPEN",
+      "title": "Metapen Pencil Air8 for Apple iPad 2018-2026, 10 Min Faster Charge, Palm Rejection Stylus Pen for iPad a16/11/10/9/8/7/6th Ge",
+      "url": "https://www.amazon.com/dp/B0DDPMQJVH?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17951751495016978",
+      "facebook_post_id": ""
+    },
+    {
       "keyword": "GAIAM",
       "title": "Gaiam Yoga Block - Supportive Latex-Free Eva Foam - Soft Non-Slip Surface with Beveled Edges for Yoga, Pilates, Meditation",
       "url": "https://www.amazon.com/dp/B075W63K67?tag=atlasfindsus-20",
@@ -391,14 +407,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "METAPEN",
-      "title": "Metapen Pencil Air8 for Apple iPad 2018-2026, 10 Min Faster Charge, Palm Rejection Stylus Pen for iPad a16/11/10/9/8/7/6th Ge",
-      "url": "https://www.amazon.com/dp/B0DDPMQJVH?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "17951751495016978",
       "facebook_post_id": ""
     }
   ]
