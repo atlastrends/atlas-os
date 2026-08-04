@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-04T21:23:49.932267+00:00",
+  "updated_at": "2026-08-04T21:24:07.513040+00:00",
   "products": [
+    {
+      "keyword": "CANETA",
+      "title": "Caneta, Faber-Castell, MT/ESZF, Multicor, pacote de 4",
+      "url": "https://www.amazon.com.br/dp/B07C8NWV2R?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18217537906327209",
+      "facebook_post_id": "27456184604084139"
+    },
     {
       "keyword": "LEGO",
       "title": "LEGO Classic - Caixa Média de Peças Criativas",
@@ -255,14 +263,6 @@
       "url": "https://www.amazon.com.br/dp/B0FZDSXJMY?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CANETA",
-      "title": "Caneta, Faber-Castell, MT/ESZF, Multicor, pacote de 4",
-      "url": "https://www.amazon.com.br/dp/B07C8NWV2R?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18217537906327209",
       "facebook_post_id": ""
     },
     {
