@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-05T14:23:27.950040+00:00",
+  "updated_at": "2026-08-05T14:27:56.481921+00:00",
   "products": [
+    {
+      "keyword": "ESPUMA",
+      "title": "Espuma Mágica Aerossol 400ml / 370g",
+      "url": "https://www.amazon.com.br/dp/B076X7T368?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18124845757748692",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "CAIXA",
       "title": "Caixa de Pilha AA com 40 unidades Elgin Palito - Tubo, Zinco",
@@ -447,14 +455,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "ESPUMA",
-      "title": "Espuma Mágica Aerossol 400ml / 370g",
-      "url": "https://www.amazon.com.br/dp/B076X7T368?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18124845757748692",
       "facebook_post_id": ""
     },
     {
@@ -1901,6 +1901,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "SIMPLE",
+      "title": "Simple Modern Kids Water Bottle & Toddler Cup | 14oz | Confetti | Insulated Stainless Steel Toddler Water Bottle, Kids Tumble",
+      "url": "https://www.amazon.com/dp/B0C9FR5FD8?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
