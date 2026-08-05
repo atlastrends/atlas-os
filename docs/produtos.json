@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-05T15:02:37.096728+00:00",
+  "updated_at": "2026-08-05T15:09:02.644596+00:00",
   "products": [
+    {
+      "keyword": "GILLETTE",
+      "title": "Gillette Venus Suave Sensitive Aparelho de Depilação Descartável, 4 Un",
+      "url": "https://www.amazon.com.br/dp/B08XNTQNFB?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17977954989081070",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "AMACIANTE",
       "title": "Ypê Amaciante Tradicional Aconchego 5L (Embalagem pode variar)",
@@ -474,11 +482,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "GILLETTE",
-      "title": "Gillette Venus Suave Sensitive Aparelho de Depilação Descartável, 4 Un",
-      "url": "https://www.amazon.com.br/dp/B08XNTQNFB?tag=achadosatlasb-20",
+      "keyword": "VINAGRE",
+      "title": "Vinagre de Álcool Concentrado 6% Castelo 5l",
+      "url": "https://www.amazon.com.br/dp/B084BXFGJN?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "17977954989081070",
+      "instagram_media_id": "18107145065119316",
       "facebook_post_id": ""
     },
     {
