@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-05T00:27:19.809370+00:00",
+  "updated_at": "2026-08-05T00:27:36.967061+00:00",
   "products": [
     {
       "keyword": "SANDUICHEIRA",
@@ -1418,6 +1418,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "BANANA",
+      "title": "Banana Bunch (4-5 Count)",
+      "url": "https://www.amazon.com/dp/B07ZLFPXHC?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18099291953204816",
+      "facebook_post_id": "1542473820621180"
+    },
+    {
       "keyword": "MAYBELLINE",
       "title": "Maybelline Lash Sensational Sky High Washable Mascara Makeup, Volumizing, Lengthening, Defining, Curling, Multiplying, Builda",
       "url": "https://www.amazon.com/dp/B08H3JPH74?tag=atlasfindsus-20",
@@ -1727,14 +1735,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "BANANA",
-      "title": "Banana Bunch (4-5 Count)",
-      "url": "https://www.amazon.com/dp/B07ZLFPXHC?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18099291953204816",
       "facebook_post_id": ""
     },
     {
