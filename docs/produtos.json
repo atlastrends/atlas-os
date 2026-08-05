@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-05T00:38:14.555558+00:00",
+  "updated_at": "2026-08-05T00:38:27.120309+00:00",
   "products": [
+    {
+      "keyword": "WHEY",
+      "title": "Whey Protein Concentrado Pote (900g), Chocolate Branco, Dux Human Health",
+      "url": "https://www.amazon.com.br/dp/B0CMXQGND5?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18458032156143735",
+      "facebook_post_id": "1607914181027295"
+    },
     {
       "keyword": "HITS",
       "title": "God Of War Hits Ps4-hits-playstation_4",
@@ -367,14 +375,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "WHEY",
-      "title": "Whey Protein Concentrado Pote (900g), Chocolate Branco, Dux Human Health",
-      "url": "https://www.amazon.com.br/dp/B0CMXQGND5?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18458032156143735",
       "facebook_post_id": ""
     },
     {
