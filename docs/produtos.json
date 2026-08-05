@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-05T03:25:43.332811+00:00",
+  "updated_at": "2026-08-05T03:25:56.995835+00:00",
   "products": [
+    {
+      "keyword": "SPICES",
+      "title": "Br Spices Sal Marinho Integral Fino Br Spices Pouch 1Kg",
+      "url": "https://www.amazon.com.br/dp/B0D3VLTGV4?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18024021866851229",
+      "facebook_post_id": "1803169110849592"
+    },
     {
       "keyword": "PACK",
       "title": "Pack Ração Úmida Whiskas Sachê Carne ao Molho para Gatos Adultos - Leve 20 Pague 16",
@@ -407,14 +415,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "SPICES",
-      "title": "Br Spices Sal Marinho Integral Fino Br Spices Pouch 1Kg",
-      "url": "https://www.amazon.com.br/dp/B0D3VLTGV4?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18024021866851229",
       "facebook_post_id": ""
     },
     {
