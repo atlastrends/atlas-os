@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-05T05:26:30.827519+00:00",
+  "updated_at": "2026-08-05T12:46:08.867222+00:00",
   "products": [
+    {
+      "keyword": "CAIXA",
+      "title": "Caixa de Pilha AA com 40 unidades Elgin Palito - Tubo, Zinco",
+      "url": "https://www.amazon.com.br/dp/B0B2YJK7KF?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18106768639845086",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "TRICICLO",
       "title": "TRICICLO AVESPA MARAL PINK",
@@ -439,14 +447,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CAIXA",
-      "title": "Caixa de Pilha AA com 40 unidades Elgin Palito - Tubo, Zinco",
-      "url": "https://www.amazon.com.br/dp/B0B2YJK7KF?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18106768639845086",
       "facebook_post_id": ""
     },
     {
