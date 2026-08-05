@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-05T15:22:37.070747+00:00",
+  "updated_at": "2026-08-05T15:22:52.918511+00:00",
   "products": [
     {
       "keyword": "MICROSOFT",
@@ -1562,6 +1562,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "NINTENDO",
+      "title": "Nintendo Switch 2 System",
+      "url": "https://www.amazon.com/dp/B0F3GWXLTS?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18011029886744558",
+      "facebook_post_id": "1524964062155492"
+    },
+    {
       "keyword": "FIVE",
       "title": "Five Star Spiral Notebook + Study App, 1 Subject, College Ruled Paper, 8.5\" x 11\", 100 Sheets, Blue (Color May Vary) (72565)",
       "url": "https://www.amazon.com/dp/B004K6LHF2?tag=atlasfindsus-20",
@@ -1991,14 +1999,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "NINTENDO",
-      "title": "Nintendo Switch 2 System",
-      "url": "https://www.amazon.com/dp/B0F3GWXLTS?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18011029886744558",
       "facebook_post_id": ""
     },
     {
