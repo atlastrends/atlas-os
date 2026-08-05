@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-05T15:09:02.644596+00:00",
+  "updated_at": "2026-08-05T15:13:22.459424+00:00",
   "products": [
+    {
+      "keyword": "VINAGRE",
+      "title": "Vinagre de Álcool Concentrado 6% Castelo 5l",
+      "url": "https://www.amazon.com.br/dp/B084BXFGJN?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18107145065119316",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "GILLETTE",
       "title": "Gillette Venus Suave Sensitive Aparelho de Depilação Descartável, 4 Un",
@@ -479,14 +487,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "VINAGRE",
-      "title": "Vinagre de Álcool Concentrado 6% Castelo 5l",
-      "url": "https://www.amazon.com.br/dp/B084BXFGJN?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18107145065119316",
       "facebook_post_id": ""
     },
     {
@@ -1965,6 +1965,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "FIVE",
+      "title": "Five Star Spiral Notebook + Study App, 1 Subject, College Ruled Paper, 8.5\" x 11\", 100 Sheets, Blue (Color May Vary) (72565)",
+      "url": "https://www.amazon.com/dp/B004K6LHF2?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
