@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-05T21:41:02.250262+00:00",
+  "updated_at": "2026-08-05T21:41:14.735410+00:00",
   "products": [
     {
       "keyword": "FONES",
@@ -1618,6 +1618,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "PURE",
+      "title": "Pure Protein Chocolate Peanut Butter Protein Bars, 20g Protein, 12 Ct | 3g Sugar, 190 Calories, Low Sugar* High Protein Snack",
+      "url": "https://www.amazon.com/dp/B00GJ82VK4?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18128897077645460",
+      "facebook_post_id": "810939072107803"
+    },
+    {
       "keyword": "LAVAZZA",
       "title": "Lavazza Super Crema Whole Bean Coffee, Medium Espresso Roast, Arabica and Robusta Blend, 2.2 lb Bag, Package May Vary (Pack o",
       "url": "https://www.amazon.com/dp/B000SDKDM4?tag=atlasfindsus-20",
@@ -2127,14 +2135,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PURE",
-      "title": "Pure Protein Chocolate Peanut Butter Protein Bars, 20g Protein, 12 Ct | 3g Sugar, 190 Calories, Low Sugar* High Protein Snack",
-      "url": "https://www.amazon.com/dp/B00GJ82VK4?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18128897077645460",
       "facebook_post_id": ""
     },
     {
