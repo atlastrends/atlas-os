@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-05T01:26:46.359520+00:00",
+  "updated_at": "2026-08-05T01:27:04.615207+00:00",
   "products": [
+    {
+      "keyword": "DETERGENTE",
+      "title": "Ypê Detergente Clear 5L | Detergente Líquido",
+      "url": "https://www.amazon.com.br/dp/B076BJMK4N?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18464273080113541",
+      "facebook_post_id": "1047848324313801"
+    },
     {
       "keyword": "HOLLYLAND",
       "title": "Hollyland Lark M2 Microfone de Lapela sem Fio(2TX+3RX), Transmissão Sem Fio de 1000ft, Cancelamento de Ruído, 40 H Tempo de T",
@@ -391,14 +399,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "DETERGENTE",
-      "title": "Ypê Detergente Clear 5L | Detergente Líquido",
-      "url": "https://www.amazon.com.br/dp/B076BJMK4N?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18464273080113541",
       "facebook_post_id": ""
     },
     {
