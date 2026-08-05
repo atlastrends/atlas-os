@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-05T04:27:11.909308+00:00",
+  "updated_at": "2026-08-05T04:27:27.034559+00:00",
   "products": [
+    {
+      "keyword": "CADEIRA",
+      "title": "Mor - Cadeira Alta Alumínio Anis",
+      "url": "https://www.amazon.com.br/dp/B0779KWRHK?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17907566613463898",
+      "facebook_post_id": "1369566562035065"
+    },
     {
       "keyword": "SUGGAR",
       "title": "SUGGAR DEPURADOR DE AR SLIM 60CM 3 VEL. PRATA 110V DPS161PR",
@@ -423,14 +431,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CADEIRA",
-      "title": "Mor - Cadeira Alta Alumínio Anis",
-      "url": "https://www.amazon.com.br/dp/B0779KWRHK?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17907566613463898",
       "facebook_post_id": ""
     },
     {
