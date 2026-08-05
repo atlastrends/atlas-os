@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-05T15:20:51.775944+00:00",
+  "updated_at": "2026-08-05T15:21:32.216247+00:00",
   "products": [
+    {
+      "keyword": "MICROSOFT",
+      "title": "Microsoft OFFICE 365 PERSONAL, QQ2-01368",
+      "url": "https://www.amazon.com.br/dp/B0B4T5245K?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18111813340782611",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "PIPICAT",
       "title": "Pipicat Granulado Sanitario Classic 4 kg",
@@ -495,14 +503,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "MICROSOFT",
-      "title": "Microsoft OFFICE 365 PERSONAL, QQ2-01368",
-      "url": "https://www.amazon.com.br/dp/B0B4T5245K?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18111813340782611",
       "facebook_post_id": ""
     },
     {
@@ -1989,6 +1989,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "NINTENDO",
+      "title": "Nintendo Switch 2 System",
+      "url": "https://www.amazon.com/dp/B0F3GWXLTS?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
