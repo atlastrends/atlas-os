@@ -518,7 +518,7 @@ def stop_auto_affiliate() -> dict:
     return auto_affiliate_status()
 
 
-def run_collect_metrics():
+def run_collect_metrics(force_meta: bool = False):
     job = "collect_metrics"
     if is_running(job):
         return
@@ -531,7 +531,7 @@ def run_collect_metrics():
 
             db = SessionLocal()
             try:
-                summary = MetricsService(db).collect_all()
+                summary = MetricsService(db).collect_all(force_meta=force_meta)
             finally:
                 db.close()
 

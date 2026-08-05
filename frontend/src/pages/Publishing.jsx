@@ -12,8 +12,7 @@ export default function Publishing() {
   const [toast, setToast] = useState(null);
   const [tab, setTab] = useState("all"); // "all" | "resend"
   const [busyId, setBusyId] = useState(null);
-  const [ttAccounts, setTtAccounts] = useState([]);
-  const [ttStatus, setTtStatus] = useState(null);
+  const [clearing, setClearing] = useState(false);
 
   const load = async () => {
     try {
@@ -26,48 +25,8 @@ export default function Publishing() {
     }
   };
 
-  const loadTikTok = async () => {
-    try {
-      const [accRes, st] = await Promise.all([
-        Api.tiktokAccounts(),
-        Api.tiktokStatus(),
-      ]);
-      setTtAccounts(accRes?.accounts || []);
-      setTtStatus(st || null);
-    } catch {
-      /* silencioso: o painel funciona mesmo sem contas conectadas */
-    }
-  };
-
-  function connectTikTok(market) {
-    window.open(Api.tiktokConnectUrl(market), "_blank", "noopener,noreferrer");
-    setToast({
-      type: "success",
-      msg: "Abri o login do TikTok em outra aba. Após autorizar, clique em ↻ para atualizar a lista.",
-    });
-  }
-
-  async function disconnectTikTok(acc) {
-    if (
-      !window.confirm(
-        `Desconectar a conta ${acc.display_name}? Os vídeos desse mercado deixam de publicar automaticamente no TikTok até reconectar.`
-      )
-    ) {
-      return;
-    }
-    try {
-      await Api.tiktokDisconnect(acc.id);
-      setToast({ type: "success", msg: "Conta desconectada." });
-      await loadTikTok();
-    } catch (e) {
-      const detail = e?.response?.data?.detail || e?.message || String(e);
-      setToast({ type: "error", msg: "Falha ao desconectar: " + detail });
-    }
-  }
-
   useEffect(() => {
     load();
-    loadTikTok();
     const t = setInterval(load, 15000);
     return () => clearInterval(t);
   }, []);
@@ -109,6 +68,32 @@ export default function Publishing() {
     }
   }
 
+  async function handleClearAll() {
+    if (
+      !window.confirm(
+        "Zerar TODO o histórico de envios? Apaga TODOS os registros desta lista e tira os vídeos travados da fila de reenvio. Não apaga os vídeos, e os que já foram publicados NÃO são reenviados. Não dá para desfazer."
+      )
+    ) {
+      return;
+    }
+    setClearing(true);
+    try {
+      const res = await Api.clearAllPublications();
+      setToast({
+        type: "success",
+        msg: res?.deleted
+          ? `${res.deleted} registro(s) apagado(s). Lista zerada.`
+          : "A lista já estava vazia.",
+      });
+      await load();
+    } catch (e) {
+      const detail = e?.response?.data?.detail || e?.message || String(e);
+      setToast({ type: "error", msg: "Falha ao limpar: " + detail });
+    } finally {
+      setClearing(false);
+    }
+  }
+
   return (
     <div>
       <div className="page-head">
@@ -146,92 +131,6 @@ export default function Publishing() {
         ))}
       </div>
 
-      <div
-        className="section-title"
-        style={{ display: "flex", alignItems: "center", gap: 10 }}
-      >
-        <span>Contas do TikTok</span>
-        <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
-          <button className="btn btn-sm" onClick={() => connectTikTok("BR")}>
-            + Conectar conta (Brasil)
-          </button>
-          <button className="btn btn-sm" onClick={() => connectTikTok("US")}>
-            + Conectar conta (EUA)
-          </button>
-          <button
-            className="btn ghost btn-sm"
-            onClick={loadTikTok}
-            title="Atualizar lista de contas"
-          >
-            ↻
-          </button>
-        </div>
-      </div>
-      <div className="card" style={{ padding: 16 }}>
-        {ttStatus && !ttStatus.has_client ? (
-          <div className="foot" style={{ color: "var(--amber)", marginBottom: 10 }}>
-            Falta configurar TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET no .env.
-          </div>
-        ) : ttStatus && !ttStatus.is_public_https ? (
-          <div className="foot" style={{ color: "var(--amber)", marginBottom: 10 }}>
-            Falta o endereço de retorno HTTPS (ATLAS_TIKTOK_REDIRECT_URI) no .env.
-          </div>
-        ) : null}
-        {ttAccounts.length === 0 ? (
-          <div style={{ color: "var(--text-faint)" }}>
-            Nenhuma conta conectada. Clique em “Conectar conta” para autorizar uma
-            conta do TikTok — cada criador conecta a própria conta.
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {ttAccounts.map((a) => (
-              <div
-                key={a.id}
-                style={{ display: "flex", alignItems: "center", gap: 12 }}
-              >
-                {a.avatar_url ? (
-                  <img
-                    src={a.avatar_url}
-                    alt=""
-                    width={40}
-                    height={40}
-                    style={{ borderRadius: "50%", objectFit: "cover" }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                      background: "var(--panel-2, #1f2937)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <PlatformLogo platform="tiktok" size={20} />
-                  </div>
-                )}
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600 }}>{a.display_name}</div>
-                  <div className="foot">
-                    {a.market ? `Mercado ${a.market}` : "sem mercado"} ·{" "}
-                    {a.connected ? "conectada" : "sem token"}
-                  </div>
-                </div>
-                <button
-                  className="btn ghost btn-sm"
-                  style={{ color: "#fca5a5" }}
-                  onClick={() => disconnectTikTok(a)}
-                >
-                  Desconectar
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       <div className="section-title" style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span>Envios</span>
         <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
@@ -246,6 +145,15 @@ export default function Publishing() {
             onClick={() => setTab("resend")}
           >
             ⏳ Aguardando reenvio {resendItems.length > 0 ? `(${resendItems.length})` : ""}
+          </button>
+          <button
+            className="btn ghost btn-sm"
+            style={{ color: "#fca5a5" }}
+            disabled={clearing || (pubs || []).length === 0}
+            onClick={handleClearAll}
+            title="Zera TODOS os registros de envio desta lista (não apaga os vídeos)."
+          >
+            {clearing ? "Limpando…" : "🧹 Limpar tudo"}
           </button>
         </div>
       </div>

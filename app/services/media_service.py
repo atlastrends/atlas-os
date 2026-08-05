@@ -1702,11 +1702,12 @@ class MediaService:
                     src_path = downloaded
 
             # ---- Validacao: IMAGENS + PALAVRAS batendo com a narracao ----
-            # Se a IA de visao julgar, respeitamos o veredito. Se a IA estiver
-            # INDISPONIVEL (ex.: cota do Gemini esgotada / 429), NAO jogamos fora
-            # um trailer oficial: como o candidato veio de busca pelo ASSUNTO
-            # EXATO, e o MAIS VISTO e com titulo casando (match >= piso), confiamos
-            # nesse sinal forte. Quando a cota voltar, a IA volta a julgar sozinha.
+            # Regra do usuario: so cria o video se tiver 100% de certeza de que o
+            # material MOSTRA o assunto/pessoa. Se a IA de visao JULGAR, respeitamos
+            # o veredito. Se a IA estiver INDISPONIVEL (ex.: cota do Gemini / 429),
+            # NAO da para confirmar as IMAGENS pelo titulo (o titulo pode citar a
+            # pessoa certa e o video mostrar OUTRA pessoa) -> descartamos por
+            # seguranca (fail-closed). Quando a cota voltar, a IA volta a julgar.
             approved = True
             if trend_relevance_service is not None:
                 try:
@@ -1730,38 +1731,43 @@ class MediaService:
                                 f"{detail.get('confidence', 0)}%): {detail.get('reason', '') or 'fora do tema'}"
                             )
                     else:
-                        # IA indisponivel: confia no sinal assunto-exato + mais
-                        # visto + titulo. Mas se o assunto pede material especifico
-                        # (ex.: "trailer"), so aceita se o TITULO for fiel a esse
-                        # material — assim nao entra clipe generico no lugar do trailer.
-                        strong = float(candidate.get("score", 0.0)) >= self.min_asset_match_score
-                        title_norm = self._normalize_text(title)
-                        faithful = (not required_terms) or any(
-                            self._normalize_text(t) in title_norm for t in required_terms
-                        )
-                        if strong and faithful and self._env_bool("ATLAS_YOUTUBE_TRUST_WHEN_AI_DOWN", True):
-                            approved = True
-                            print(
-                                f"⚠️ [MEDIA ENGINE] IA de visão indisponível "
-                                f"({detail.get('reason', '')}). Aceitando '{title}' pelo sinal "
-                                f"forte: assunto EXATO + {views:,} views + título casando "
-                                f"(match {candidate.get('score', 0.0):.2f})."
+                        # IA de visao INDISPONIVEL (sem cota/erro/sem frames): NAO
+                        # da para CONFIRMAR pelas imagens que o clipe mostra a pessoa/
+                        # assunto certo. O titulo casar NAO garante o video (foi o caso
+                        # do "Thiago Almada" que trouxe outro homem de camisa do
+                        # Flamengo). Por exigencia do usuario (100% de certeza),
+                        # descartamos. Para voltar a confiar no titulo quando a IA cai,
+                        # defina ATLAS_YOUTUBE_TRUST_WHEN_AI_DOWN=true.
+                        if self._env_bool("ATLAS_YOUTUBE_TRUST_WHEN_AI_DOWN", False):
+                            strong = float(candidate.get("score", 0.0)) >= self.min_asset_match_score
+                            title_norm = self._normalize_text(title)
+                            faithful = (not required_terms) or any(
+                                self._normalize_text(t) in title_norm for t in required_terms
                             )
-                        elif not faithful:
-                            approved = False
-                            print(
-                                f"🚫 [MEDIA ENGINE] '{title}' não é o material pedido "
-                                f"('{'/'.join(required_terms)}'); descartado para manter fidelidade."
-                            )
+                            approved = bool(strong and faithful)
+                            if approved:
+                                print(
+                                    f"⚠️ [MEDIA ENGINE] IA de visão indisponível "
+                                    f"({detail.get('reason', '')}). ATLAS_YOUTUBE_TRUST_WHEN_AI_DOWN "
+                                    f"ligado: aceitando '{title}' pelo título (assunto EXATO + "
+                                    f"{views:,} views, match {candidate.get('score', 0.0):.2f})."
+                                )
+                            else:
+                                print(
+                                    f"🚫 [MEDIA ENGINE] IA indisponível e título não confiável "
+                                    f"(match {candidate.get('score', 0.0):.2f}); descartado."
+                                )
                         else:
                             approved = False
                             print(
-                                f"🚫 [MEDIA ENGINE] IA indisponível e sinal fraco "
-                                f"(match {candidate.get('score', 0.0):.2f}); descartado."
+                                f"🚫 [MEDIA ENGINE] IA de visão indisponível "
+                                f"({detail.get('reason', '') or 'sem cota/erro'}). Não dá para "
+                                f"confirmar pelas imagens que '{title}' mostra o assunto; "
+                                f"descartado (100% de certeza exigido)."
                             )
                 except Exception as ge:
-                    print(f"⚠️ [MEDIA ENGINE] Validação falhou ({ge}); mantendo por segurança do fluxo.")
-                    approved = True
+                    print(f"⚠️ [MEDIA ENGINE] Validação de relevância falhou ({ge}); descartando por segurança (não dá para confirmar o assunto).")
+                    approved = False
 
             if approved:
                 validated_paths.append(src_path)
@@ -2164,7 +2170,9 @@ class MediaService:
         market = "BR" if str(language or "").lower().startswith("pt") else "US"
 
         try:
-            reference_id, voice_label = _fish_next_voice(market)
+            # Contador proprio ("trend") p/ alternar F/M sem contaminar o dos
+            # afiliados (que consome 2 vozes por produto e travava a paridade).
+            reference_id, voice_label = _fish_next_voice(market, "trend")
         except Exception:
             return None, 0.0
 
@@ -2202,9 +2210,35 @@ class MediaService:
         )
         return output_path, duration
 
+    def _normalize_tts_text(self, text: str) -> str:
+        """Deixa o texto pronto para o TTS narrar de forma CONTINUA (sem pausas).
+
+        O roteiro pode vir com quebras de linha/paragrafo, espacos duplos, tags
+        HTML ou caracteres invisiveis. O Fish (e o Edge) transformam quebras de
+        linha em PAUSAS, deixando a fala picotada. Aqui colapsamos tudo em um
+        texto de linha unica, igual ao pipeline de afiliados (create_voice)."""
+        import html
+
+        raw = html.unescape(str(text or ""))
+        raw = raw.replace("\u200b", " ")
+        raw = re.sub(r"<[^>]+>", " ", raw)
+        # Reticencias viram pausa dramatica no TTS -> ponto simples.
+        raw = raw.replace("…", ".")
+        raw = re.sub(r"\.{2,}", ".", raw)
+        # Colapsa QUALQUER espaco em branco (inclui \n e \t) num unico espaco.
+        raw = re.sub(r"\s+", " ", raw)
+        # Remove espaco antes de pontuacao.
+        raw = re.sub(r"\s+([,.!?;:])", r"\1", raw)
+        return raw.strip()
+
     def _synthesize_voice(self, script: str, voice_name: str, temp_dir: str, language: str = ""):
         voice_name = voice_name or self.default_voice
         output_path = os.path.join(temp_dir, "voice.mp3")
+
+        # Narracao FLUIDA: colapsa quebras de linha/espacos e limpa o texto antes
+        # do TTS. Sem isso, o Fish (e o Edge) transformam as quebras de linha do
+        # roteiro em PAUSAS, deixando a fala "picotada" em vez de continua.
+        script = self._normalize_tts_text(script)
 
         # Fish Audio primeiro (voz natural escolhida pelo usuario); Edge = fallback.
         fish_path, fish_duration = self._try_fish_voice(script, language, output_path)

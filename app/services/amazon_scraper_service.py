@@ -96,30 +96,39 @@ def _page_has_block_hint(page) -> Optional[str]:
     return None
 
 
-def _login(page, market: str, email: str, password: str) -> None:
-    """Preenche o formulario de login padrao da Amazon (mesma tela usada
-    em amazon.com/amazon.com.br). Reaproveita sessao salva quando possivel;
-    isso so roda quando a sessao salva expirou ou nao existe."""
-    urls = _MARKET_URLS[market]
-    page.goto(urls["login"], wait_until="domcontentloaded", timeout=45000)
-
-    # Se ja tem sessao valida (cookie reaproveitado), o site pode ja abrir
-    # logado direto no painel - nesse caso nao ha campo de email.
-    email_field = page.locator("#ap_email, input[name='email']").first
+def _on_signin_page(page) -> bool:
+    """True se a pagina atual e uma tela de login/re-autenticacao da Amazon
+    (URL /ap/signin|/ap/cvf|/ap/mfa ou campo de senha visivel)."""
     try:
-        email_field.wait_for(state="visible", timeout=8000)
+        url = page.url or ""
     except Exception:
-        return  # provavelmente ja esta logado (sessao valida)
+        url = ""
+    if "/ap/signin" in url or "/ap/cvf" in url or "/ap/mfa" in url:
+        return True
+    try:
+        pw = page.locator("#ap_password, input[name='password']").first
+        return pw.count() > 0 and pw.is_visible()
+    except Exception:
+        return False
 
+
+def _submit_login_form(page, market: str, email: str, password: str) -> None:
+    """Preenche a tela de login da Amazon cobrindo os DOIS formatos:
+      - completo: campo de email -> "Continuar" -> senha;
+      - re-autenticacao (usuario lembrado): so a senha (a Amazon exige login
+        RECENTE, max_auth_age=3600, para abrir os Relatorios de afiliado).
+    Marca "Continuar conectado" quando existir, para prolongar a sessao."""
     block = _page_has_block_hint(page)
     if block:
         raise AmazonLoginBlocked(f"Amazon pediu verificacao extra na tela de login ({block}).")
 
-    email_field.fill(email)
-    continue_btn = page.locator("#continue, input#continue").first
-    if continue_btn.count() > 0:
-        continue_btn.click()
-        page.wait_for_timeout(1200)
+    email_field = page.locator("#ap_email, input[name='email']").first
+    if email_field.count() > 0 and email_field.is_visible():
+        email_field.fill(email)
+        continue_btn = page.locator("#continue, input#continue").first
+        if continue_btn.count() > 0:
+            continue_btn.click()
+            page.wait_for_timeout(1200)
 
     password_field = page.locator("#ap_password, input[name='password']").first
     password_field.wait_for(state="visible", timeout=15000)
@@ -129,7 +138,15 @@ def _login(page, market: str, email: str, password: str) -> None:
         raise AmazonLoginBlocked(f"Amazon pediu verificacao extra apos o email ({block}).")
 
     password_field.fill(password)
-    submit_btn = page.locator("#signInSubmit, input#signInSubmit").first
+    # "Continuar conectado"/"Keep me signed in": reduz re-logins futuros.
+    keep = page.locator("input[name='rememberMe']").first
+    try:
+        if keep.count() > 0 and not keep.is_checked():
+            keep.check()
+    except Exception:
+        pass
+
+    submit_btn = page.locator("#signInSubmit, input#signInSubmit, #auth-signin-button").first
     submit_btn.click()
 
     page.wait_for_load_state("domcontentloaded", timeout=30000)
@@ -139,15 +156,37 @@ def _login(page, market: str, email: str, password: str) -> None:
     if block:
         raise AmazonLoginBlocked(f"Amazon pediu verificacao extra apos a senha ({block}).")
 
-    # Confirma que saiu da tela de login (nao ha mais campo de senha).
-    if page.locator("#ap_password").count() > 0:
+    # Confirma que a senha foi aceita (nao ha mais campo de senha visivel).
+    pw_after = page.locator("#ap_password").first
+    if pw_after.count() > 0 and pw_after.is_visible():
         raise AmazonLoginBlocked(
             "Login nao foi aceito. Confira o email/senha em ATLAS_AMAZON_"
             f"{market}_EMAIL / _PASSWORD no .env."
         )
 
 
-def _download_earnings_report(page, market: str) -> tuple[str, bytes]:
+def _login(page, market: str, email: str, password: str) -> None:
+    """Reaproveita a sessao salva quando possivel; so preenche o formulario
+    quando a Amazon realmente mostra login/senha. Cobre 3 estados: (a) ja
+    logado (sem formulario) -> retorna; (b) login completo (email+senha);
+    (c) re-autenticacao so-senha (usuario lembrado)."""
+    urls = _MARKET_URLS[market]
+    page.goto(urls["login"], wait_until="domcontentloaded", timeout=45000)
+
+    # Espera aparecer QUALQUER campo do formulario (email OU senha). Se nada
+    # aparecer, a sessao salva ja abriu logada -> nao ha o que fazer.
+    form_field = page.locator(
+        "#ap_email, input[name='email'], #ap_password, input[name='password']"
+    ).first
+    try:
+        form_field.wait_for(state="visible", timeout=8000)
+    except Exception:
+        return  # ja esta logado (sessao valida)
+
+    _submit_login_form(page, market, email, password)
+
+
+def _download_earnings_report(page, market: str, email: str, password: str) -> tuple[str, bytes]:
     """Abre a pagina de 'Relatorios', pede um relatorio de ganhos (CSV, por
     produto) do periodo padrao (ultimos 30 dias) e baixa o arquivo assim
     que a Amazon terminar de gera-lo.
@@ -168,6 +207,23 @@ def _download_earnings_report(page, market: str) -> tuple[str, bytes]:
     urls = _MARKET_URLS[market]
     page.goto(urls["reports"], wait_until="domcontentloaded", timeout=45000)
     page.wait_for_timeout(2000)
+
+    # A Amazon Associates exige autenticacao RECENTE (max_auth_age=3600) para
+    # abrir os Relatorios: mesmo com a sessao salva "logada", ela redireciona
+    # para /ap/signin pedindo a SENHA de novo (tela do usuario lembrado). Sem
+    # tratar isso, o robo seguia sem logar e nao achava o botao de download -
+    # era a causa do "nao conseguiu conectar no US". Re-autentica e volta.
+    if _on_signin_page(page):
+        _submit_login_form(page, market, email, password)
+        page.goto(urls["reports"], wait_until="domcontentloaded", timeout=45000)
+        page.wait_for_timeout(2000)
+    if _on_signin_page(page):
+        raise AmazonLoginBlocked(
+            "A Amazon continuou pedindo login ao abrir os Relatorios do "
+            f"mercado {market} (a conta pode exigir verificacao em 2 etapas). "
+            "Faca a configuracao unica: python -m app.services."
+            f"amazon_scraper_service {market}."
+        )
 
     block = _page_has_block_hint(page)
     if block:
@@ -289,7 +345,7 @@ def fetch_report_for_market(db: Session, market: str) -> dict:
             page = context.new_page()
             try:
                 _login(page, market, email, password)
-                filename, data = _download_earnings_report(page, market)
+                filename, data = _download_earnings_report(page, market, email, password)
                 # Sessao deu certo: salva os cookies para o proximo clique
                 # em "Atualizar" nao precisar logar de novo.
                 context.storage_state(path=str(session_file))

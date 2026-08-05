@@ -61,28 +61,55 @@ export default function Analytics() {
 
   const collect = async () => {
     setCollecting(true);
-    setMsg("Coleta iniciada…");
+    setMsg("Coleta iniciada… os números vão atualizando aos poucos.");
     try {
       await Api.collectMetrics();
-      // A coleta roda em segundo plano no servidor. Ficamos checando o
-      // estado do job até ele terminar, para manter o botão travado.
+      // A coleta roda em segundo plano no servidor e pode levar alguns
+      // minutos, porque coleta TODAS as plataformas (Instagram, Facebook,
+      // YouTube, TikTok). Ficamos checando o estado do job e ATUALIZANDO os
+      // números na tela a cada ~10s, para o usuário ver subindo ao vivo, até
+      // o job terminar ou até o tempo-limite generoso abaixo.
+      const started = Date.now();
+      const MAX_MS = 8 * 60 * 1000; // espera ate 8 min pela coleta completa
       let state = null;
-      for (let i = 0; i < 120; i++) {
+      let lastReload = 0;
+      while (Date.now() - started < MAX_MS) {
         await new Promise((res) => setTimeout(res, 1500));
         const jobs = await Api.jobs();
         state = jobs?.collect_metrics;
+        // Atualiza os números na tela a cada ~10s enquanto a coleta anda.
+        if (Date.now() - lastReload > 10000) {
+          lastReload = Date.now();
+          load().catch(() => {});
+        }
         if (!state || state.status !== "running") break;
+        const secs = Math.round((Date.now() - started) / 1000);
+        setMsg(
+          `Coletando métricas… (${secs}s) — os números vão atualizando aos poucos.`
+        );
       }
       if (state?.status === "error") {
         setMsg("Falha ao coletar métricas: " + (state.error || ""));
       } else if (state?.result) {
-        setMsg(
-          `Coleta concluída: ${state.result.video_snapshots ?? 0} vídeos, ${
-            state.result.platform_snapshots ?? 0
-          } contas.`
+        const r = state.result;
+        const errs = Array.isArray(r.errors) ? r.errors : [];
+        const cooldown = errs.some(
+          (e) =>
+            typeof e === "string" &&
+            (e.includes("#4") || e.toLowerCase().includes("cooldown"))
         );
+        let m = `Coleta concluída: ${r.video_snapshots ?? 0} vídeos, ${
+          r.platform_snapshots ?? 0
+        } contas.`;
+        if (cooldown) {
+          m +=
+            " Instagram/Facebook entraram em pausa temporária da Meta — o restante completa sozinho depois.";
+        }
+        setMsg(m);
       } else {
-        setMsg("Coleta concluída.");
+        setMsg(
+          "Ainda coletando em segundo plano — os números continuam atualizando. Clique em 'Atualizar' em alguns minutos para ver o total final."
+        );
       }
       await load();
     } catch (e) {

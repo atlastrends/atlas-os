@@ -29,6 +29,9 @@ from app.services.product_keyword import product_keyword  # noqa: E402
 DOCS_DIR = PROJECT_ROOT / "docs"  # noqa: E402
 OUTPUT_FILE = DOCS_DIR / "index.html"
 PRODUCTS_JSON = DOCS_DIR / "produtos.json"  # lista que o robo de direct le
+# Uniao PERSISTENTE de todos os produtos ja vistos (backup versionado no git).
+# Garante que a bio NUNCA perca produtos, mesmo se o banco for zerado.
+HISTORICO_FILE = DOCS_DIR / "_bio_historico.json"
 
 # Marca de cada mercado (ajuste os nomes/@ como preferir)
 BRANDS = {
@@ -133,17 +136,235 @@ CATEGORY_RULES = [
 ]
 FALLBACK_CAT = ("outros", "📦", "Outros", "Others")
 
+# Categorias extras que vem da categoria REAL do produto (guardada no payload
+# do video_asset). Emoji + nome PT/EN para exibir na bio.
+EXTRA_CAT_DISPLAY = {
+    "casa": ("🏠", "Casa", "Home"),
+    "brinquedos": ("🧸", "Brinquedos", "Toys"),
+    "esportes": ("⚽", "Esportes", "Sports"),
+    "pet": ("🐾", "Pet", "Pet"),
+    "saude": ("🧴", "Saúde", "Health"),
+    "escritorio": ("✏️", "Escritório", "Office"),
+    "automotivo": ("🚗", "Automotivo", "Automotive"),
+    "moda": ("👕", "Moda", "Fashion"),
+    "livros": ("📚", "Livros", "Books"),
+    "mercado": ("🛒", "Mercado", "Grocery"),
+    "instrumentos": ("🎸", "Instrumentos", "Instruments"),
+    "eletrodomesticos": ("🔌", "Eletrodomésticos", "Appliances"),
+}
+
+# Categoria REAL do produto (slug guardado no payload) -> chave da bio.
+# Slugs vindos de app/automation/real_amazon_pipeline.py (CATEGORY_LABELS).
+SLUG_TO_KEY = {
+    "electronics": "eletronicos",
+    "kitchen": "cozinha",
+    "home": "casa",
+    "beauty": "beleza",
+    "toys": "brinquedos",
+    "videogames": "games",
+    "sports": "esportes",
+    "pet-supplies": "pet",
+    "hpc": "saude",
+    "office-products": "escritorio",
+    "automotive": "automotivo",
+    "fashion": "moda",
+    "books": "livros",
+    "grocery": "mercado",
+    "musical-instruments": "instrumentos",
+    "appliances": "eletrodomesticos",
+}
+
+# Fones/caixas de som as vezes chegam como "musical-instruments" na Amazon.
+_AUDIO_HINTS = (
+    "fone", "headphone", "earbud", "airpod", "headset",
+    "caixa de som", "soundbar", "jbl",
+)
+
+# Adivinhacao por TITULO cobrindo TODAS as categorias (ordem = prioridade).
+# Usada quando o produto nao tem categoria real no payload (ex.: recuperados
+# do historico). Primeira regra que casar vence, entao as mais especificas
+# vem antes das mais genericas.
+TITLE_GUESS_RULES = [
+    ("games", ["playstation", "dualsense", "ps5", "ps4", "xbox", "nintendo",
+               "gift card", "joystick", "gamepad", "console", "splatoon"]),
+    ("audio", ["fone", "headphone", "earbud", "airpod", "headset",
+               "caixa de som", "soundbar", "jbl", "speaker"]),
+    ("wearables", ["smartwatch", "galaxy fit", "apple watch", "smart band",
+                   "mi band", "relógio", "relogio", "pulseira intelig"]),
+    ("smart", ["alexa", " echo ", "fire tv", "chromecast", "google home",
+               "casa inteligente", "lâmpada intelig", "lampada intelig",
+               "smart lâmpada", "smart lampada", "smart bulb", "smart color",
+               "tomada intelig", "wi-fi positivo"]),
+    ("pet", ["coleira", "antipulga", "antiparasit", "carrapato", "bravecto",
+             "scalibor", "ração", "racao", "petisco", " gato", "cachorro",
+             "cães", "caes", " cão", "aquário", "aquario", "petshop",
+             "dog food", "dog treat", "cat treat", " litter", "dog wrap",
+             "poop bag", "pet wipes", "dentastix", "milk-bone", "pedigree",
+             "blue buffalo", "greenies", "temptations", "inaba churu",
+             "earth rated", "pur luv", "fresh step", "all-absorb",
+             "pill pockets", "dog biscuit", "clumping", "for dogs",
+             "for cats", "cat food", "dog poop", "poop bags", " leash"]),
+    ("automotivo", ["capacete", " moto ", "motocicl", "automotiv", "pneu",
+                    "vonixx", "v-mol", "cera automotiva", "para-brisa",
+                    "limpa vidro", "óleo motor", "aditivo radiador",
+                    "motor oil", "valvoline", "0w-20", "5w-30", "0w-30",
+                    "5w-20", "synthetic blend", "windshield", "sun shade",
+                    "car mount", "magsafe car", "tesla model"]),
+    ("eletrodomesticos", ["ferro de passar", "vaporizador", "aspirador",
+                          "sanduicheira", "espremedor", "purificador",
+                          "panificadora", "master bread", "geladeira",
+                          "fogão", "fogao", "máquina de lavar",
+                          "maquina de lavar", "secadora", "ventilador",
+                          "climatizador", "torradeira", "enceradeira",
+                          "ice maker", "ice machine"]),
+    ("cozinha", ["fritadeira", "air fryer", "liquidificador", "cafeteira",
+                 "panela", "frigideira", " mixer", "batedeira", " forno",
+                 " grill", "cozinha", " faca", "knife", "termômetro",
+                 "termometro", "garrafa térmica", "garrafa termica",
+                 "coqueteleira", "pote hermétic", "potes hermétic", "tábua",
+                 "assadeira", "xícara", "xicara", "water bottle", "tumbler",
+                 "quencher", "freesip", "smoothsip", "insulated stainless",
+                 "kitchen scale", "food kitchen scale", "can opener",
+                 "kitchen shears", "kitchenaid", "hydrojug", "waffle weave",
+                 "dish cloth", "coffee tumbler"]),
+    ("escritorio", ["papel sulfite", "sulfite", "chamex", "chamequinho",
+                    " caneta", "canetinha", " lápis", " lapis", "apontador",
+                    "marca texto", "marcador", " estojo", "faber-castell",
+                    "pentel", "grafite", "giz de cera", "cd zip", "cd-r",
+                    "dvd-r", "fichário", "fichario", "papel a4",
+                    "mechanical pencil", "pencils", " pencil", " marker",
+                    "highlighter", "sharpie", " expo ", "calculator",
+                    "file folder", "laminating", "sheet protector",
+                    "printer paper", "copy paper", "copy printer",
+                    "ticonderoga", " bic ", "dry erase", "wood-cased"]),
+    ("saude", ["creatina", " whey", "ômega", "omega", "colágeno", "colageno",
+               "vitamina", "suplement", "glutamina", "bcaa", "maltodextrina",
+               "fio dental", "escova de dente", "escova dental", "enxaguante",
+               "cicaplast", "protetor solar", "álcool em gel", "alcool em gel",
+               "curativo", "band-aid", "multivitam", "probiótic", "probiotic",
+               "creatine", "electrolyte", "hydration", "benzoyl peroxide",
+               " acne", "pimple patch", "mighty patch", "panoxyl",
+               "beet root", "replenisher", "liquid i.v.", "monohydrate"]),
+    ("beleza", ["shampoo", "condicionador", "sabonete", "hidratante", " creme",
+                "cerave", "nivea", "neutrogena", "makeup", "maquiagem",
+                "skincare", "loção", "locao", "perfume", "íntimo", "intimo",
+                "barbear", "depila", "facial", "corporal", "cabelo",
+                "leave-in", "óleo reparador", "argan", "elseve", "l'oréal",
+                "loreal", "lola cosmetics", "sérum", " serum", "esmalte",
+                "batom", "rímel", "rimel", "base líquida", "corretivo",
+                "body lotion", "body wash", " lotion", "cotton swab",
+                "bellacotton", "clean towels", "face towel", "booster",
+                "tightening"]),
+    ("mercado", ["café", " cafe ", "leite", "ketchup", "danone", " ninho",
+                 "nescafé", "nescafe", "dolce gusto", "yopro", "chocolate",
+                 "achocolatado", "biscoito", "bolacha", "alimento",
+                 "fórmula infantil", "formula infantil", "aptanutri",
+                 "arabica", "grãos", "graos", "açúcar", "acucar", " arroz",
+                 "feijão", "feijao", "azeite", " molho", "tempero", "cereal",
+                 "bebida láctea", "bebida lactea", "heinz", "orfeu",
+                 "sparkling water", "sparkling ice", "energy drink",
+                 "monster energy", "nespresso", "davinci gourmet",
+                 "blueberries", "sparkling"]),
+    ("casa", ["amaciante", "desinfetante", "sabão", "sabao", "detergente",
+              "lava louças", "lava-louças", "lava louça", "desodorizador",
+              "papel higiênico", "higiênico", "higienico", "lysoform",
+              " omo ", "downy", " cif ", "finish", "limpeza", "guardanapo",
+              "pano reutiliz", "pano de", "vassoura", " rodo", "organizador",
+              "toalha de papel", "alvejante", "água sanitária",
+              "agua sanitaria", "multiuso", "lustra móveis", "hand soap",
+              "mrs. meyer", "toilet paper", "paper plates", "paper towel",
+              "moving bags", "hangers", "clothes hanger", "sheets set",
+              "bed sheet", "bedding", "fitted sheet", "mattress protector",
+              "microfiber cleaning", "cleaning cloth", "odor defense",
+              "velvet non-slip", "insect trap", "ant killer", "bait station"]),
+    ("moda", ["meia", "meias", "chinelo", "havaianas", "camiseta", " camisa",
+              "calça", "calca jeans", "tênis", " tenis", "sapato", "sandália",
+              "sandalia", " bota", " roupa", "vestido", "bermuda", "cueca",
+              "sutiã", "sutia", "calcinha", "blusa", "jaqueta", "boné",
+              " bone ", "óculos de sol", "oculos de sol", "mochila", " bolsa",
+              "carteira", " cinto", "t-shirt", "crew t-shirt", "gildan",
+              "crocs", " clog", "linen shirt", " shirts", "nipple cover"]),
+    ("brinquedos", ["bicicleta de equilibrio", "massa para modelar",
+                    "massa de modelar", " das massa", " lego", "boneca",
+                    "boneco", "quebra-cabeça", "quebra cabeca", "brinquedo",
+                    "pelúcia", "pelucia", "jogo de tabuleiro", "uno original",
+                    "carrinho de brinquedo", "playmobil", " pista ", "slime",
+                    "baralho", "caiu perdeu"]),
+    ("esportes", [" bola ", "futebol", "basquete", "vôlei", "volei",
+                  "bicicleta", " bike", "patins", "skate", "corda de pular",
+                  "halter", "anilha", "kettlebell", "colchonete", "barraca",
+                  "camping", " pesca", "natação", "chuteira", "boxe",
+                  "dumbbell", "hand weights", "beach blanket", "beach mat",
+                  "dry bag", "waterproof backpack", "yoga mat"]),
+    ("instrumentos", ["violão", "violao", "guitarra", "teclado musical",
+                      " piano", "ukulele", "cavaco", "pandeiro", "flauta",
+                      "cajón", "cajon", "microfone", "guitar strings",
+                      "guitar stand", " guitar", "d'addario", "ernie ball",
+                      "slinky"]),
+    ("fitness", ["fitness", "yoga", "pilates", "faixa elástic",
+                 "faixa elastic", "elástic", "elastic", "massage", "massagem",
+                 "academia", "oura ring", "esteira", "abdominal"]),
+    ("livros", ["edição comemorativa", "edicao comemorativa", " livro",
+                " livros", "romance", "editora", "box livros", "a novel",
+                " novel ", "dungeon crawler", "hungry caterpillar",
+                "project hail mary"]),
+    ("eletronicos", [" tv", "monitor", "notebook", "tablet", "carregador",
+                     " cabo", " mouse", "teclado", " ssd", "pen drive",
+                     "câmera", "camera", "celular", "smartphone", "power bank",
+                     "pilha", "pilhas", "bateria", "cr2032", "duracell",
+                     "alcalina", "recarregáv", "recarregav", "impressora",
+                     "multifuncional", "cartucho", "toner", "adaptador",
+                     "hdmi", " usb", "roteador", "filtro de linha", "lanterna",
+                     "ink cartridge", "airtag", "aa batteries", "batteries",
+                     "microphone cable", " xlr", "blink plus", "hp 67"]),
+]
+
 CAT_DISPLAY = {r[0]: (r[1], r[2], r[3]) for r in CATEGORY_RULES}
+CAT_DISPLAY.update(EXTRA_CAT_DISPLAY)
 CAT_DISPLAY[FALLBACK_CAT[0]] = (FALLBACK_CAT[1], FALLBACK_CAT[2], FALLBACK_CAT[3])
-CAT_ORDER = [r[0] for r in CATEGORY_RULES] + [FALLBACK_CAT[0]]
+# Ordem de exibicao: regras por titulo, depois as categorias reais, "outros" no fim.
+CAT_ORDER = (
+    [r[0] for r in CATEGORY_RULES]
+    + list(EXTRA_CAT_DISPLAY.keys())
+    + [FALLBACK_CAT[0]]
+)
 
 
-def _category(title: str) -> str:
+def _category(title: str, slug: str | None = None) -> str:
+    """Categoria da bio. Prioriza a categoria REAL do produto (slug do
+    payload); so quando nao ha categoria real e que adivinha pelo titulo."""
+    slug = (slug or "").strip().lower()
+    if slug:
+        # Fones catalogados como "musical-instruments" vao para Audio.
+        if slug == "musical-instruments":
+            probe = f" {(title or '').lower()} "
+            if any(hint in probe for hint in _AUDIO_HINTS):
+                return "audio"
+        mapped = SLUG_TO_KEY.get(slug)
+        if mapped:
+            return mapped
+        if slug in CAT_DISPLAY and slug != FALLBACK_CAT[0]:
+            return slug
     text = f" {(title or '').lower()} "
-    for key, _emoji, _pt, _en, keywords in CATEGORY_RULES:
+    for key, keywords in TITLE_GUESS_RULES:
         if any(kw in text for kw in keywords):
             return key
     return FALLBACK_CAT[0]
+
+
+def _payload_category(payload: object) -> str:
+    """Slug da categoria REAL do produto, guardada no payload do video_asset."""
+    if not payload:
+        return ""
+    data = payload
+    if isinstance(data, (str, bytes)):
+        try:
+            data = json.loads(data)
+        except (ValueError, TypeError):
+            return ""
+    if isinstance(data, dict):
+        return str(data.get("category") or "").strip()
+    return ""
 
 
 def _asin_from_url(url: str) -> str | None:
@@ -199,34 +420,53 @@ def _save_img_cache(cache: dict[str, str]) -> None:
 
 
 def _fetch_amazon_image(product_url: str) -> str | None:
-    """Busca a imagem REAL do produto direto na pagina da Amazon (og:image).
+    """Baixa a imagem REAL (foto) do produto na pagina da Amazon.
 
-    O padrao P/{asin} da Amazon devolve um pixel vazio para muitos produtos
-    (fora de livros/midia), deixando o card sem imagem mesmo com HTTP 200.
-    Aqui abrimos a pagina do produto e pegamos a imagem verdadeira, garantindo
-    que sempre haja uma imagem valida.
+    Prioriza a foto da galeria (hiRes/old-hires/dynamic) para o card NUNCA usar
+    o poster de um video como imagem; og:image/large ficam so como reserva. O
+    padrao P/{asin} devolve pixel vazio para muitos produtos, por isso aqui
+    abrimos a pagina e pegamos a imagem verdadeira. Usa cabecalhos completos de
+    navegador (com gzip) para nao cair na pagina anti-robo da Amazon.
     """
+    import gzip
+    import io
     import urllib.request
 
     headers = {
         "User-Agent": _UA,
-        "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+        "Accept": (
+            "text/html,application/xhtml+xml,application/xml;q=0.9,"
+            "image/avif,image/webp,*/*;q=0.8"
+        ),
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Accept-Encoding": "gzip, deflate",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
     }
-    # A Amazon alterna entre layouts de pagina; tentamos 2 vezes para pegar
-    # um layout que contenha a imagem principal.
+    # Foto da galeria PRIMEIRO (evita poster de video); og/large por ultimo.
     regexes = (
-        _IMG_OG_RE,
         _IMG_HIRES_RE,
         _IMG_OLDHIRES_RE,
         _IMG_DYN_RE,
+        _IMG_OG_RE,
         _IMG_LARGE_RE,
     )
-    for _ in range(2):
+    for _ in range(3):
         try:
             req = urllib.request.Request(product_url, headers=headers)
-            with urllib.request.urlopen(req, timeout=20) as resp:
-                page = resp.read().decode("utf-8", "ignore")
+            with urllib.request.urlopen(req, timeout=25) as resp:
+                raw = resp.read()
+                if resp.headers.get("Content-Encoding") == "gzip":
+                    raw = gzip.GzipFile(fileobj=io.BytesIO(raw)).read()
+                page = raw.decode("utf-8", "ignore")
         except Exception:
+            continue
+        # Pagina de bloqueio (captcha) vem bem pequena; a real tem centenas de KB.
+        low = page.lower()
+        if len(page) < 60000 or "automated access" in low or "/errors/" in low:
             continue
         for regex in regexes:
             match = regex.search(page)
@@ -244,7 +484,7 @@ def fetch_products() -> dict[str, list[dict]]:
     """
     query = text(
         """
-        SELECT va.id, va.title, va.country_code, va.affiliate_url
+        SELECT va.id, va.title, va.country_code, va.affiliate_url, va.payload
         FROM video_assets va
         WHERE va.kind = 'AFFILIATE'
           AND va.affiliate_url IS NOT NULL
@@ -266,7 +506,7 @@ def fetch_products() -> dict[str, list[dict]]:
     seen: dict[str, set[str]] = {"BR": set(), "US": set()}
     img_cache = _load_img_cache()
     with SessionLocal() as db:
-        for asset_id, title, country, url in db.execute(query):
+        for asset_id, title, country, url, payload in db.execute(query):
             cc = (country or "").upper()
             if cc not in grouped:
                 continue
@@ -294,7 +534,7 @@ def fetch_products() -> dict[str, list[dict]]:
                     "asin": asin,
                     "image": imgs[0] if imgs else "",
                     "images": imgs,
-                    "cat": _category(title),
+                    "cat": _category(title, _payload_category(payload)),
                 }
             )
     _save_img_cache(img_cache)
@@ -323,6 +563,115 @@ def _media_ids_by_asset() -> dict[int, dict[str, str]]:
     return out
 
 
+def _load_historico() -> dict[str, dict]:
+    """Uniao PERSISTENTE de produtos ja vistos, por chave 'MERCADO:ASIN'."""
+    try:
+        data = json.loads(HISTORICO_FILE.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            return data
+    except Exception:
+        pass
+    return {}
+
+
+def _save_historico(hist: dict[str, dict]) -> None:
+    try:
+        HISTORICO_FILE.write_text(
+            json.dumps(hist, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+
+
+def _apply_historico(
+    grouped: dict[str, list[dict]],
+    media: dict[int, dict[str, str]],
+) -> tuple[dict[str, list[dict]], int]:
+    """Une os produtos ATUAIS do banco com o historico persistente.
+
+    1) Atualiza o historico com os produtos atuais (categoria REAL + IDs de post).
+    2) Adiciona de volta na bio os produtos que sumiram do banco (append-only),
+       para a bio NUNCA perder produto por reset/limpeza do banco.
+    Devolve (grouped, quantos foram recuperados do historico).
+    """
+    hist = _load_historico()
+    present: dict[str, set[str]] = {"BR": set(), "US": set()}
+
+    # 1) Atualiza o historico com o que esta publicado agora.
+    for market, products in grouped.items():
+        for p in products:
+            asin = p.get("asin") or ""
+            ck = asin or p["url"]
+            present.setdefault(market, set()).add(ck)
+            ids = media.get(int(p["asset_id"]), {}) if p.get("asset_id") else {}
+            entry = hist.get(f"{market}:{ck}", {})
+            entry.update(
+                {
+                    "market": market,
+                    "asin": asin,
+                    "title": p["title"],
+                    "url": p["url"],
+                    "cat": p.get("cat") or entry.get("cat") or FALLBACK_CAT[0],
+                }
+            )
+            # Nao apaga IDs de post ja conhecidos se agora vierem vazios.
+            entry["instagram_media_id"] = (
+                ids.get("instagram") or entry.get("instagram_media_id", "")
+            )
+            entry["facebook_post_id"] = (
+                ids.get("facebook") or entry.get("facebook_post_id", "")
+            )
+            hist[f"{market}:{ck}"] = entry
+    _save_historico(hist)
+
+    # 2) Recupera na bio os produtos que estao so no historico (sumiram do banco).
+    img_cache = _load_img_cache()
+    recovered = 0
+    for entry in hist.values():
+        market = entry.get("market", "")
+        if market not in grouped:
+            continue
+        url = (entry.get("url") or "").strip()
+        asin = entry.get("asin") or _asin_from_url(url)
+        ck = asin or url
+        if not ck or ck in present.get(market, set()):
+            continue
+        present[market].add(ck)
+        imgs = _image_urls(asin)
+        real = img_cache.get(ck)
+        if not real:
+            real = _fetch_amazon_image(url)
+            if real:
+                img_cache[ck] = real
+        if real:
+            imgs = [real] + [u for u in imgs if u != real]
+        title = (entry.get("title") or "").strip()
+        # Recuperados so tem titulo: se a categoria guardada for "outros"/vazia,
+        # tenta adivinhar de novo com as regras atuais (mais completas).
+        cat = entry.get("cat") or ""
+        if not cat or cat == FALLBACK_CAT[0]:
+            cat = _category(title)
+        entry["cat"] = cat
+        grouped[market].append(
+            {
+                "asset_id": None,
+                "title": title,
+                "url": url,
+                "asin": asin,
+                "image": imgs[0] if imgs else "",
+                "images": imgs,
+                "cat": cat,
+                "ig_media": entry.get("instagram_media_id", ""),
+                "fb_media": entry.get("facebook_post_id", ""),
+            }
+        )
+        recovered += 1
+    _save_img_cache(img_cache)
+    _save_historico(hist)
+    return grouped, recovered
+
+
 def build_products_index(grouped: dict[str, list[dict]]) -> list[dict]:
     """Lista simples que o robo de direct le (palavra -> link do produto)."""
     media = _media_ids_by_asset()
@@ -330,14 +679,16 @@ def build_products_index(grouped: dict[str, list[dict]]) -> list[dict]:
     for market, products in grouped.items():
         for p in products:
             ids = media.get(int(p["asset_id"]), {}) if p.get("asset_id") else {}
+            ig = ids.get("instagram", "") or p.get("ig_media", "")
+            fb = ids.get("facebook", "") or p.get("fb_media", "")
             items.append(
                 {
                     "keyword": product_keyword(p["title"], p.get("asin") or ""),
                     "title": p["title"],
                     "url": p["url"],
                     "market": market,
-                    "instagram_media_id": ids.get("instagram", ""),
-                    "facebook_post_id": ids.get("facebook", ""),
+                    "instagram_media_id": ig,
+                    "facebook_post_id": fb,
                 }
             )
     return items
@@ -743,6 +1094,8 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
 
 def main() -> None:
     grouped = fetch_products()
+    media = _media_ids_by_asset()
+    grouped, recuperados = _apply_historico(grouped, media)
     DOCS_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_FILE.write_text(build_html(grouped), encoding="utf-8")
     # Lista que o robo de direct le (palavra-gatilho -> link do produto).
@@ -762,6 +1115,7 @@ def main() -> None:
         f"Pagina de bio gerada: {OUTPUT_FILE}\n"
         f"  Brasil: {len(grouped['BR'])} produtos\n"
         f"  USA:    {len(grouped['US'])} produtos\n"
+        f"  Recuperados do historico: {recuperados}\n"
         f"Lista do robo: {PRODUCTS_JSON} ({len(index)} produtos)"
     )
 

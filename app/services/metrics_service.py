@@ -86,7 +86,7 @@ class MetricsService:
     # ENTRADA PRINCIPAL
     # ----------------------------------------------------------------
 
-    def collect_all(self) -> dict:
+    def collect_all(self, force_meta: bool = False) -> dict:
         """Coleta metricas de todas as publicacoes e contas configuradas.
 
         As chamadas ao Instagram/Facebook (Graph API) compartilham a MESMA cota
@@ -96,6 +96,10 @@ class MetricsService:
         videos serem cobertos ao longo das rodadas); (3) ESPACA as chamadas; e
         (4) ao detectar um (#4), abre o cooldown e PARA de bater no Graph nesta
         rodada. YouTube/TikTok nao entram nesse limite.
+
+        force_meta=True (clique MANUAL em "Coletar metricas") ignora o flag
+        ATLAS_METRICS_META_ENABLED e coleta TODOS os posts IG/FB desta vez
+        (sem teto rotativo), respeitando ainda o cooldown do (#4).
         """
         video_snapshots = 0
         errors: list[str] = []
@@ -116,12 +120,16 @@ class MetricsService:
         for pub in other_pubs:
             video_snapshots += self._snapshot_one(pub, errors)
 
+        # Salva o lote YouTube/TikTok de imediato: os numeros ja comecam a
+        # mudar no painel sem esperar a coleta (mais lenta) de IG/FB terminar.
+        self.db.commit()
+
         # 2) Instagram / Facebook: so coleta se HABILITADO e sem cooldown do
         # (#4); limita e espaca. A coleta de metricas IG/FB pode ser DESLIGADA
         # por completo (ATLAS_METRICS_META_ENABLED=false) para NAO gastar a cota
         # do app da Meta com varredura horaria - as PUBLICACOES continuam
         # funcionando normalmente (o link do produto fica na BIO).
-        meta_enabled = _env_bool("ATLAS_METRICS_META_ENABLED", True)
+        meta_enabled = force_meta or _env_bool("ATLAS_METRICS_META_ENABLED", True)
         meta_blocked = (not meta_enabled) or (meta_app_cooldown_remaining() > 0)
         if not meta_enabled and meta_pubs:
             errors.append(
@@ -135,11 +143,13 @@ class MetricsService:
                 "nesta rodada."
             )
         elif meta_pubs:
-            cap = max(1, _env_int("ATLAS_METRICS_META_MAX_POSTS", 50))
             spacing = max(0, _env_int("ATLAS_METRICS_META_SPACING_MS", 400)) / 1000.0
             meta_pubs.sort(key=lambda p: p.id or 0)
             total = len(meta_pubs)
-            start = _read_meta_offset() % total
+            # No clique MANUAL coletamos TODOS os posts IG/FB de uma vez; na
+            # varredura automatica respeitamos o teto rotativo por rodada.
+            cap = total if force_meta else max(1, _env_int("ATLAS_METRICS_META_MAX_POSTS", 50))
+            start = 0 if force_meta else (_read_meta_offset() % total)
             attempted = 0
             for i in range(min(cap, total)):
                 pub = meta_pubs[(start + i) % total]
@@ -156,8 +166,13 @@ class MetricsService:
                         "IG/FB nesta rodada (retoma sozinho na proxima)."
                     )
                     break
+                # Salva em lotes: os numeros de IG/FB vao aparecendo no painel
+                # aos poucos e o progresso nao se perde se algo falhar no meio.
+                if attempted % 15 == 0:
+                    self.db.commit()
                 if spacing:
                     time.sleep(spacing)
+            self.db.commit()
             # Avanca o cursor rotativo pelos que TENTAMOS, para a proxima rodada
             # continuar de onde parou e cobrir todos os videos ao longo do tempo.
             _write_meta_offset((start + attempted) % total)

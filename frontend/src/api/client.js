@@ -46,6 +46,8 @@ export const Api = {
     api.post(`/publications/${id}/retry`).then((r) => r.data),
   deletePublication: (id) =>
     api.delete(`/publications/${id}`).then((r) => r.data),
+  clearAllPublications: () =>
+    api.post("/publications/clear-all").then((r) => r.data),
 
   // ----- Vendas Amazon (afiliado) -----
   amazonSalesStats: (params = {}) =>
@@ -87,6 +89,10 @@ export const Api = {
   clearPublished: (kind) =>
     api
       .post("/videos/clear-published", null, { params: kind ? { kind } : {} })
+      .then((r) => r.data),
+  freeSpace: (kind) =>
+    api
+      .post("/videos/free-space", null, { params: kind ? { kind } : {} })
       .then((r) => r.data),
   pendingCount: (kind) =>
     api

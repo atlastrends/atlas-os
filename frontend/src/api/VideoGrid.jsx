@@ -83,26 +83,39 @@ export default function VideoGrid({
   };
 
   const [freeing, setFreeing] = useState(false);
-  // Libera espaco no PC: apaga SO os arquivos dos videos JA PUBLICADOS (que ja
-  // subiram para o YouTube). Eles seguem publicados e as estatisticas ficam.
+  // Liberar espaco DESTA aba (kind): (1) PUBLICADOS -> apaga so o arquivo pesado
+  // (mantem estatisticas, video segue no ar); (2) APROVADOS e REJEITADOS ->
+  // apaga de vez (arquivo + registro). Nao mistura reels com afiliados.
   const freeSpace = async () => {
+    const pub = counts.published || 0;
+    const apr = counts.approved || 0;
+    const rej = counts.rejected || 0;
+    if (pub + apr + rej === 0) {
+      setToast({ type: "info", msg: "Nada para liberar nesta aba." });
+      return;
+    }
     if (
       !window.confirm(
-        "Liberar espaço no computador?\n\n" +
-          "Isso apaga SÓ os arquivos dos vídeos JÁ PUBLICADOS (que já subiram " +
-          "para o YouTube). Eles continuam publicados, as ESTATÍSTICAS são " +
-          "mantidas e não serão gerados de novo. Só o arquivo pesado sai do PC."
+        "Liberar espaço nesta aba?\n\n" +
+          `• ${pub} publicado(s): libera o arquivo do PC (o vídeo continua no ` +
+          "ar e as ESTATÍSTICAS são mantidas).\n" +
+          `• ${apr} aprovado(s): APAGADOS DE VEZ (você já postou manualmente; ` +
+          "não serão recriados).\n" +
+          `• ${rej} rejeitado(s): APAGADOS DE VEZ.\n\n` +
+          "Esta ação não pode ser desfeita."
       )
     )
       return;
     setFreeing(true);
     try {
-      const r = await Api.clearPublished(kind);
+      const r = await Api.freeSpace(kind);
       setToast({
         type: "success",
         msg: `Espaço liberado: ${r?.removed_files ?? 0} arquivo(s), ~${
           r?.freed_mb ?? 0
-        } MB. Estatísticas mantidas.`,
+        } MB. ${r?.removed_assets ?? 0} vídeo(s) apagado(s); ${
+          r?.published_freed ?? 0
+        } publicado(s) mantido(s) com estatísticas.`,
       });
       load();
     } catch {
@@ -199,7 +212,7 @@ export default function VideoGrid({
             className="btn ghost"
             onClick={freeSpace}
             disabled={freeing}
-            title="Apaga os arquivos dos vídeos já publicados para liberar espaço no PC (continuam no YouTube e as estatísticas ficam)"
+            title="Libera espaço desta aba: apaga o arquivo dos publicados (mantém estatísticas) e apaga de vez os aprovados (já postados) e os rejeitados"
           >
             {freeing ? "Liberando…" : "🧹 Liberar espaço"}
           </button>

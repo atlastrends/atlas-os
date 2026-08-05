@@ -311,32 +311,54 @@ class VideoLibraryService:
         contrario, apaga os rejeitados de todos os tipos.
         Remove tambem os arquivos .mp4, metadados/sidecars e as publicacoes.
         """
+        result = self._purge_by_status(
+            VideoStatusEnum.REJECTED, kind=kind, keep_sidecar=False
+        )
+        return {
+            "removed_assets": result["removed_assets"],
+            "removed_files": result["removed_files"],
+        }
+
+    def _purge_by_status(
+        self,
+        status: VideoStatusEnum,
+        kind: Optional[str] = None,
+        keep_sidecar: bool = False,
+    ) -> dict:
+        """
+        Apaga DE VEZ os videos com o `status` dado: arquivos em disco +
+        publicacoes + registro no banco (some da lista). Limita ao `kind`
+        se informado.
+
+        keep_sidecar=True preserva o arquivinho .json ao lado (chave
+        mercado+ASIN) para o robo NAO recriar o mesmo produto — usado ao
+        limpar os APROVADOS que o usuario ja postou manualmente.
+        """
         from app.models.dashboard import Publication
 
         removed_assets = 0
         removed_files = 0
+        freed_bytes = 0
 
-        query = self.db.query(VideoAsset).filter(
-            VideoAsset.status == VideoStatusEnum.REJECTED
-        )
+        query = self.db.query(VideoAsset).filter(VideoAsset.status == status)
         if kind:
             query = query.filter(VideoAsset.kind == kind)
 
-        rejected = query.all()
-        ids = [a.id for a in rejected]
+        assets = query.all()
+        ids = [a.id for a in assets]
 
-        # 1) Apaga os arquivos em disco (video, metadados e thumbnail).
-        for asset in rejected:
-            for rel in (
-                asset.video_path,
-                asset.metadata_path,
-                asset.thumbnail_path,
-            ):
+        # 1) Arquivos em disco (video + miniatura; e o sidecar, se nao preservar).
+        for asset in assets:
+            targets = [asset.video_path, asset.thumbnail_path]
+            if not keep_sidecar:
+                targets.append(asset.metadata_path)
+            for rel in targets:
                 if not rel:
                     continue
                 full = os.path.join(PROJECT_ROOT, rel.replace("/", os.sep))
                 try:
                     if os.path.isfile(full):
+                        freed_bytes += os.path.getsize(full)
                         os.remove(full)
                         removed_files += 1
                 except Exception:
@@ -360,6 +382,42 @@ class VideoLibraryService:
         return {
             "removed_assets": removed_assets,
             "removed_files": removed_files,
+            "freed_mb": round(freed_bytes / (1024 * 1024), 1),
+        }
+
+    def free_space(self, kind: Optional[str] = None) -> dict:
+        """
+        Botao "Liberar espaco" da aba (kind). Em uma tacada:
+        - PUBLICADOS: apaga so o arquivo pesado (.mp4 + miniatura); mantem o
+          registro, as ESTATISTICAS e o .json — o video segue no ar.
+        - APROVADOS: apaga DE VEZ (arquivo + miniatura + registro + publicacoes),
+          mas PRESERVA o .json ao lado para o robo NAO recriar o produto (o
+          usuario ja postou esses videos manualmente).
+        - REJEITADOS: apaga DE VEZ (arquivo + metadados + registro + publicacoes).
+        Tudo restrito ao `kind` informado (nao mistura reels com afiliados).
+        """
+        published = self.delete_published_files(kind=kind)
+        approved = self._purge_by_status(
+            VideoStatusEnum.APPROVED, kind=kind, keep_sidecar=True
+        )
+        rejected = self._purge_by_status(
+            VideoStatusEnum.REJECTED, kind=kind, keep_sidecar=False
+        )
+
+        return {
+            "published_freed": published.get("affected_assets", 0),
+            "removed_assets": approved["removed_assets"] + rejected["removed_assets"],
+            "removed_files": (
+                published.get("removed_files", 0)
+                + approved["removed_files"]
+                + rejected["removed_files"]
+            ),
+            "freed_mb": round(
+                float(published.get("freed_mb", 0.0))
+                + approved["freed_mb"]
+                + rejected["freed_mb"],
+                1,
+            ),
         }
 
     def delete_published_files(self, kind: Optional[str] = None) -> dict:

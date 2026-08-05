@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+import html as _htmlmod
 import json
 import os
 import re
@@ -2387,21 +2388,34 @@ def _extract_listing_image_urls(html: str) -> list[str]:
 
 
 def _extract_listing_video_url(html: str) -> str | None:
-    # Procura o video DO PRODUTO: um .mp4 hospedado na Amazon perto de uma
-    # marca "isVideo":true (evita pegar video de anuncio/propaganda).
-    for marker in re.finditer(r'"isVideo":\s*true', html):
-        start = max(0, marker.start() - 1500)
-        window = html[start:marker.start() + 1500]
-        match = re.search(r'"url":"(https:[^"]+?\.mp4)"', window)
-        if match:
-            url = (
-                match.group(1)
-                .replace("\\u002F", "/")
-                .replace("\\/", "/")
-            )
-            if "media-amazon" in url.lower():
-                return url
-    return None
+    # O JSON da galeria vem HTML-escapado (&quot;) no HTML da Amazon, entao
+    # desescapamos antes de procurar. O video DO PRODUTO fica num bloco
+    # "isVideo":true (galeria ImageBlock) e a URL costuma ser um HLS .m3u8
+    # (as vezes .mp4). Preferimos o video "hero" quando existe e exigimos
+    # host media-amazon para nao pegar propaganda de terceiros.
+    page = _htmlmod.unescape(html)
+    fallback: str | None = None
+    for marker in re.finditer(r'"isVideo"\s*:\s*true', page):
+        block = page[max(0, marker.start() - 400):marker.end() + 900]
+        window = page[marker.end():marker.end() + 900]
+        match = re.search(
+            r'"url"\s*:\s*"(https:[^"]+?\.(?:m3u8|mp4))"',
+            window,
+        )
+        if not match:
+            continue
+        candidate = (
+            match.group(1)
+            .replace("\\u002F", "/")
+            .replace("\\/", "/")
+        )
+        if "media-amazon" not in candidate.lower():
+            continue
+        if re.search(r'"isHeroVideo"\s*:\s*true', block):
+            return candidate
+        if fallback is None:
+            fallback = candidate
+    return fallback
 
 
 def _download_listing_image(url: str, destination: Path) -> bool:
@@ -2427,30 +2441,45 @@ def _download_listing_image(url: str, destination: Path) -> bool:
 
 
 def _download_listing_video(url: str, work: Path) -> Path | None:
+    # O video principal do anuncio costuma ser HLS (.m3u8); o FFmpeg baixa
+    # tanto HLS quanto mp4 direto. Pegamos so o VIDEO (a narracao propria e
+    # adicionada depois) e limitamos a duracao para nao baixar algo enorme.
     destination = work / "listing_video.mp4"
-    try:
-        with requests.get(
-            url,
-            headers=_listing_headers(),
-            timeout=120,
-            stream=True,
-        ) as response:
-            response.raise_for_status()
-            content_type = response.headers.get("content-type", "").lower()
-            if "video" not in content_type and "octet-stream" not in content_type:
-                return None
-            total = 0
-            with open(destination, "wb") as handle:
-                for chunk in response.iter_content(chunk_size=262_144):
-                    if not chunk:
-                        continue
-                    total += len(chunk)
-                    if total > 80 * 1024 * 1024:
-                        break
-                    handle.write(chunk)
-    except Exception:
-        return None
-    if not destination.is_file() or destination.stat().st_size < 200_000:
+    user_agent = _listing_headers()["User-Agent"]
+    base = [
+        _FFMPEG, "-y", "-hide_banner", "-loglevel", "error",
+        "-user_agent", user_agent,
+        "-i", url,
+    ]
+    tail_copy = [
+        "-map", "0:v:0", "-c:v", "copy", "-an", "-t", "120",
+        "-movflags", "+faststart", str(destination),
+    ]
+    tail_transcode = [
+        "-map", "0:v:0", "-c:v", "libx264", "-preset", "veryfast",
+        "-crf", "20", "-an", "-t", "120",
+        "-movflags", "+faststart", str(destination),
+    ]
+    downloaded = False
+    for tail in (tail_copy, tail_transcode):
+        try:
+            completed = subprocess.run(
+                base + tail,
+                check=False,
+                text=True,
+                capture_output=True,
+                timeout=420,
+            )
+        except Exception:
+            continue
+        if (
+            completed.returncode == 0
+            and destination.is_file()
+            and destination.stat().st_size >= 200_000
+        ):
+            downloaded = True
+            break
+    if not downloaded:
         return None
     try:
         if duration(destination) < 2.0:

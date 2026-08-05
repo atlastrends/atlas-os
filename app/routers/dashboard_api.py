@@ -192,6 +192,18 @@ def clear_published(
     return VideoLibraryService(db).delete_published_files(kind=kind)
 
 
+@router.post("/videos/free-space")
+def free_space(
+    kind: Optional[str] = Query(default=None, description="reel | affiliate"),
+    db: Session = Depends(get_db),
+):
+    """Botao "Liberar espaco" da aba: libera o arquivo dos PUBLICADOS (mantem as
+    estatisticas e o video no ar) e apaga DE VEZ os APROVADOS (ja postados
+    manualmente; preserva o .json para NAO recriar) e os REJEITADOS. Restrito
+    ao `kind` (nao mistura reels com afiliados)."""
+    return VideoLibraryService(db).free_space(kind=kind)
+
+
 @router.get("/videos/pending-count")
 def videos_pending_count(
     kind: Optional[str] = Query(default=None, description="reel | affiliate"),
@@ -225,15 +237,21 @@ def list_videos(
     library.sync()
     assets = library.list_assets(kind=kind, status=status, limit=limit)
 
-    # Esconde da lista os videos JA PUBLICADOS cujo arquivo foi apagado
-    # (pela limpeza) ou sumiu do disco. Assim nao aparecem quebrados
-    # (player 404). As estatisticas deles seguem no Analytics.
+    # Esconde da lista apenas os cards que ficariam quebrados (player 404):
+    #  - JA PUBLICADOS cujo arquivo foi apagado/purgado pela limpeza; e
+    #  - REELS orfaos cujo .mp4 sumiu do disco (apareciam como "reels ja
+    #    apagados"). Os reels usam output_videos/video_*.mp4, nome que bate
+    #    com o disco, entao a checagem de arquivo e confiavel.
+    # NAO aplicamos a checagem de arquivo aos AFILIADOS: seus arquivos reais
+    # usam sufixo .live.mp4 (diferente do video_path gravado), logo
+    # is_file_present daria falso-negativo e sumiria com a grade inteira.
+    # As estatisticas dos ja publicados seguem no Analytics (video_metrics).
     visible = []
     for a in assets:
-        if _enum(a.status) == "published":
-            purged = bool((a.payload or {}).get("file_purged"))
-            if purged or not library.is_file_present(a):
-                continue
+        purged = bool((a.payload or {}).get("file_purged"))
+        missing = purged or not library.is_file_present(a)
+        if missing and (_enum(a.status) == "published" or _enum(a.kind) == "reel"):
+            continue
         visible.append(a)
 
     return [_serialize_asset(a, db) for a in visible]
@@ -356,6 +374,14 @@ def delete_publication(publication_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(exc))
 
 
+@router.post("/publications/clear-all")
+def clear_all_publications(db: Session = Depends(get_db)):
+    """Zera TODO o historico de envios (apaga TODAS as publications) e tira os
+    videos travados da fila de reenvio para o agendador nao republicar/duplicar.
+    Nao apaga os videos em si."""
+    return PublishingService(db).clear_all_publications()
+
+
 # ----------------------------------------------------------------
 # JOBS (botoes do painel)
 # ----------------------------------------------------------------
@@ -448,7 +474,9 @@ def auto_affiliate_status():
 
 @router.post("/jobs/collect-metrics")
 def trigger_collect_metrics():
-    job_service.run_collect_metrics()
+    # Clique MANUAL coleta TODAS as plataformas (IG, FB, YouTube, TikTok),
+    # ignorando ATLAS_METRICS_META_ENABLED (que so freia a varredura horaria).
+    job_service.run_collect_metrics(force_meta=True)
     return job_service.get_job_state("collect_metrics")
 
 

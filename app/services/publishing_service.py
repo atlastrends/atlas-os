@@ -52,6 +52,19 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def _disabled_platforms() -> set[str]:
+    """Plataformas com o ENVIO DESLIGADO no momento (nao publica nem reenvia).
+    Reversivel: definido em ATLAS_DISABLED_PLATFORMS (lista separada por
+    virgula, ex.: "tiktok" ou "tiktok,facebook"). Nao apaga nada; so pula o
+    envio. Para religar, remova a plataforma da variavel e reinicie."""
+    raw = os.getenv("ATLAS_DISABLED_PLATFORMS") or ""
+    return {p.strip().lower() for p in raw.split(",") if p.strip()}
+
+
+def _platform_enabled(platform: str) -> bool:
+    return (platform or "").lower().strip() not in _disabled_platforms()
+
+
 # Trechos que indicam BLOQUEIO TEMPORARIO da plataforma (limite diario/cota),
 # NAO um erro real. Nesses casos o video deve aguardar reenvio, e nao virar
 # "erro". So retentar amanha resolve.
@@ -528,7 +541,11 @@ class PublishingService:
         asset.reviewed_at = _now()
         self.db.commit()
 
-        targets = [p for p in (platforms or PLATFORMS) if p in PLATFORMS]
+        targets = [
+            p
+            for p in (platforms or PLATFORMS)
+            if p in PLATFORMS and _platform_enabled(p)
+        ]
 
         results = []
         for platform in targets:
@@ -606,6 +623,44 @@ class PublishingService:
 
         return {"deleted": True, "asset_id": asset_id}
 
+    def clear_all_publications(self) -> dict:
+        """Zera TODO o historico de envios: apaga TODAS as publications (a aba
+        Envios fica vazia). Para o reenvio automatico NAO republicar (e evitar
+        DUPLICAR nos canais, ja que a protecao anti-duplicata depende dos
+        registros de publicacao existirem), tira os videos de RETRY_PENDING:
+        os que ja tinham subido em alguma rede viram PUBLISHED; os demais viram
+        FAILED (terminal, fora da fila de reenvio). Nao apaga os videos em si."""
+        pubs = self.db.query(Publication).all()
+        total = len(pubs)
+        published_asset_ids = {
+            p.video_asset_id
+            for p in pubs
+            if p.status == PublicationStatusEnum.PUBLISHED
+        }
+        for pub in pubs:
+            self.db.delete(pub)
+        self.db.commit()
+
+        # Sem publicacoes, o agendador reenviaria do zero e duplicaria o que ja
+        # subiu -> tira todo mundo de RETRY_PENDING (fora da fila de reenvio).
+        moved = 0
+        stuck = (
+            self.db.query(VideoAsset)
+            .filter(VideoAsset.status == VideoStatusEnum.RETRY_PENDING)
+            .all()
+        )
+        for asset in stuck:
+            asset.status = (
+                VideoStatusEnum.PUBLISHED
+                if asset.id in published_asset_ids
+                else VideoStatusEnum.FAILED
+            )
+            moved += 1
+        if moved:
+            self.db.commit()
+
+        return {"deleted": total, "assets_moved": moved}
+
     # ----------------------------------------------------------------
     # HELPERS
     # ----------------------------------------------------------------
@@ -621,6 +676,19 @@ class PublishingService:
         rate_limited). Nao mexe no status do asset (isso e feito por quem
         chama, via _recompute_asset_status, ja que um asset pode ter varias
         publicacoes)."""
+        # INTERRUPTOR DE PLATAFORMA: se o envio a esta rede foi DESLIGADO
+        # (ATLAS_DISABLED_PLATFORMS), nao publica nem reenvia. Marca SKIPPED
+        # (terminal, fora da fila de reenvio) com aviso; nada e apagado e basta
+        # remover a plataforma da variavel e reiniciar para religar.
+        if not _platform_enabled(platform):
+            pub.status = PublicationStatusEnum.SKIPPED
+            pub.error = (
+                f"Envio ao {platform} desligado no momento "
+                "(ATLAS_DISABLED_PLATFORMS). Nada foi enviado."
+            )
+            self.db.commit()
+            return pub
+
         # GUARDA DE ARQUIVO PURGADO: se o video foi removido (purgado depois de
         # publicar), NENHUMA plataforma consegue enviar. Marca SKIPPED (terminal)
         # e sai - evita retentar para sempre um arquivo inexistente, que era a
@@ -1027,22 +1095,71 @@ class PublishingService:
             ]
             caption_text = f"{short} \U0001f60d\nAchadinho que vale a pena \u2014 corre que o pre\u00e7o t\u00e1 bom! \U0001f525\U0001f447"
 
-        tags: list[str] = list(base_tags)
+        # ------------------------------------------------------------------
+        # HASHTAGS FIEIS AO PRODUTO. Antes saiam quase so tags genericas
+        # (#achadinhos, #ofertas...) mais a 1a palavra do titulo como "marca"
+        # (que costuma ser o TIPO do produto, ex.: "Panela"). Agora extraimos
+        # do titulo/marca/categoria as palavras que REALMENTE descrevem o
+        # anuncio (tipo, marca, material, atributos) e so
+        # completamos com algumas tags virais p/ alcance -> fiel E em destaque.
+        # ------------------------------------------------------------------
+        stop = {
+            "de", "da", "do", "das", "dos", "com", "sem", "para", "pra", "por",
+            "em", "no", "na", "nos", "nas", "um", "uma", "uns", "umas", "que",
+            "ao", "aos", "ou", "mais", "ate", "sob", "sobre", "entre", "tipo",
+            "cor", "kit", "und", "pcs", "the", "and", "with", "without", "for",
+            "of", "to", "by", "from", "plus", "set", "pack", "size", "color",
+            "colour", "new",
+        }
 
-        # Hashtag da categoria do produto.
-        cat = payload.get("category_label") or payload.get("category") or ""
-        cat_slug = slug(cat)
-        if len(cat_slug) >= 3:
-            tag = f"#{cat_slug}"
-            if tag not in tags:
-                tags.append(tag)
+        def content_words(text: str) -> list[str]:
+            """Palavras 'de conteudo' do texto: descarta stopwords, numeros,
+            medidas (3,2 / 220v / 10w) e tokens curtos. Base das tags fieis."""
+            out: list[str] = []
+            for raw_word in re.split(r"[^0-9A-Za-zÀ-ÿ]+", str(text or "")):
+                low = raw_word.lower()
+                if not low or low in stop:
+                    continue
+                if any(ch.isdigit() for ch in low):
+                    continue
+                if len(slug(raw_word)) < 3:
+                    continue
+                out.append(raw_word)
+            return out
 
-        # Hashtag da marca (primeira palavra do titulo do produto).
-        first = title.split(" ")[0] if title else ""
-        brand_slug = slug(first)
-        if 3 <= len(brand_slug) <= 20 and not brand_slug.isdigit():
-            tag = f"#{brand_slug}"
-            if tag not in tags:
+        product_tags: list[str] = []
+
+        def add_tag(value: str) -> None:
+            token = slug(value)
+            if len(token) < 3 or token.isdigit():
+                return
+            tag = f"#{token}"
+            if tag not in product_tags:
+                product_tags.append(tag)
+
+        title_words = content_words(title)
+
+        # 1) Marca real (se o anuncio informou) -- a hashtag mais forte.
+        add_tag(str(payload.get("brand") or ""))
+
+        # 2) Tipo do produto: tag composta das 2 primeiras palavras de conteudo
+        #    (ex.: "Panela de Pressao" -> #panelapressao) + as palavras soltas.
+        if len(title_words) >= 2:
+            add_tag(title_words[0] + title_words[1])
+        for word in title_words[:5]:
+            add_tag(word)
+
+        # 3) Categoria do produto.
+        add_tag(payload.get("category_label") or payload.get("category") or "")
+
+        # Lista final: lidera com o TIPO do produto (fiel) + 1 tag viral de
+        # alcance logo em seguida, depois o resto das fieis e das virais. O
+        # corte por plataforma vem logo abaixo.
+        flagship = base_tags[0] if base_tags else ""
+        lead = product_tags[0] if product_tags else flagship
+        tags: list[str] = []
+        for tag in [lead, flagship, *product_tags, *base_tags]:
+            if tag and tag not in tags:
                 tags.append(tag)
 
         # Ajuste inteligente da quantidade por plataforma. As primeiras da lista

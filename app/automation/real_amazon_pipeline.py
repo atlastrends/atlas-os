@@ -778,23 +778,31 @@ def _fish_discover_market_voices(market_code: str) -> dict[str, str]:
     return result
 
 
-def _fish_bump_counter() -> int:
+def _fish_bump_counter(key: str = "counter") -> int:
+    """Contador PERSISTIDO por CHAVE (ex.: "BR:reel"). Cada fluxo (reel de
+    afiliado, live, trend) alterna F/M de forma INDEPENDENTE. Antes era um unico
+    contador global: como o afiliado gera 2 vozes por produto (reel+live), a
+    paridade do reel nunca trocava e ele saia SEMPRE na mesma voz (feminina)."""
     try:
-        current = 0
+        data: dict[str, Any] = {}
         if FISH_STATE_PATH.is_file():
-            data = json.loads(FISH_STATE_PATH.read_text(encoding="utf-8"))
-            current = int(data.get("counter", 0))
+            loaded = json.loads(FISH_STATE_PATH.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                data = loaded
+        current = int(data.get(key, 0))
+        data[key] = current + 1
         FISH_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        FISH_STATE_PATH.write_text(
-            json.dumps({"counter": current + 1}), encoding="utf-8"
-        )
+        FISH_STATE_PATH.write_text(json.dumps(data), encoding="utf-8")
         return current
     except Exception:
         return 0
 
 
-def _fish_next_voice(market_code: str) -> tuple[str, str]:
-    """Escolhe (reference_id, rotulo) alternando feminino/masculino por video."""
+def _fish_next_voice(market_code: str, stream: str = "default") -> tuple[str, str]:
+    """Escolhe (reference_id, rotulo) alternando feminino/masculino por video.
+
+    `stream` separa os contadores (ex.: "reel", "live", "trend") para cada fluxo
+    alternar por conta propria."""
     voices = _fish_discover_market_voices(market_code)
     female_id = voices.get("female", "")
     male_id = voices.get("male", "")
@@ -816,7 +824,7 @@ def _fish_next_voice(market_code: str) -> tuple[str, str]:
         import random
         return random.choice(available)
 
-    index = _fish_bump_counter()
+    index = _fish_bump_counter(f"{market_code}:{stream}")
     return available[index % len(available)]
 
 
@@ -866,6 +874,7 @@ def create_voice(
     product: Product,
     text: str,
     destination: Path,
+    stream: str = "reel",
 ) -> bool:
     import html
 
@@ -928,7 +937,7 @@ def create_voice(
     # portugues). Falhou por qualquer motivo -> cai no Edge TTS abaixo.
     if _fish_enabled():
         fish_min_seconds = max(3.0, (len(cleaned_text) / 16.0) * 0.6)
-        reference_id, voice_label = _fish_next_voice(product.marketplace_code)
+        reference_id, voice_label = _fish_next_voice(product.marketplace_code, stream)
         if reference_id or voice_label:
             fish_ok, fish_detail = _fish_synthesize(
                 cleaned_text, reference_id, destination
@@ -1205,6 +1214,10 @@ def create_video_for_product(product: Product, report: Any = None) -> dict[str, 
                     "narration": narration,
                     "category": product.category,
                     "category_label": product.category_label,
+                    # Marca e caracteristicas do anuncio p/ gerar hashtags
+                    # fieis ao produto na hora de publicar.
+                    "brand": product.brand,
+                    "features": product.features,
                 },
             )
         except Exception as sidecar_error:  # noqa: BLE001
@@ -1231,7 +1244,7 @@ def create_video_for_product(product: Product, report: Any = None) -> dict[str, 
                 live_narration = narration_from_story(live_story)
                 live_audio = work / "voice_live.mp3"
 
-                if create_voice(product, live_narration, live_audio):
+                if create_voice(product, live_narration, live_audio, stream="live"):
                     live_video_path = OUTPUT_DIRECTORY / (output_name + ".live.mp4")
                     live_meta = render_live_variant(
                         product=product,
@@ -1258,6 +1271,8 @@ def create_video_for_product(product: Product, report: Any = None) -> dict[str, 
                             "narration": live_narration,
                             "category": product.category,
                             "category_label": product.category_label,
+                            "brand": product.brand,
+                            "features": product.features,
                             "reel_video": video_path.name,
                             "duration_seconds": live_meta.get("duration_seconds"),
                         },
