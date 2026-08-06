@@ -1,6 +1,22 @@
 {
-  "updated_at": "2026-08-06T11:35:39.797064+00:00",
+  "updated_at": "2026-08-06T11:36:05.160357+00:00",
   "products": [
+    {
+      "keyword": "ACHOCOLATADO",
+      "title": "Achocolatado NESCAU® 2,01kg",
+      "url": "https://www.amazon.com.br/dp/B0FPRGYFCL?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18117679372700684",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "SUGGAR",
+      "title": "SUGGAR DEPURADOR DE AR SLIM 80CM 3 VEL. PRETO 220V DPS182PT",
+      "url": "https://www.amazon.com.br/dp/B0B3SJ8YLP?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18108652129840600",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "HORIZON",
       "title": "Horizon Forbidden West Edição Padrão - PlayStation 5",
