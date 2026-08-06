@@ -1,6 +1,22 @@
 {
-  "updated_at": "2026-08-06T17:23:14.864741+00:00",
+  "updated_at": "2026-08-06T17:23:22.853794+00:00",
   "products": [
+    {
+      "keyword": "JANTAR",
+      "title": "Jantar secreto: Edição de colecionador",
+      "url": "https://www.amazon.com.br/dp/8535946039?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18128153938662010",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "SABAO",
+      "title": "Omo Sabão em Pó Lavagem Perfeita 4Kg",
+      "url": "https://www.amazon.com.br/dp/B09Z68GWC7?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18085574936414394",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "POKEMON",
       "title": "Pokémon TCG: Mega Evolução - Escuridão Absoluta - Booster Bundle - Português, Jogo de Cartas",
@@ -1770,6 +1786,14 @@
       "facebook_post_id": "1607914181027295"
     },
     {
+      "keyword": "BIGFOOT",
+      "title": "BigFoot Clear Shower Curtain - 72x72 Odorless Plastic with Magnets, Washable Long Bathroom Curtain - Premium PEVA Waterproof",
+      "url": "https://www.amazon.com/dp/B08CRPWQHB?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18009201245939879",
+      "facebook_post_id": ""
+    },
+    {
       "keyword": "SILONN",
       "title": "Silonn Ice Maker Countertop, 8 Cubes in 6 Mins, 26.5lbs/24H, Self-Cleaning",
       "url": "https://www.amazon.com/dp/B0H5WCCFSQ?tag=atlasfindsus-20",
@@ -2309,14 +2333,6 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "BIGFOOT",
-      "title": "BigFoot Clear Shower Curtain - 72x72 Odorless Plastic with Magnets, Washable Long Bathroom Curtain - Premium PEVA Waterproof",
-      "url": "https://www.amazon.com/dp/B08CRPWQHB?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
