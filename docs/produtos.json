@@ -1,6 +1,22 @@
 {
-  "updated_at": "2026-08-06T11:37:02.593585+00:00",
+  "updated_at": "2026-08-06T11:37:13.201336+00:00",
   "products": [
+    {
+      "keyword": "AMIGUINHOS",
+      "title": "Amiguinhos - Um Livro de Banho: Amiguinhos da Fazenda",
+      "url": "https://www.amazon.com.br/dp/8537612464?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18106918429852675",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "CAIXA",
+      "title": "Caixa Homero – Ilíada & Odisseia",
+      "url": "https://www.amazon.com.br/dp/8563560948?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18070951796423357",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "POTES",
       "title": "Kit com 5 Potes de Vidro Gato Panda, 640 ml, Retangular, com Tampa Hermética, Azul",
@@ -631,14 +647,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CAIXA",
-      "title": "Caixa Homero – Ilíada & Odisseia",
-      "url": "https://www.amazon.com.br/dp/8563560948?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18070951796423357",
       "facebook_post_id": ""
     },
     {
