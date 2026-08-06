@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-06T13:29:38.972132+00:00",
+  "updated_at": "2026-08-06T13:29:51.370102+00:00",
   "products": [
+    {
+      "keyword": "PHILIPS",
+      "title": "PHILIPS, Fone de Ouvido Sem Fio TWS, TAT1109BK/00, Bluetooth, Com Microfone, Até 24 horas de bateria, Preto",
+      "url": "https://www.amazon.com.br/dp/B0DVMQVVDY?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18110909998956221",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "CAPACETE",
       "title": "CAPACETE FECHADO PRO TORK SPORT MOTO 788 PRETO - VERMELHO TAM. 58",
@@ -655,14 +663,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PHILIPS",
-      "title": "PHILIPS, Fone de Ouvido Sem Fio TWS, TAT1109BK/00, Bluetooth, Com Microfone, Até 24 horas de bateria, Preto",
-      "url": "https://www.amazon.com.br/dp/B0DVMQVVDY?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18110909998956221",
       "facebook_post_id": ""
     },
     {
@@ -2253,6 +2253,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "SILONN",
+      "title": "Silonn Ice Maker Countertop, 8 Cubes in 6 Mins, 26.5lbs/24H, Self-Cleaning",
+      "url": "https://www.amazon.com/dp/B0H5WCCFSQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
