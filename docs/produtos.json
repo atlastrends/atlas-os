@@ -1,6 +1,22 @@
 {
-  "updated_at": "2026-08-06T11:36:38.453089+00:00",
+  "updated_at": "2026-08-06T11:36:50.178433+00:00",
   "products": [
+    {
+      "keyword": "POTES",
+      "title": "Kit com 5 Potes de Vidro Gato Panda, 640 ml, Retangular, com Tampa Hermética, Azul",
+      "url": "https://www.amazon.com.br/dp/B08CPW5BR2?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17950140642227769",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "NIVEA",
+      "title": "NIVEA Desodorante Antitranspirante Stick Derma Protect Clinical 58g, Defesa Intensa 96h, Controle de Suor Extremo, Toque Suav",
+      "url": "https://www.amazon.com.br/dp/B0CYJ7DBQC?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18090077270545212",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "MIBEE",
       "title": "Mibee Compressor de ar portátil com inflador de pneu mini com bateria recarregável de 4000 mAh, bomba de pneu sem fio 150 PSI",
