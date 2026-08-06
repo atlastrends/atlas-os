@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-06T13:33:14.838632+00:00",
+  "updated_at": "2026-08-06T13:34:18.840366+00:00",
   "products": [
+    {
+      "keyword": "PENTEL",
+      "title": "Pentel Fita Corretiva Rosa + Refil SM/ZTP205R-P",
+      "url": "https://www.amazon.com.br/dp/B08YGWKDS7?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18103825595584415",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "PHILIPS",
       "title": "PHILIPS, Fone de Ouvido Sem Fio TWS, TAT1109BK/00, Bluetooth, Com Microfone, Até 24 horas de bateria, Preto",
@@ -666,11 +674,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "PENTEL",
-      "title": "Pentel Fita Corretiva Rosa + Refil SM/ZTP205R-P",
-      "url": "https://www.amazon.com.br/dp/B08YGWKDS7?tag=achadosatlasb-20",
+      "keyword": "VIVA",
+      "title": "Viva Verde Areia Higiênica Biodegradável para Gatos Grãos Finos 4kg",
+      "url": "https://www.amazon.com.br/dp/B07YP1K82Z?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18103825595584415",
+      "instagram_media_id": "17988609524843662",
       "facebook_post_id": ""
     },
     {
