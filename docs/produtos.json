@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-07T15:04:12.722314+00:00",
+  "updated_at": "2026-08-07T17:56:48.127749+00:00",
   "products": [
+    {
+      "keyword": "APPLE",
+      "title": "Apple iPhone 17 de 256 GB — Lavanda",
+      "url": "https://www.amazon.com.br/dp/B0GQWVYKZV?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17879534589683388",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "MOTOROLA",
       "title": "Motorola, Fone de Ouvido com Microfone, Intra Auricular, Preto",
@@ -754,11 +762,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "APPLE",
-      "title": "Apple iPhone 17 de 256 GB — Lavanda",
-      "url": "https://www.amazon.com.br/dp/B0GQWVYKZV?tag=achadosatlasb-20",
+      "keyword": "DELLO",
+      "title": "Dello - Pasta Aba Elástico A4 Line Cristal",
+      "url": "https://www.amazon.com.br/dp/B0F15LKNCQ?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "17879534589683388",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
