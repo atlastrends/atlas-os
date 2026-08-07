@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-07T19:34:00.767068+00:00",
+  "updated_at": "2026-08-07T19:37:03.478211+00:00",
   "products": [
     {
       "keyword": "DOVE",
@@ -831,6 +831,14 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BAGGIO",
+      "title": "Baggio Café Café Torrado e Moído Aroma de Chocolate Trufado 250g",
+      "url": "https://www.amazon.com.br/dp/B075W7XHMY?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18027324560675280",
       "facebook_post_id": ""
     },
     {
