@@ -1,6 +1,22 @@
 {
-  "updated_at": "2026-08-07T19:12:11.065477+00:00",
+  "updated_at": "2026-08-07T19:16:04.410919+00:00",
   "products": [
+    {
+      "keyword": "DOVE",
+      "title": "Dove Sérum Hidratante Corporal Niacinamida + Uniformizador 380ml",
+      "url": "https://www.amazon.com.br/dp/B0D8RHX3C6?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18054489863788659",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "DANOS",
+      "title": "Danos Vorazes Óleo Reparador 50ml , Lola Cosmetics",
+      "url": "https://www.amazon.com.br/dp/B09GHN14FP?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17984231145019611",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "ACORDO",
       "title": "O acordo (Nova edição): Amores improváveis vol. 1",
@@ -815,14 +831,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "DANOS",
-      "title": "Danos Vorazes Óleo Reparador 50ml , Lola Cosmetics",
-      "url": "https://www.amazon.com.br/dp/B09GHN14FP?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17984231145019611",
       "facebook_post_id": ""
     },
     {
