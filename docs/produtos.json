@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-07T21:19:05.748762+00:00",
+  "updated_at": "2026-08-07T21:22:53.780268+00:00",
   "products": [
+    {
+      "keyword": "CAPACETE",
+      "title": "CAPACETE FECHADO PRO TORK SPORT MOTO 788 PRETO - BRANCO TAM. 60",
+      "url": "https://www.amazon.com.br/dp/B07X3YB5FJ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18325002589279565",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "QUANTA",
       "title": "De quanta terra precisa um homem? e outras histórias",
@@ -879,14 +887,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CAPACETE",
-      "title": "CAPACETE FECHADO PRO TORK SPORT MOTO 788 PRETO - BRANCO TAM. 60",
-      "url": "https://www.amazon.com.br/dp/B07X3YB5FJ?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18325002589279565",
       "facebook_post_id": ""
     },
     {
@@ -2653,6 +2653,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "SIMPLE",
+      "title": "Simple Modern Disney Princess Kids Water Bottle & Toddler Cup | 14oz | Insulated Stainless Steel Princess Rainbows Toddler Wa",
+      "url": "https://www.amazon.com/dp/B094W9TGQG?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
