@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-07T19:40:59.164246+00:00",
+  "updated_at": "2026-08-07T19:46:10.305860+00:00",
   "products": [
+    {
+      "keyword": "PILHA",
+      "title": "Pilha recarregável AA 2700Mah Elgin Com 4 unidades Comum",
+      "url": "https://www.amazon.com.br/dp/B0754J31B7?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18101927783224720",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "BAGGIO",
       "title": "Baggio Café Café Torrado e Moído Aroma de Chocolate Trufado 250g",
@@ -842,11 +850,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "PILHA",
-      "title": "Pilha recarregável AA 2700Mah Elgin Com 4 unidades Comum",
-      "url": "https://www.amazon.com.br/dp/B0754J31B7?tag=achadosatlasb-20",
+      "keyword": "PENTEL",
+      "title": "Pentel Caneta Gel Energel X Retrátil 0.5mm Preta SM/BLN105-AN",
+      "url": "https://www.amazon.com.br/dp/B07V69MJTR?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18101927783224720",
+      "instagram_media_id": "18350519878170255",
       "facebook_post_id": ""
     },
     {
