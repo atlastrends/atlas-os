@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-07T14:55:37.113947+00:00",
+  "updated_at": "2026-08-07T14:58:09.507414+00:00",
   "products": [
+    {
+      "keyword": "ASPIRADOR",
+      "title": "Aspirador Pó Philco Vertical Power Clean 2000W PAS4000V 220V",
+      "url": "https://www.amazon.com.br/dp/B088MV7YB5?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18089321741641961",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "CAFETEIRA",
       "title": "Cafeteira Oster Inox Compacta 0,7L OCAF300-127",
@@ -738,11 +746,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "ASPIRADOR",
-      "title": "Aspirador Pó Philco Vertical Power Clean 2000W PAS4000V 220V",
-      "url": "https://www.amazon.com.br/dp/B088MV7YB5?tag=achadosatlasb-20",
+      "keyword": "MOTOROLA",
+      "title": "Motorola, Fone de Ouvido com Microfone, Intra Auricular, Preto",
+      "url": "https://www.amazon.com.br/dp/B0CWLV49MY?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18089321741641961",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
