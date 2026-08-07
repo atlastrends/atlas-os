@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-07T19:37:03.478211+00:00",
+  "updated_at": "2026-08-07T19:40:59.164246+00:00",
   "products": [
+    {
+      "keyword": "BAGGIO",
+      "title": "Baggio Café Café Torrado e Moído Aroma de Chocolate Trufado 250g",
+      "url": "https://www.amazon.com.br/dp/B075W7XHMY?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18027324560675280",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "DOVE",
       "title": "Dove Sérum Hidratante Corporal Niacinamida + Uniformizador 380ml",
@@ -834,11 +842,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "BAGGIO",
-      "title": "Baggio Café Café Torrado e Moído Aroma de Chocolate Trufado 250g",
-      "url": "https://www.amazon.com.br/dp/B075W7XHMY?tag=achadosatlasb-20",
+      "keyword": "PILHA",
+      "title": "Pilha recarregável AA 2700Mah Elgin Com 4 unidades Comum",
+      "url": "https://www.amazon.com.br/dp/B0754J31B7?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18027324560675280",
+      "instagram_media_id": "18101927783224720",
       "facebook_post_id": ""
     },
     {
