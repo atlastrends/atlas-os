@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-07T18:51:46.628814+00:00",
+  "updated_at": "2026-08-07T18:56:54.578378+00:00",
   "products": [
+    {
+      "keyword": "CHINELO",
+      "title": "Chinelo Havaianas Top adulto-unissex",
+      "url": "https://www.amazon.com.br/dp/B000YKO2LE?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18437592592131114",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "POKEMON",
       "title": "Pokémon TCG: Mega Evolução - Equilíbrio Perfeito - Sleeved Booster - Português",
@@ -787,10 +795,10 @@
     },
     {
       "keyword": "CHINELO",
-      "title": "Chinelo Havaianas Top adulto-unissex",
-      "url": "https://www.amazon.com.br/dp/B000YKO2LE?tag=achadosatlasb-20",
+      "title": "Chinelo Havaianas Brasil",
+      "url": "https://www.amazon.com.br/dp/B000YKMIVK?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18437592592131114",
+      "instagram_media_id": "18030946202831062",
       "facebook_post_id": ""
     },
     {
