@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-07T20:55:27.067347+00:00",
+  "updated_at": "2026-08-07T21:00:18.226624+00:00",
   "products": [
+    {
+      "keyword": "HIGIENIZANTE",
+      "title": "Gel Higienizante 70% Classic 500Ml, GIOVANNA BABY, Rosa",
+      "url": "https://www.amazon.com.br/dp/B07DTNP5GX?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17932028607124550",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "PILHA",
       "title": "Pilha Alcalina AA com 16 unidades Elgin Comum",
@@ -863,14 +871,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "HIGIENIZANTE",
-      "title": "Gel Higienizante 70% Classic 500Ml, GIOVANNA BABY, Rosa",
-      "url": "https://www.amazon.com.br/dp/B07DTNP5GX?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17932028607124550",
       "facebook_post_id": ""
     },
     {
@@ -2621,6 +2621,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "LETSJOLI",
+      "title": "LetsJoli Jelly Bras for Women No Underwire Plus Size Push Up Supportive | Full Coverage, Wireless Support Lift, For Older Wom",
+      "url": "https://www.amazon.com/dp/B0F6TWKDFK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
