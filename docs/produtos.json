@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-07T14:59:07.142567+00:00",
+  "updated_at": "2026-08-07T15:02:16.514968+00:00",
   "products": [
+    {
+      "keyword": "MOTOROLA",
+      "title": "Motorola, Fone de Ouvido com Microfone, Intra Auricular, Preto",
+      "url": "https://www.amazon.com.br/dp/B0CWLV49MY?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18110172290102914",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "ASPIRADOR",
       "title": "Aspirador Pó Philco Vertical Power Clean 2000W PAS4000V 220V",
@@ -746,11 +754,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "MOTOROLA",
-      "title": "Motorola, Fone de Ouvido com Microfone, Intra Auricular, Preto",
-      "url": "https://www.amazon.com.br/dp/B0CWLV49MY?tag=achadosatlasb-20",
+      "keyword": "APPLE",
+      "title": "Apple iPhone 17 de 256 GB — Lavanda",
+      "url": "https://www.amazon.com.br/dp/B0GQWVYKZV?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18110172290102914",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
