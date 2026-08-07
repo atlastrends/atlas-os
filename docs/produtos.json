@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-08-07T17:57:35.405709+00:00",
+  "updated_at": "2026-08-07T18:38:07.697627+00:00",
   "products": [
     {
       "keyword": "APPLE",
       "title": "Apple iPhone 17 de 256 GB — Lavanda",
       "url": "https://www.amazon.com.br/dp/B0GQWVYKZV?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "17879534589683388",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
@@ -14,7 +14,7 @@
       "title": "Motorola, Fone de Ouvido com Microfone, Intra Auricular, Preto",
       "url": "https://www.amazon.com.br/dp/B0CWLV49MY?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18110172290102914",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
@@ -22,7 +22,7 @@
       "title": "Aspirador Pó Philco Vertical Power Clean 2000W PAS4000V 220V",
       "url": "https://www.amazon.com.br/dp/B088MV7YB5?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18089321741641961",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
@@ -30,7 +30,7 @@
       "title": "Cafeteira Oster Inox Compacta 0,7L OCAF300-127",
       "url": "https://www.amazon.com.br/dp/B093HBXB54?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18166908553455314",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
@@ -762,11 +762,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "DELLO",
-      "title": "Dello - Pasta Aba Elástico A4 Line Cristal",
-      "url": "https://www.amazon.com.br/dp/B0F15LKNCQ?tag=achadosatlasb-20",
+      "keyword": "BATEDEIRA",
+      "title": "Batedeira Planetária Oster Bowl Inox III - 127V",
+      "url": "https://www.amazon.com.br/dp/B0C4CF2F67?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "17901522552480035",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
@@ -1824,6 +1824,14 @@
       "market": "BR",
       "instagram_media_id": "18458032156143735",
       "facebook_post_id": "1607914181027295"
+    },
+    {
+      "keyword": "DELLO",
+      "title": "Dello - Pasta Aba Elástico A4 Line Cristal",
+      "url": "https://www.amazon.com.br/dp/B0F15LKNCQ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17901522552480035",
+      "facebook_post_id": ""
     },
     {
       "keyword": "GROCERY",
