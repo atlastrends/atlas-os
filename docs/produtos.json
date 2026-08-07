@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-07T19:46:10.305860+00:00",
+  "updated_at": "2026-08-07T19:49:13.914229+00:00",
   "products": [
+    {
+      "keyword": "PENTEL",
+      "title": "Pentel Caneta Gel Energel X Retrátil 0.5mm Preta SM/BLN105-AN",
+      "url": "https://www.amazon.com.br/dp/B07V69MJTR?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18350519878170255",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "PILHA",
       "title": "Pilha recarregável AA 2700Mah Elgin Com 4 unidades Comum",
@@ -847,14 +855,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PENTEL",
-      "title": "Pentel Caneta Gel Energel X Retrátil 0.5mm Preta SM/BLN105-AN",
-      "url": "https://www.amazon.com.br/dp/B07V69MJTR?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18350519878170255",
       "facebook_post_id": ""
     },
     {
@@ -2509,6 +2509,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "GILDAN",
+      "title": "Gildan Men&#x27;s Crew T-Shirts, Multipack, Style G1100",
+      "url": "https://www.amazon.com/dp/B07JDFPQTC?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
