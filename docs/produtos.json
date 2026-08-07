@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-07T22:00:01.403599+00:00",
+  "updated_at": "2026-08-07T22:03:23.407635+00:00",
   "products": [
+    {
+      "keyword": "CANETA",
+      "title": "CANETA CIS SPIRO 0.7 C/08UN 761140",
+      "url": "https://www.amazon.com.br/dp/B09S6V872Z?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17938645089337583",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "CAPACETE",
       "title": "CAPACETE FECHADO PRO TORK SPORT MOTO 788 PRETO - BRANCO TAM. 60",
@@ -887,14 +895,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CANETA",
-      "title": "CANETA CIS SPIRO 0.7 C/08UN 761140",
-      "url": "https://www.amazon.com.br/dp/B09S6V872Z?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17938645089337583",
       "facebook_post_id": ""
     },
     {
@@ -2725,6 +2725,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "OWALA",
+      "title": "Owala Tumbler Kids Stainless Steel Water Bottle 12 oz Turtley Awesome | Insulated | Spill-Resistant Lid | Reusable Straw | Do",
+      "url": "https://www.amazon.com/dp/B0CR5HLCVQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
