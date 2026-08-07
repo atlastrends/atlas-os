@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-07T18:38:57.710925+00:00",
+  "updated_at": "2026-08-07T18:42:30.414422+00:00",
   "products": [
+    {
+      "keyword": "BATEDEIRA",
+      "title": "Batedeira Planetária Oster Bowl Inox III - 127V",
+      "url": "https://www.amazon.com.br/dp/B0C4CF2F67?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17869482348585717",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "APPLE",
       "title": "Apple iPhone 17 de 256 GB — Lavanda",
@@ -762,11 +770,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "BATEDEIRA",
-      "title": "Batedeira Planetária Oster Bowl Inox III - 127V",
-      "url": "https://www.amazon.com.br/dp/B0C4CF2F67?tag=achadosatlasb-20",
+      "keyword": "SAMSUNG",
+      "title": "Samsung Lava e Seca WD11M com Digital Inverter WD11M4473PX Inox Look 11/7kg - 220V",
+      "url": "https://www.amazon.com.br/dp/B0B61WJRY5?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "17869482348585717",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
