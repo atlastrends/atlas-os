@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T13:04:32.613766+00:00",
+  "updated_at": "2026-08-08T13:08:11.215722+00:00",
   "products": [
+    {
+      "keyword": "SUGGAR",
+      "title": "SUGGAR DEPURADOR DE AR SLIM 60CM 3 VEL. PRETO 110V DPS161PT",
+      "url": "https://www.amazon.com.br/dp/B0B3SJ345V?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17926395576392943",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "OBRAS",
       "title": "As obras revolucionárias de George Orwell - Box com 3 livros",
@@ -903,14 +911,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "SUGGAR",
-      "title": "SUGGAR DEPURADOR DE AR SLIM 60CM 3 VEL. PRETO 110V DPS161PT",
-      "url": "https://www.amazon.com.br/dp/B0B3SJ345V?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17926395576392943",
       "facebook_post_id": ""
     },
     {
@@ -2845,6 +2845,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "MEAD",
+      "title": "Mead Primary Journal Creative Story Tablet Composition Notebook, 7.5\" x 9.75\", Grades K-2, 100 Sheets, Blue (09554)",
+      "url": "https://www.amazon.com/dp/B00LT54P06?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
