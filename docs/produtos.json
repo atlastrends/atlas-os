@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T16:04:47.122027+00:00",
+  "updated_at": "2026-08-08T18:28:33.234318+00:00",
   "products": [
+    {
+      "keyword": "BOLA",
+      "title": "Mini Bola De Exercicios Cinza 25cm",
+      "url": "https://www.amazon.com.br/dp/B084BKPMKL?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18245327467314607",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "CLASSICOS",
       "title": "Box Clássicos de William Shakespeare - com 7 marcadores de páginas",
@@ -1066,11 +1074,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "BOLA",
-      "title": "Mini Bola De Exercicios Cinza 25cm",
-      "url": "https://www.amazon.com.br/dp/B084BKPMKL?tag=achadosatlasb-20",
+      "keyword": "REFRIGERANTE",
+      "title": "Refrigerante Pepsi Zero BLACK, Lata 350Ml Pack (12 Unidades)",
+      "url": "https://www.amazon.com.br/dp/B0954R6FNH?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18245327467314607",
+      "instagram_media_id": "18193154458379884",
       "facebook_post_id": ""
     },
     {
@@ -2135,6 +2143,14 @@
       "url": "https://www.amazon.com.br/dp/B0F15LKNCQ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "17901522552480035",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "ANTARCTIC",
+      "title": "Antarctic Star Countertop Ice Maker Machine, 26Lbs/Day Fastest 6‑Min Ice | 8 bullet ice in 6min, 2 sizes, energy-saving, port",
+      "url": "https://www.amazon.com/dp/B0F8NKJD6X?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
