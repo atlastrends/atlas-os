@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T13:36:33.252372+00:00",
+  "updated_at": "2026-08-08T13:39:17.882896+00:00",
   "products": [
+    {
+      "keyword": "BLUE",
+      "title": "Blue Premium Tapete Higiênico Descartável para Cães, 30 Unidades",
+      "url": "https://www.amazon.com.br/dp/B07XVX9G17?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18350397403221558",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "TORK",
       "title": "Pro Tork Capacete Moto R8, Cinza/Vermelho Fosco, Tam. 58",
@@ -946,11 +954,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "BLUE",
-      "title": "Blue Premium Tapete Higiênico Descartável para Cães, 30 Unidades",
-      "url": "https://www.amazon.com.br/dp/B07XVX9G17?tag=achadosatlasb-20",
+      "keyword": "CADEIRA",
+      "title": "Mor - Cadeira Alta Alumínio Azul",
+      "url": "https://www.amazon.com.br/dp/B076WX3VSJ?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18350397403221558",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
