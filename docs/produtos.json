@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T14:19:23.786223+00:00",
+  "updated_at": "2026-08-08T14:42:48.784472+00:00",
   "products": [
+    {
+      "keyword": "CRIME",
+      "title": "Crime e castigo",
+      "url": "https://www.amazon.com.br/dp/6555520809?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18123313072763002",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "CAPACETE",
       "title": "CAPACETE FECHADO PRO TORK NEW LIBERTY 4 SOLID PRETO FOSCO TAM. 60",
@@ -1002,11 +1010,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "CRIME",
-      "title": "Crime e castigo",
-      "url": "https://www.amazon.com.br/dp/6555520809?tag=achadosatlasb-20",
+      "keyword": "WHISKAS",
+      "title": "WHISKAS Ração Carne Gatos Adultos Castrados 2,7 kg",
+      "url": "https://www.amazon.com.br/dp/B0BCHB3X2W?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18123313072763002",
+      "instagram_media_id": "17904888252307913",
       "facebook_post_id": ""
     },
     {
