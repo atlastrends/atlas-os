@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T16:03:27.285726+00:00",
+  "updated_at": "2026-08-08T16:04:47.122027+00:00",
   "products": [
+    {
+      "keyword": "CLASSICOS",
+      "title": "Box Clássicos de William Shakespeare - com 7 marcadores de páginas",
+      "url": "https://www.amazon.com.br/dp/B09PW8LBZD?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18065682251778650",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "PEQUENO",
       "title": "O Pequeno Príncipe – Edição de luxo com capa dura almofadada e aquarelas originais do autor",
@@ -1058,11 +1066,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "CLASSICOS",
-      "title": "Box Clássicos de William Shakespeare - com 7 marcadores de páginas",
-      "url": "https://www.amazon.com.br/dp/B09PW8LBZD?tag=achadosatlasb-20",
+      "keyword": "BOLA",
+      "title": "Mini Bola De Exercicios Cinza 25cm",
+      "url": "https://www.amazon.com.br/dp/B084BKPMKL?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18065682251778650",
+      "instagram_media_id": "18245327467314607",
       "facebook_post_id": ""
     },
     {
