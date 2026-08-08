@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T13:44:15.397114+00:00",
+  "updated_at": "2026-08-08T13:47:31.388917+00:00",
   "products": [
+    {
+      "keyword": "TORK",
+      "title": "Pro Tork Capacete Moto R8, Viseira Fumê, Preto/Prata, Tam. 58",
+      "url": "https://www.amazon.com.br/dp/B07Z5F2FZ9?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18456462526142814",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "CADEIRA",
       "title": "Mor - Cadeira Alta Alumínio Azul",
@@ -962,11 +970,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "TORK",
-      "title": "Pro Tork Capacete Moto R8, Viseira Fumê, Preto/Prata, Tam. 58",
-      "url": "https://www.amazon.com.br/dp/B07Z5F2FZ9?tag=achadosatlasb-20",
+      "keyword": "SUPORTE",
+      "title": "Suporte Para Notebook E MacBook em Alumínio com Altura Ajustável",
+      "url": "https://www.amazon.com.br/dp/B086CB6BXW?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18456462526142814",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
