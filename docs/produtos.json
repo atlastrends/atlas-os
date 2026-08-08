@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T15:11:22.524678+00:00",
+  "updated_at": "2026-08-08T15:12:03.649935+00:00",
   "products": [
+    {
+      "keyword": "PEQUENO",
+      "title": "O Pequeno Príncipe – Edição de luxo com capa dura almofadada e aquarelas originais do autor",
+      "url": "https://www.amazon.com.br/dp/6559801365?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17904036486525750",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "CANETAS",
       "title": "Kit de 60 Canetas Marcador Permanente Ponta Dupla Coloridas para Desenho Profissional Escolar Infantil com Estojo Organizador",
@@ -1047,14 +1055,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PEQUENO",
-      "title": "O Pequeno Príncipe – Edição de luxo com capa dura almofadada e aquarelas originais do autor",
-      "url": "https://www.amazon.com.br/dp/6559801365?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17904036486525750",
       "facebook_post_id": ""
     },
     {
@@ -3037,6 +3037,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "ZEERUN",
+      "title": "Zeerun Weighted Vest, 6lb/8lb/10lb/12lb/15lb/18lb/20lb/24lb/30lb for Men Women, Reflective Stripe Adjustable Buckle, Comforta",
+      "url": "https://www.amazon.com/dp/B0FG7WXNP3?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
