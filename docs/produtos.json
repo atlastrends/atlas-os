@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T13:23:22.933184+00:00",
+  "updated_at": "2026-08-08T13:26:40.672695+00:00",
   "products": [
+    {
+      "keyword": "COMFORT",
+      "title": "Comfort Amaciante Concentrado Frescor Intenso 1 L",
+      "url": "https://www.amazon.com.br/dp/B07DTLS9M7?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18179171527412726",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "VONIXX",
       "title": "vonixx V-FLOC 1,5L",
@@ -922,11 +930,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "COMFORT",
-      "title": "Comfort Amaciante Concentrado Frescor Intenso 1 L",
-      "url": "https://www.amazon.com.br/dp/B07DTLS9M7?tag=achadosatlasb-20",
+      "keyword": "DETERGENTE",
+      "title": "Ypê Detergente em Pó para Máquina 1Kg",
+      "url": "https://www.amazon.com.br/dp/B0CSYPRC2Q?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18179171527412726",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
