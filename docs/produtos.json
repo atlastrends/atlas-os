@@ -1,6 +1,22 @@
 {
-  "updated_at": "2026-08-08T14:42:48.784472+00:00",
+  "updated_at": "2026-08-08T14:55:48.892859+00:00",
   "products": [
+    {
+      "keyword": "CRAYOLA",
+      "title": "CRAYOLA 52-3024 Regular Crayon Regular Crayon 24 Pack, (16018)",
+      "url": "https://www.amazon.com.br/dp/B0765ML9Y1?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18059946890780643",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "WHISKAS",
+      "title": "WHISKAS Ração Carne Gatos Adultos Castrados 2,7 kg",
+      "url": "https://www.amazon.com.br/dp/B0BCHB3X2W?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17904888252307913",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "CRIME",
       "title": "Crime e castigo",
@@ -1007,14 +1023,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "WHISKAS",
-      "title": "WHISKAS Ração Carne Gatos Adultos Castrados 2,7 kg",
-      "url": "https://www.amazon.com.br/dp/B0BCHB3X2W?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17904888252307913",
       "facebook_post_id": ""
     },
     {
