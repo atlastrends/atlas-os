@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T12:10:23.183014+00:00",
+  "updated_at": "2026-08-08T12:13:11.158650+00:00",
   "products": [
+    {
+      "keyword": "OBRAS",
+      "title": "As obras revolucionárias de George Orwell - Box com 3 livros",
+      "url": "https://www.amazon.com.br/dp/B08ZK6N3XZ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17926333422384057",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "CANETA",
       "title": "CANETA CIS SPIRO 0.7 C/08UN 761140",
@@ -895,14 +903,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "OBRAS",
-      "title": "As obras revolucionárias de George Orwell - Box com 3 livros",
-      "url": "https://www.amazon.com.br/dp/B08ZK6N3XZ?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17926333422384057",
       "facebook_post_id": ""
     },
     {
@@ -2765,6 +2765,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "THERMOS",
+      "title": "THERMOS FUNTAINER Water Bottle with Straw, 12oz, Construction | Kids Stainless Steel Insulated Water Bottle, Keeps Drinks Col",
+      "url": "https://www.amazon.com/dp/B0F2BF31PW?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
