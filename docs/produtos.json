@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T18:30:00.454124+00:00",
+  "updated_at": "2026-08-08T18:31:41.465418+00:00",
   "products": [
+    {
+      "keyword": "MEEPLEBR",
+      "title": "MeepleBR Sleeves - PADRÃO (63,5x88mm), 100 Unidades, TCG, Plástico para Proteção de Cartas",
+      "url": "https://www.amazon.com.br/dp/B07PDGL5X4?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18100479403965963",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "REFRIGERANTE",
       "title": "Refrigerante Pepsi Zero BLACK, Lata 350Ml Pack (12 Unidades)",
@@ -1082,11 +1090,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "MEEPLEBR",
-      "title": "MeepleBR Sleeves - PADRÃO (63,5x88mm), 100 Unidades, TCG, Plástico para Proteção de Cartas",
-      "url": "https://www.amazon.com.br/dp/B07PDGL5X4?tag=achadosatlasb-20",
+      "keyword": "RACAO",
+      "title": "Ração Whiskas Carne Para Gatos Adultos 10,1 kg",
+      "url": "https://www.amazon.com.br/dp/B07XQ7J1DR?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18100479403965963",
+      "instagram_media_id": "18618363586006403",
       "facebook_post_id": ""
     },
     {
