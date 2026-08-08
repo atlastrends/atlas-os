@@ -1,6 +1,22 @@
 {
-  "updated_at": "2026-08-08T18:33:24.067592+00:00",
+  "updated_at": "2026-08-08T19:28:39.200468+00:00",
   "products": [
+    {
+      "keyword": "VONIXX",
+      "title": "VONIXX V-MOL, 1.5L",
+      "url": "https://www.amazon.com.br/dp/B0BW4NDV3N?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18140390389565444",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "CAFE",
+      "title": "L&#x27;OR, Café Solúvel Classique Pote de Vidro 130g",
+      "url": "https://www.amazon.com.br/dp/B0C4M2SYF8?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17961636012178059",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "RACAO",
       "title": "Ração Whiskas Carne Para Gatos Adultos 10,1 kg",
@@ -1098,14 +1114,6 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "CAFE",
-      "title": "L&#x27;OR, Café Solúvel Classique Pote de Vidro 130g",
-      "url": "https://www.amazon.com.br/dp/B0C4M2SYF8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17961636012178059",
-      "facebook_post_id": ""
-    },
-    {
       "keyword": "SPORT",
       "title": "One Sport Luva Fitness Academia Fitness Musculação OSP5",
       "url": "https://www.amazon.com.br/dp/B09HR3QHL8?tag=achadosatlasb-20",
@@ -2125,14 +2133,6 @@
       "keyword": "ROKU",
       "title": "Roku Streaming Stick HD 2025 | Dispositivo de streaming para TV HD/FHD com controle remoto por comando de voz compatível com Alexa, Siri e Google",
       "url": "https://www.amazon.com.br/dp/B0FH7LY3R4?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "VONIXX",
-      "title": "VONIXX V-MOL, 1.5L",
-      "url": "https://www.amazon.com.br/dp/B0BW4NDV3N?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
