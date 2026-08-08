@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T13:40:11.418923+00:00",
+  "updated_at": "2026-08-08T13:43:22.655359+00:00",
   "products": [
+    {
+      "keyword": "CADEIRA",
+      "title": "Mor - Cadeira Alta Alumínio Azul",
+      "url": "https://www.amazon.com.br/dp/B076WX3VSJ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18047072633801228",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "BLUE",
       "title": "Blue Premium Tapete Higiênico Descartável para Cães, 30 Unidades",
@@ -954,11 +962,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "CADEIRA",
-      "title": "Mor - Cadeira Alta Alumínio Azul",
-      "url": "https://www.amazon.com.br/dp/B076WX3VSJ?tag=achadosatlasb-20",
+      "keyword": "TORK",
+      "title": "Pro Tork Capacete Moto R8, Viseira Fumê, Preto/Prata, Tam. 58",
+      "url": "https://www.amazon.com.br/dp/B07Z5F2FZ9?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18047072633801228",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
