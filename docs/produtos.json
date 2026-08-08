@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-08T13:14:38.865365+00:00",
+  "updated_at": "2026-08-08T13:17:55.066366+00:00",
   "products": [
     {
       "keyword": "SUGGAR",
@@ -909,6 +909,14 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "VONIXX",
+      "title": "vonixx V-FLOC 1,5L",
+      "url": "https://www.amazon.com.br/dp/B07YM4MJ3K?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
@@ -1978,6 +1986,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "KISMILE",
+      "title": "Kismile Nugget Ice Maker Countertop, 35 lbs/Day, Stainless Steel | Portable Sonic Ice Maker & Pebble Ice Machine, First Ice i",
+      "url": "https://www.amazon.com/dp/B0F64WHP74?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18177028378420763",
+      "facebook_post_id": ""
+    },
+    {
       "keyword": "MEAD",
       "title": "Mead Primary Journal Creative Story Tablet Composition Notebook, 7.5\" x 9.75\", Grades K-2, 100 Sheets, Blue (09554)",
       "url": "https://www.amazon.com/dp/B00LT54P06?tag=atlasfindsus-20",
@@ -2855,14 +2871,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "KISMILE",
-      "title": "Kismile Nugget Ice Maker Countertop, 35 lbs/Day, Stainless Steel | Portable Sonic Ice Maker & Pebble Ice Machine, First Ice i",
-      "url": "https://www.amazon.com/dp/B0F64WHP74?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18177028378420763",
       "facebook_post_id": ""
     },
     {
