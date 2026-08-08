@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T18:28:33.234318+00:00",
+  "updated_at": "2026-08-08T18:30:00.454124+00:00",
   "products": [
+    {
+      "keyword": "REFRIGERANTE",
+      "title": "Refrigerante Pepsi Zero BLACK, Lata 350Ml Pack (12 Unidades)",
+      "url": "https://www.amazon.com.br/dp/B0954R6FNH?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18193154458379884",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "BOLA",
       "title": "Mini Bola De Exercicios Cinza 25cm",
@@ -1074,11 +1082,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "REFRIGERANTE",
-      "title": "Refrigerante Pepsi Zero BLACK, Lata 350Ml Pack (12 Unidades)",
-      "url": "https://www.amazon.com.br/dp/B0954R6FNH?tag=achadosatlasb-20",
+      "keyword": "MEEPLEBR",
+      "title": "MeepleBR Sleeves - PADRÃO (63,5x88mm), 100 Unidades, TCG, Plástico para Proteção de Cartas",
+      "url": "https://www.amazon.com.br/dp/B07PDGL5X4?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18193154458379884",
+      "instagram_media_id": "18100479403965963",
       "facebook_post_id": ""
     },
     {
