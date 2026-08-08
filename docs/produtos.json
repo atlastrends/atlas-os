@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T14:00:29.404792+00:00",
+  "updated_at": "2026-08-08T14:05:45.585557+00:00",
   "products": [
+    {
+      "keyword": "ASPIRADOR",
+      "title": "WAP Aspirador de Pó Automotivo Car 12V2, Portátil, 420ml, com Recipiente Removível e Filtro Lavável, 180W 12VDC",
+      "url": "https://www.amazon.com.br/dp/B0CLDRS18S?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18548834854072579",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "ELECTROLUX",
       "title": "Electrolux Filtro Refil para Purificador de Água Acqua Pure PE12 | Modelos Compatíveis PC02B, PC02X, PE12A, PE12B, PE12G, PE1",
@@ -983,14 +991,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "ASPIRADOR",
-      "title": "WAP Aspirador de Pó Automotivo Car 12V2, Portátil, 420ml, com Recipiente Removível e Filtro Lavável, 180W 12VDC",
-      "url": "https://www.amazon.com.br/dp/B0CLDRS18S?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18548834854072579",
       "facebook_post_id": ""
     },
     {
@@ -2941,6 +2941,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "EUHOMY",
+      "title": "EUHOMY Mini Fridge 130 Can Beverage Refrigerator Cooler Glass Door for Soda Wine Beer, Beverage Cooler for Home, Bar, Office",
+      "url": "https://www.amazon.com/dp/B0GCNN5MYR?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
