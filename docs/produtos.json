@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-08T13:19:37.728695+00:00",
+  "updated_at": "2026-08-08T13:22:21.843286+00:00",
   "products": [
+    {
+      "keyword": "VONIXX",
+      "title": "vonixx V-FLOC 1,5L",
+      "url": "https://www.amazon.com.br/dp/B07YM4MJ3K?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18616582522006059",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "SUGGAR",
       "title": "SUGGAR DEPURADOR DE AR SLIM 60CM 3 VEL. PRETO 110V DPS161PT",
@@ -914,11 +922,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "VONIXX",
-      "title": "vonixx V-FLOC 1,5L",
-      "url": "https://www.amazon.com.br/dp/B07YM4MJ3K?tag=achadosatlasb-20",
+      "keyword": "COMFORT",
+      "title": "Comfort Amaciante Concentrado Frescor Intenso 1 L",
+      "url": "https://www.amazon.com.br/dp/B07DTLS9M7?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18616582522006059",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
