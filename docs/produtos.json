@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-09T22:46:38.019773+00:00",
+  "updated_at": "2026-08-09T22:51:17.178600+00:00",
   "products": [
+    {
+      "keyword": "HEINZ",
+      "title": "Heinz Maionese Tradicional 390G",
+      "url": "https://www.amazon.com.br/dp/B07YN9ZY5D?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18136064137611415",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "ZOETIS",
       "title": "Zoetis Simparic 20Mg 5 1 Até 10Kg 03 Compr Para Cães",
@@ -1183,14 +1191,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "HEINZ",
-      "title": "Heinz Maionese Tradicional 390G",
-      "url": "https://www.amazon.com.br/dp/B07YN9ZY5D?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18136064137611415",
       "facebook_post_id": ""
     },
     {
@@ -3229,6 +3229,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "OWALA",
+      "title": "Owala Tumbler Kids Stainless Steel Water Bottle 12 oz Lilac Rocket | Insulated | Spill-Resistant Lid | Reusable Straw | Doubl",
+      "url": "https://www.amazon.com/dp/B0C76CC69J?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
