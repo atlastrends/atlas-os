@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-09T22:10:19.981268+00:00",
+  "updated_at": "2026-08-09T22:14:08.030828+00:00",
   "products": [
+    {
+      "keyword": "PENTEL",
+      "title": "Pentel Pastel Oleoso 36 Cores PHN-36",
+      "url": "https://www.amazon.com.br/dp/B00879S4OK?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18002798852979893",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "GAMESIR",
       "title": "GameSir G7 SE Controle com Fio para PC, Xbox One, Xbox Series X|S, Gamepad para Jogos Plug and Play (Azul)",
@@ -1170,11 +1178,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "PENTEL",
-      "title": "Pentel Pastel Oleoso 36 Cores PHN-36",
-      "url": "https://www.amazon.com.br/dp/B00879S4OK?tag=achadosatlasb-20",
+      "keyword": "ZOETIS",
+      "title": "Zoetis Simparic 20Mg 5 1 Até 10Kg 03 Compr Para Cães",
+      "url": "https://www.amazon.com.br/dp/B07Y1Y7NDX?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18002798852979893",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
