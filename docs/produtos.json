@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-09T21:26:30.449538+00:00",
+  "updated_at": "2026-08-09T21:30:02.353649+00:00",
   "products": [
+    {
+      "keyword": "ECHO",
+      "title": "Echo Dot (Geração mais recente) | Smart speaker com Alexa, som vibrante e potente, Wi-Fi e Bluetooth | Cor Azul, com Acesso A",
+      "url": "https://www.amazon.com.br/dp/B09B8QFYZ2?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18116799524484204",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "VONIXX",
       "title": "VONIXX V-MOL, 1.5L",
@@ -1114,11 +1122,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "ECHO",
-      "title": "Echo Dot (Geração mais recente) | Smart speaker com Alexa, som vibrante e potente, Wi-Fi e Bluetooth | Cor Azul, com Acesso A",
-      "url": "https://www.amazon.com.br/dp/B09B8QFYZ2?tag=achadosatlasb-20",
+      "keyword": "SAMSUNG",
+      "title": "Samsung Galaxy Buds Core, Fone de Ouvido, sem fio, cancelamento de ruído, interprete inteligente",
+      "url": "https://www.amazon.com.br/dp/B0FP8KDP36?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18116799524484204",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
