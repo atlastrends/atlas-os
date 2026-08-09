@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-09T23:02:54.262966+00:00",
+  "updated_at": "2026-08-09T23:07:02.329658+00:00",
   "products": [
+    {
+      "keyword": "APERITIVO",
+      "title": "Aperitivo Bitter Campari 748ml",
+      "url": "https://www.amazon.com.br/dp/B0CPFJMNZB?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18101769113581309",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "HEINZ",
       "title": "Heinz Maionese Tradicional 390G",
@@ -1194,11 +1202,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "APERITIVO",
-      "title": "Aperitivo Bitter Campari 748ml",
-      "url": "https://www.amazon.com.br/dp/B0CPFJMNZB?tag=achadosatlasb-20",
+      "keyword": "PENTEL",
+      "title": "Pentel Lapiseira Técnica Graphgear 500 0.5mm SM/PG525-A",
+      "url": "https://www.amazon.com.br/dp/B00DZTNRGC?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18101769113581309",
+      "instagram_media_id": "18110102897042951",
       "facebook_post_id": ""
     },
     {
