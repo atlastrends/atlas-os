@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-09T21:42:03.967268+00:00",
+  "updated_at": "2026-08-09T21:47:20.944847+00:00",
   "products": [
+    {
+      "keyword": "SAMSUNG",
+      "title": "Samsung Smart TV 43\" QLED Full HD Q5F 2025, Xbox Cloud Gaming, Canais Gratuitos, HDR, Som em Movimento Virtual",
+      "url": "https://www.amazon.com.br/dp/B0GC17K7K7?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18088007924170134",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "SMARTPHONE",
       "title": "Smartphone Motorola Signature 5G - 512GB 24GB (12GB RAM + 12GB RAM Boost), 3 cameras 50MP Sony Lytia e Zoom 100x, Tela 1.5K e",
@@ -1135,14 +1143,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "SAMSUNG",
-      "title": "Samsung Smart TV 43\" QLED Full HD Q5F 2025, Xbox Cloud Gaming, Canais Gratuitos, HDR, Som em Movimento Virtual",
-      "url": "https://www.amazon.com.br/dp/B0GC17K7K7?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18088007924170134",
       "facebook_post_id": ""
     },
     {
@@ -3133,6 +3133,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "FIVE",
+      "title": "Five Star Spiral Notebook + Study App, 5 Subject, College Ruled Paper, 8-1/2\" x 11\", 200 Sheets, Fights Ink Bleed, Water Resi",
+      "url": "https://www.amazon.com/dp/B003O2RXUQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
