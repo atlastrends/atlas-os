@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-09T23:07:02.329658+00:00",
+  "updated_at": "2026-08-09T23:11:18.085402+00:00",
   "products": [
+    {
+      "keyword": "PENTEL",
+      "title": "Pentel Lapiseira Técnica Graphgear 500 0.5mm SM/PG525-A",
+      "url": "https://www.amazon.com.br/dp/B00DZTNRGC?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18110102897042951",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "APERITIVO",
       "title": "Aperitivo Bitter Campari 748ml",
@@ -1202,11 +1210,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "PENTEL",
-      "title": "Pentel Lapiseira Técnica Graphgear 500 0.5mm SM/PG525-A",
-      "url": "https://www.amazon.com.br/dp/B00DZTNRGC?tag=achadosatlasb-20",
+      "keyword": "TOYSTER",
+      "title": "Toyster - Quebra-cabeça: Vincent Van Gogh: A Noite Estrelada - 500 peças nano - Game Office",
+      "url": "https://www.amazon.com.br/dp/B0BY9NPL64?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18110102897042951",
+      "instagram_media_id": "18074469437352998",
       "facebook_post_id": ""
     },
     {
