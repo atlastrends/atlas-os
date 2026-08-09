@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-09T21:30:52.044590+00:00",
+  "updated_at": "2026-08-09T21:36:55.252054+00:00",
   "products": [
+    {
+      "keyword": "SAMSUNG",
+      "title": "Samsung Galaxy Buds Core, Fone de Ouvido, sem fio, cancelamento de ruído, interprete inteligente",
+      "url": "https://www.amazon.com.br/dp/B0FP8KDP36?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18190650610376500",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "ECHO",
       "title": "Echo Dot (Geração mais recente) | Smart speaker com Alexa, som vibrante e potente, Wi-Fi e Bluetooth | Cor Azul, com Acesso A",
@@ -1122,11 +1130,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "SAMSUNG",
-      "title": "Samsung Galaxy Buds Core, Fone de Ouvido, sem fio, cancelamento de ruído, interprete inteligente",
-      "url": "https://www.amazon.com.br/dp/B0FP8KDP36?tag=achadosatlasb-20",
+      "keyword": "SMARTPHONE",
+      "title": "Smartphone Motorola Signature 5G - 512GB 24GB (12GB RAM + 12GB RAM Boost), 3 cameras 50MP Sony Lytia e Zoom 100x, Tela 1.5K e",
+      "url": "https://www.amazon.com.br/dp/B0GMKS98D5?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18190650610376500",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
