@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T00:06:38.557338+00:00",
+  "updated_at": "2026-08-10T00:09:43.727069+00:00",
   "products": [
+    {
+      "keyword": "INVERNO",
+      "title": "Bom dia, inverno",
+      "url": "https://www.amazon.com.br/dp/8535944672?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17940596085300376",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "ASMODEE",
       "title": "Asmodee Dobble Jogo de Cartas para Amigos, 2 a 8 Jogadores, Idade +6",
@@ -1314,11 +1322,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "INVERNO",
-      "title": "Bom dia, inverno",
-      "url": "https://www.amazon.com.br/dp/8535944672?tag=achadosatlasb-20",
+      "keyword": "BUBA",
+      "title": "Buba, Chocalho Com Mordedor Coelhinho",
+      "url": "https://www.amazon.com.br/dp/B0CRZC7GRL?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "17940596085300376",
+      "instagram_media_id": "18073160696386898",
       "facebook_post_id": ""
     },
     {
