@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T01:28:25.158233+00:00",
+  "updated_at": "2026-08-10T01:34:37.141059+00:00",
   "products": [
+    {
+      "keyword": "AMORES",
+      "title": "Box - Amores Improváveis (Nova Edição)",
+      "url": "https://www.amazon.com.br/dp/8584395784?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18078900935657428",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "PIPICAT",
       "title": "Pipicat Granulado Sanitario Floral 12 kg",
@@ -1391,14 +1399,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "AMORES",
-      "title": "Box - Amores Improváveis (Nova Edição)",
-      "url": "https://www.amazon.com.br/dp/8584395784?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18078900935657428",
       "facebook_post_id": ""
     },
     {
@@ -3501,6 +3501,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "EUHOMY",
+      "title": "EUHOMY Ice Maker Countertop, 9 Cubes Ready in 6 Mins, 26lbs/24H, Self-Cleaning, Portable Ice Maker Machine with Carry Handle,",
+      "url": "https://www.amazon.com/dp/B0DCJ78D27?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
