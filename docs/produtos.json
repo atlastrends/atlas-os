@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T01:00:46.195205+00:00",
+  "updated_at": "2026-08-10T01:05:25.106559+00:00",
   "products": [
+    {
+      "keyword": "DELET",
+      "title": "DELET 500ML",
+      "url": "https://www.amazon.com.br/dp/B0BSB128CV?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18108056111135210",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "NOTA",
       "title": "Nota Autoadesiva, Tris, 7897476677446, Multicor, pacote de 100",
@@ -1370,11 +1378,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "DELET",
-      "title": "DELET 500ML",
-      "url": "https://www.amazon.com.br/dp/B0BSB128CV?tag=achadosatlasb-20",
+      "keyword": "LIVE",
+      "title": "O-LIVE & Co, Azeite de oliva extra virgem, Chileno, vidro, 450ml",
+      "url": "https://www.amazon.com.br/dp/B0CZS2LGFD?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18108056111135210",
+      "instagram_media_id": "18610635553052151",
       "facebook_post_id": ""
     },
     {
