@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T00:58:00.082649+00:00",
+  "updated_at": "2026-08-10T00:58:19.900715+00:00",
   "products": [
+    {
+      "keyword": "NOTA",
+      "title": "Nota Autoadesiva, Tris, 7897476677446, Multicor, pacote de 100",
+      "url": "https://www.amazon.com.br/dp/B0791LY2TH?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17989792791010333",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "PLAYSTATION",
       "title": "PlayStation®5 Slim Disk - Pacote ASTRO BOT e Gran Turismo 7",
@@ -1359,14 +1367,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "NOTA",
-      "title": "Nota Autoadesiva, Tris, 7897476677446, Multicor, pacote de 100",
-      "url": "https://www.amazon.com.br/dp/B0791LY2TH?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17989792791010333",
       "facebook_post_id": ""
     },
     {
@@ -3437,6 +3437,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "XBOX",
+      "title": "XBOX Wireless Gaming Controller | Shock Blue | Consoles, PCs, TVs, mobile, and more | Textured Grip | Wireless, Bluetooth, US",
+      "url": "https://www.amazon.com/dp/B0F1J12R6N?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
