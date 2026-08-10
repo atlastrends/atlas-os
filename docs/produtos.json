@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T01:05:25.106559+00:00",
+  "updated_at": "2026-08-10T01:09:28.792385+00:00",
   "products": [
+    {
+      "keyword": "LIVE",
+      "title": "O-LIVE & Co, Azeite de oliva extra virgem, Chileno, vidro, 450ml",
+      "url": "https://www.amazon.com.br/dp/B0CZS2LGFD?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18610635553052151",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "DELET",
       "title": "DELET 500ML",
@@ -1375,14 +1383,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "LIVE",
-      "title": "O-LIVE & Co, Azeite de oliva extra virgem, Chileno, vidro, 450ml",
-      "url": "https://www.amazon.com.br/dp/B0CZS2LGFD?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18610635553052151",
       "facebook_post_id": ""
     },
     {
@@ -3461,6 +3461,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "RAZER",
+      "title": "Razer BlackShark V2 X Xbox Gaming Headset, 3.5mm Audio Jack, Black | 50mm Drivers, Cardioid Mic, Lightweight, Comfortable Noi",
+      "url": "https://www.amazon.com/dp/B0CXGTGPZQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
