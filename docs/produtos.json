@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T17:12:11.868642+00:00",
+  "updated_at": "2026-08-10T17:13:07.687883+00:00",
   "products": [
+    {
+      "keyword": "MAQUINA",
+      "title": "Máquina de Lavar Electrolux 13kg Branca Essential Care com Cesto Inox e Jet&Clean (LED13)",
+      "url": "https://www.amazon.com.br/dp/B09B7X4JSZ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18117362380720670",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "FAIXAS",
       "title": "Kit 4 Faixas Elásticas Bands 3 Intensidades | 4 intensidades",
@@ -1423,14 +1431,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "MAQUINA",
-      "title": "Máquina de Lavar Electrolux 13kg Branca Essential Care com Cesto Inox e Jet&Clean (LED13)",
-      "url": "https://www.amazon.com.br/dp/B09B7X4JSZ?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18117362380720670",
       "facebook_post_id": ""
     },
     {
@@ -3549,6 +3549,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "MOBILE",
+      "title": "DJI Mic Mini (2 TX + 1 Mobile RX), Ultralight, Active Noise Cancelling | Wireless Lavalier Microphone for iPhone 17/16/15 & A",
+      "url": "https://www.amazon.com/dp/B0FQJH54TR?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
