@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T00:13:01.740002+00:00",
+  "updated_at": "2026-08-10T00:16:09.935489+00:00",
   "products": [
+    {
+      "keyword": "FABER",
+      "title": "Faber-Castell Lápis De Cor Supersoft com 24 Cores - Ecolápis super mácio com cores mais vivas, excelente cobertura",
+      "url": "https://www.amazon.com.br/dp/B0FMFXH7RT?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18452350318191072",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "BUBA",
       "title": "Buba, Chocalho Com Mordedor Coelhinho",
@@ -1330,11 +1338,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "FABER",
-      "title": "Faber-Castell Lápis De Cor Supersoft com 24 Cores - Ecolápis super mácio com cores mais vivas, excelente cobertura",
-      "url": "https://www.amazon.com.br/dp/B0FMFXH7RT?tag=achadosatlasb-20",
+      "keyword": "TECH",
+      "title": "Tech T-shirt Gola U Masculino",
+      "url": "https://www.amazon.com.br/dp/B0BFT97SDN?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18452350318191072",
+      "instagram_media_id": "18481134214106624",
       "facebook_post_id": ""
     },
     {
