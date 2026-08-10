@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T00:20:58.318610+00:00",
+  "updated_at": "2026-08-10T00:24:08.918023+00:00",
   "products": [
+    {
+      "keyword": "VONIXX",
+      "title": "vonixx Shampoo Automotivo Concentrado 1:400 V-floc 3 Litros",
+      "url": "https://www.amazon.com.br/dp/B08N844668?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17951743770231808",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "TECH",
       "title": "Tech T-shirt Gola U Masculino",
@@ -1343,14 +1351,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "VONIXX",
-      "title": "vonixx Shampoo Automotivo Concentrado 1:400 V-floc 3 Litros",
-      "url": "https://www.amazon.com.br/dp/B08N844668?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17951743770231808",
       "facebook_post_id": ""
     },
     {
@@ -3405,6 +3405,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "BLOOM",
+      "title": "Bloom Nutrition Sparkling Energy Drink - Natural Caffeine, Zero Sugar, 180mg Caffeine - Antioxidant-Rich with Green Coffee Be",
+      "url": "https://www.amazon.com/dp/B0FL9GK819?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
