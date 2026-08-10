@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T00:29:52.883155+00:00",
+  "updated_at": "2026-08-10T00:55:44.673959+00:00",
   "products": [
+    {
+      "keyword": "PLAYSTATION",
+      "title": "PlayStation®5 Slim Disk - Pacote ASTRO BOT e Gran Turismo 7",
+      "url": "https://www.amazon.com.br/dp/B0F8R9NDXC?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18099228653459464",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "VONIXX",
       "title": "vonixx Shampoo Automotivo Concentrado 1:400 V-floc 3 Litros",
@@ -2410,6 +2418,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "HOLLYLAND",
+      "title": "Hollyland Lark A1 Wireless Microphone for iPhone & Android, 48kHz/24-bit Studio Audio, 3-Level Noise Cancellation, 200m Range",
+      "url": "https://www.amazon.com/dp/B0F3CV3RMQ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "18115968316844877",
+      "facebook_post_id": ""
+    },
+    {
       "keyword": "BLOOM",
       "title": "Bloom Nutrition Sparkling Energy Drink - Natural Caffeine, Zero Sugar, 180mg Caffeine - Antioxidant-Rich with Green Coffee Be",
       "url": "https://www.amazon.com/dp/B0FL9GK819?tag=atlasfindsus-20",
@@ -3415,14 +3431,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "HOLLYLAND",
-      "title": "Hollyland Lark A1 Wireless Microphone for iPhone & Android, 48kHz/24-bit Studio Audio, 3-Level Noise Cancellation, 200m Range",
-      "url": "https://www.amazon.com/dp/B0F3CV3RMQ?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "18115968316844877",
       "facebook_post_id": ""
     },
     {
