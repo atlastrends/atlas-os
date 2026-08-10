@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T00:09:43.727069+00:00",
+  "updated_at": "2026-08-10T00:13:01.740002+00:00",
   "products": [
+    {
+      "keyword": "BUBA",
+      "title": "Buba, Chocalho Com Mordedor Coelhinho",
+      "url": "https://www.amazon.com.br/dp/B0CRZC7GRL?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18073160696386898",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "INVERNO",
       "title": "Bom dia, inverno",
@@ -1322,11 +1330,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "BUBA",
-      "title": "Buba, Chocalho Com Mordedor Coelhinho",
-      "url": "https://www.amazon.com.br/dp/B0CRZC7GRL?tag=achadosatlasb-20",
+      "keyword": "FABER",
+      "title": "Faber-Castell Lápis De Cor Supersoft com 24 Cores - Ecolápis super mácio com cores mais vivas, excelente cobertura",
+      "url": "https://www.amazon.com.br/dp/B0FMFXH7RT?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18073160696386898",
+      "instagram_media_id": "18452350318191072",
       "facebook_post_id": ""
     },
     {
