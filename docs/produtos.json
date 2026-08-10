@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T01:16:25.678968+00:00",
+  "updated_at": "2026-08-10T01:21:00.131149+00:00",
   "products": [
+    {
+      "keyword": "PIPICAT",
+      "title": "Pipicat Granulado Sanitario Floral 12 kg",
+      "url": "https://www.amazon.com.br/dp/B07Y2DGXQB?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18145783537536591",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "LIVE",
       "title": "O-LIVE & Co, Azeite de oliva extra virgem, Chileno, vidro, 450ml",
@@ -1383,14 +1391,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PIPICAT",
-      "title": "Pipicat Granulado Sanitario Floral 12 kg",
-      "url": "https://www.amazon.com.br/dp/B07Y2DGXQB?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18145783537536591",
       "facebook_post_id": ""
     },
     {
@@ -3477,6 +3477,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "EUHOMY",
+      "title": "EUHOMY Nugget Ice Maker Countertop, 44Lbs/24H Sonic Ice Maker Machine, Self-Cleaning Pellet Ice Makers with Ice Scoop&Basket,",
+      "url": "https://www.amazon.com/dp/B0GVYRDGS4?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
