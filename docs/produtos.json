@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-11T11:55:18.060988+00:00",
+  "updated_at": "2026-08-11T11:56:47.076414+00:00",
   "products": [
+    {
+      "keyword": "PENTEL",
+      "title": "Pentel Pastel Oleoso 50 Cores PHN-50",
+      "url": "https://www.amazon.com.br/dp/B07D3WCMVD?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18440465617192966",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "NEUTROGENA",
       "title": "Neutrogena Hidratante Corporal Body Care Hidrata&Repara, 400ml",
@@ -1482,11 +1490,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "PENTEL",
-      "title": "Pentel Pastel Oleoso 50 Cores PHN-50",
-      "url": "https://www.amazon.com.br/dp/B07D3WCMVD?tag=achadosatlasb-20",
+      "keyword": "CONTIGO",
+      "title": "Contigo, Garrafa Térmica Inox Parede Dupla Matterhorn, 591ML",
+      "url": "https://www.amazon.com.br/dp/B07K8WF98V?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18440465617192966",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
