@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-11T11:52:48.931313+00:00",
+  "updated_at": "2026-08-11T11:54:08.448401+00:00",
   "products": [
+    {
+      "keyword": "NEUTROGENA",
+      "title": "Neutrogena Hidratante Corporal Body Care Hidrata&Repara, 400ml",
+      "url": "https://www.amazon.com.br/dp/B08YZGMQ3S?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18022047266911915",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "CELULAR",
       "title": "Celular Samsung Galaxy A17, 256GB, 8GB, 50MP Tela 6.7\", IP54 - Azul",
@@ -1474,11 +1482,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "NEUTROGENA",
-      "title": "Neutrogena Hidratante Corporal Body Care Hidrata&Repara, 400ml",
-      "url": "https://www.amazon.com.br/dp/B08YZGMQ3S?tag=achadosatlasb-20",
+      "keyword": "PENTEL",
+      "title": "Pentel Pastel Oleoso 50 Cores PHN-50",
+      "url": "https://www.amazon.com.br/dp/B07D3WCMVD?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18022047266911915",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
