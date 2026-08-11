@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-10T18:11:04.035017+00:00",
+  "updated_at": "2026-08-11T10:06:15.764078+00:00",
   "products": [
+    {
+      "keyword": "FOGAO",
+      "title": "Fogão Elétrico Portátil Cooktop Elgin Double Cook 2 Bocas - 220V",
+      "url": "https://www.amazon.com.br/dp/B0DCLXRD5X?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18021468737903186",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "MAQUINA",
       "title": "Máquina de Lavar Electrolux 13kg Branca Essential Care com Cesto Inox e Jet&Clean (LED13)",
@@ -1431,14 +1439,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "FOGAO",
-      "title": "Fogão Elétrico Portátil Cooktop Elgin Double Cook 2 Bocas - 220V",
-      "url": "https://www.amazon.com.br/dp/B0DCLXRD5X?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18021468737903186",
       "facebook_post_id": ""
     },
     {
@@ -3581,6 +3581,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "CROCS",
+      "title": "Crocs Unisex-Adult Classic Clog, Clogs for Women and Men",
+      "url": "https://www.amazon.com/dp/B0014BYHGC?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
