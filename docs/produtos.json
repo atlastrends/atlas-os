@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-13T12:39:41.033873+00:00",
+  "updated_at": "2026-08-13T12:41:48.699633+00:00",
   "products": [
+    {
+      "keyword": "BULL",
+      "title": "Red Bull Energético, Energy Drink, 250ml, 4 latas",
+      "url": "https://www.amazon.com.br/dp/B004HOEU4M?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "SABAO",
       "title": "Sabão Liquido Brilhante 5L",
@@ -1514,9 +1522,9 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "BULL",
-      "title": "Red Bull Energético, Energy Drink, 250ml, 4 latas",
-      "url": "https://www.amazon.com.br/dp/B004HOEU4M?tag=achadosatlasb-20",
+      "keyword": "LIFE",
+      "title": "Mor Life - Colchão Inflável Multiuso Casal com Fole",
+      "url": "https://www.amazon.com.br/dp/B07JFKXM6N?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
