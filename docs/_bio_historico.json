@@ -5614,5 +5614,23 @@
     "cat": "mercado",
     "instagram_media_id": "",
     "facebook_post_id": ""
+  },
+  "US:B078H9VRTZ": {
+    "market": "US",
+    "asin": "B078H9VRTZ",
+    "title": "PackIt, Lunch Box Freezable Classic Black | Built-in ice packs, EcoFreeze+ Technology, Zip Closure, Zip front pocket, Side-re",
+    "url": "https://www.amazon.com/dp/B078H9VRTZ?tag=atlasfindsus-20",
+    "cat": "cozinha",
+    "instagram_media_id": "",
+    "facebook_post_id": ""
+  },
+  "US:153878405X": {
+    "market": "US",
+    "asin": "153878405X",
+    "title": "Verity",
+    "url": "https://www.amazon.com/dp/153878405X?tag=atlasfindsus-20",
+    "cat": "livros",
+    "instagram_media_id": "",
+    "facebook_post_id": ""
   }
 }

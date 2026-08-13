@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-13T17:12:46.255103+00:00",
+  "updated_at": "2026-08-13T17:18:09.456181+00:00",
   "products": [
     {
       "keyword": "ORAL",
@@ -2618,6 +2618,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "CELSIUS",
+      "title": "CELSIUS Sparkling Orange, Sugar Free Energy Drink, 12 Fl Oz (Pack of 12)",
+      "url": "https://www.amazon.com/dp/B007R8XGJA?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
       "keyword": "ADDARIO",
       "title": "D&#x27;Addario EJ16 Phosphor Bronze Acoustic Guitar Strings, Light 12-53 Set | Phosphor bronze acoustic guitar strings offer warm,",
       "url": "https://www.amazon.com/dp/B000EEJ8CS?tag=atlasfindsus-20",
@@ -3802,9 +3810,17 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "CELSIUS",
-      "title": "CELSIUS Sparkling Orange, Sugar Free Energy Drink, 12 Fl Oz (Pack of 12)",
-      "url": "https://www.amazon.com/dp/B007R8XGJA?tag=atlasfindsus-20",
+      "keyword": "PACKIT",
+      "title": "PackIt, Lunch Box Freezable Classic Black | Built-in ice packs, EcoFreeze+ Technology, Zip Closure, Zip front pocket, Side-re",
+      "url": "https://www.amazon.com/dp/B078H9VRTZ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "VERITY",
+      "title": "Verity",
+      "url": "https://www.amazon.com/dp/153878405X?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
