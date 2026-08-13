@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-13T23:57:00.142013+00:00",
+  "updated_at": "2026-08-13T23:59:04.141023+00:00",
   "products": [
+    {
+      "keyword": "LOLA",
+      "title": "Lola Cosmetics Kit Cronograma Capilar Be(m) Dita Ghee - 3 Produtos",
+      "url": "https://www.amazon.com.br/dp/B0DKVJ1HWB?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17998800861004070",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "APPLE",
       "title": "Apple EarPods (USB-C) ​​​​​​​",
@@ -1610,11 +1618,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "LOLA",
-      "title": "Lola Cosmetics Kit Cronograma Capilar Be(m) Dita Ghee - 3 Produtos",
-      "url": "https://www.amazon.com.br/dp/B0DKVJ1HWB?tag=achadosatlasb-20",
+      "keyword": "DOLCE",
+      "title": "Dolce Gusto Mochaccino Em Cápsula Avelã Nescafé Caixa 170G 10 Unidades",
+      "url": "https://www.amazon.com.br/dp/B0CN1L7B18?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "17998800861004070",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
