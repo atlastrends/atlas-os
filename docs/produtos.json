@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-13T22:09:11.016038+00:00",
+  "updated_at": "2026-08-13T23:41:50.139011+00:00",
   "products": [
+    {
+      "keyword": "APPLE",
+      "title": "Apple EarPods (USB-C) ​​​​​​​",
+      "url": "https://www.amazon.com.br/dp/B0DDCWX1NX?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17995264625810460",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "SMARTPHONE",
       "title": "Smartphone Motorola Moto g35 5G - 128GB 12GB (4GB RAM+8GB Ram Boost) e Camera 50MP com AI NFC Tela 6.7\" com Superbrilho - Ver",
@@ -1599,14 +1607,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "APPLE",
-      "title": "Apple EarPods (USB-C) ​​​​​​​",
-      "url": "https://www.amazon.com.br/dp/B0DDCWX1NX?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17995264625810460",
       "facebook_post_id": ""
     },
     {
