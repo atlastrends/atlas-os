@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-13T20:46:56.742997+00:00",
+  "updated_at": "2026-08-13T20:48:50.662236+00:00",
   "products": [
+    {
+      "keyword": "PLAYSTATION",
+      "title": "PlayStation 5 Slim Disk 1TB 1 Controle Branco Sony",
+      "url": "https://www.amazon.com.br/dp/B0GWNFMG5L?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18113010565946863",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "ORAL",
       "title": "Oral-B Pasta de Dente 3D White Brilliant Fresh, 3 Unidades de 70 g",
@@ -1562,11 +1570,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "PLAYSTATION",
-      "title": "PlayStation 5 Slim Disk 1TB 1 Controle Branco Sony",
-      "url": "https://www.amazon.com.br/dp/B0GWNFMG5L?tag=achadosatlasb-20",
+      "keyword": "CANETA",
+      "title": "Caneta Fine Pen, Faber-Castell, SM/FPBPRZF, Preta",
+      "url": "https://www.amazon.com.br/dp/B072M2ZBJM?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18113010565946863",
+      "instagram_media_id": "17981736285111881",
       "facebook_post_id": ""
     },
     {
