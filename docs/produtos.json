@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-13T12:35:26.842617+00:00",
+  "updated_at": "2026-08-13T12:39:41.033873+00:00",
   "products": [
+    {
+      "keyword": "SABAO",
+      "title": "Sabão Liquido Brilhante 5L",
+      "url": "https://www.amazon.com.br/dp/B07ZQMBFMX?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18015030551925532",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "FILTRO",
       "title": "Filtro de Linha iCLAMPER Energia 5 com Proteção contra Surtos Elétricos(DPS) 5 Tomadas, 3 Pinos, 10 Amperes para PC, Notebook",
@@ -1506,11 +1514,11 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "SABAO",
-      "title": "Sabão Liquido Brilhante 5L",
-      "url": "https://www.amazon.com.br/dp/B07ZQMBFMX?tag=achadosatlasb-20",
+      "keyword": "BULL",
+      "title": "Red Bull Energético, Energy Drink, 250ml, 4 latas",
+      "url": "https://www.amazon.com.br/dp/B004HOEU4M?tag=achadosatlasb-20",
       "market": "BR",
-      "instagram_media_id": "18015030551925532",
+      "instagram_media_id": "",
       "facebook_post_id": ""
     },
     {
