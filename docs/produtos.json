@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-13T17:04:13.549845+00:00",
+  "updated_at": "2026-08-13T17:08:01.857944+00:00",
   "products": [
     {
       "keyword": "ORAL",
@@ -2618,6 +2618,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "OUTSIDERS",
+      "title": "The Outsiders",
+      "url": "https://www.amazon.com/dp/014240733X?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
       "keyword": "CROCS",
       "title": "Crocs Kid&#x27;s Classic Clog (Little Kid/Big Kid/Toddler)",
       "url": "https://www.amazon.com/dp/B09643QGPD?tag=atlasfindsus-20",
@@ -3786,9 +3794,9 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "OUTSIDERS",
-      "title": "The Outsiders",
-      "url": "https://www.amazon.com/dp/014240733X?tag=atlasfindsus-20",
+      "keyword": "ADDARIO",
+      "title": "D&#x27;Addario EJ16 Phosphor Bronze Acoustic Guitar Strings, Light 12-53 Set | Phosphor bronze acoustic guitar strings offer warm,",
+      "url": "https://www.amazon.com/dp/B000EEJ8CS?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
