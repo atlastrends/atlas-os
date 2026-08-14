@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-14T01:24:11.082034+00:00",
+  "updated_at": "2026-08-14T01:25:31.385072+00:00",
   "products": [
+    {
+      "keyword": "FISCHER",
+      "title": "Fischer Cooktop Gás 5 Bocas TC Infinity Mesa Inox Bivolt 23678-54121",
+      "url": "https://www.amazon.com.br/dp/B07GWXBGYS?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18112860569074697",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "HEINZ",
       "title": "Heinz Pack Maionese Tradicional, 400G - 2 unidades",
@@ -1741,14 +1749,6 @@
       "keyword": "PROTETOR",
       "title": "Protetor De Geladeira ou Freezer Contra Queda Surtos de Energia 127V",
       "url": "https://www.amazon.com.br/dp/B0798XT2VK?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "FISCHER",
-      "title": "Fischer Cooktop Gás 5 Bocas TC Infinity Mesa Inox Bivolt 23678-54121",
-      "url": "https://www.amazon.com.br/dp/B07GWXBGYS?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
