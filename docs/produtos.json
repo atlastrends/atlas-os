@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-14T01:55:44.843360+00:00",
+  "updated_at": "2026-08-14T01:56:28.268610+00:00",
   "products": [
+    {
+      "keyword": "BRIGADEIRO",
+      "title": "Brigadeiro de Colher FLORMEL Zero Açúcar 200 gramas",
+      "url": "https://www.amazon.com.br/dp/B0B6LG6C73?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18093711512640077",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "MEEPLEBR",
       "title": "MeepleBR Sleeves SLIM - PADRÃO (63,5x88mm), TCG, Plástico para Proteção de Cartas",
@@ -1797,14 +1805,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "BRIGADEIRO",
-      "title": "Brigadeiro de Colher FLORMEL Zero Açúcar 200 gramas",
-      "url": "https://www.amazon.com.br/dp/B0B6LG6C73?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
