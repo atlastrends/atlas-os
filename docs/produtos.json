@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-14T01:29:28.939207+00:00",
+  "updated_at": "2026-08-14T01:30:09.233083+00:00",
   "products": [
+    {
+      "keyword": "COOKTOP",
+      "title": "Cooktop 4 Bocas Itatiaia Essencial com Mesa de Vidro Temperado e Acendimento Automático Preto Bivolt",
+      "url": "https://www.amazon.com.br/dp/B0B7C9HXGL?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18090752228397559",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "PROTETOR",
       "title": "Protetor De Geladeira ou Freezer Contra Queda Surtos de Energia 127V",
@@ -1749,14 +1757,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "COOKTOP",
-      "title": "Cooktop 4 Bocas Itatiaia Essencial com Mesa de Vidro Temperado e Acendimento Automático Preto Bivolt",
-      "url": "https://www.amazon.com.br/dp/B0B7C9HXGL?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
