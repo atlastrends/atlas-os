@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-14T00:55:56.704834+00:00",
+  "updated_at": "2026-08-14T00:56:41.672771+00:00",
   "products": [
+    {
+      "keyword": "ISOTONICO",
+      "title": "Isotônico Gatorade Morango com Maracujá, Garrafa 500ml, Pack com 6 unidades",
+      "url": "https://www.amazon.com.br/dp/B0CGY572VW?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18097486358618103",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "VONIXX",
       "title": "vonixx CARNAUBA TOK FINAL 500ML",
@@ -1693,14 +1701,6 @@
       "keyword": "PROTETOR",
       "title": "Protetor De Geladeira ou Freezer Contra Queda Surtos de Energia 127V",
       "url": "https://www.amazon.com.br/dp/B0798XT2VK?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "ISOTONICO",
-      "title": "Isotônico Gatorade Morango com Maracujá, Garrafa 500ml, Pack com 6 unidades",
-      "url": "https://www.amazon.com.br/dp/B0CGY572VW?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
