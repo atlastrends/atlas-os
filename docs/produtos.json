@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-14T01:30:46.320735+00:00",
+  "updated_at": "2026-08-14T01:35:07.566244+00:00",
   "products": [
+    {
+      "keyword": "VEJA",
+      "title": "Veja Gotas de Perfume Quartzo Rosa Jasmim Limpador Perfumado Concentrado 100 ml",
+      "url": "https://www.amazon.com.br/dp/B0FJSCVHSK?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "COOKTOP",
       "title": "Cooktop 4 Bocas Itatiaia Essencial com Mesa de Vidro Temperado e Acendimento Automático Preto Bivolt",
@@ -1762,9 +1770,9 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "VEJA",
-      "title": "Veja Gotas de Perfume Quartzo Rosa Jasmim Limpador Perfumado Concentrado 100 ml",
-      "url": "https://www.amazon.com.br/dp/B0FJSCVHSK?tag=achadosatlasb-20",
+      "keyword": "REFIL",
+      "title": "Refil Filtro Vela Purificador Soft Everest Original",
+      "url": "https://www.amazon.com.br/dp/B07CZ3R2P8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
