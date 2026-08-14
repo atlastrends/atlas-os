@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-14T01:12:53.204961+00:00",
+  "updated_at": "2026-08-14T01:13:34.008949+00:00",
   "products": [
+    {
+      "keyword": "SCALA",
+      "title": "Scala Plus Papel Toalha Multipicote, 200 Toalhas (2 Rolos de 100 Toalhas Cada)",
+      "url": "https://www.amazon.com.br/dp/B09547GF99?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18422059201198880",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "FISHER",
       "title": "Fisher-Price - Procurar e encontrar: Animais divertidos: Outros",
@@ -1725,14 +1733,6 @@
       "keyword": "PROTETOR",
       "title": "Protetor De Geladeira ou Freezer Contra Queda Surtos de Energia 127V",
       "url": "https://www.amazon.com.br/dp/B0798XT2VK?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "SCALA",
-      "title": "Scala Plus Papel Toalha Multipicote, 200 Toalhas (2 Rolos de 100 Toalhas Cada)",
-      "url": "https://www.amazon.com.br/dp/B09547GF99?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
