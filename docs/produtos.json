@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-14T02:15:09.414413+00:00",
+  "updated_at": "2026-08-14T02:17:36.388235+00:00",
   "products": [
+    {
+      "keyword": "MOUSE",
+      "title": "Mouse Gamer Redragon Predator RGB M612-RGB, Preto",
+      "url": "https://www.amazon.com.br/dp/B08T68T1T6?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17961484665178713",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "MAQUINA",
       "title": "Máquina de Lavar Panasonic 15kg Titânio 127v NA-F150B1T",
