@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-15T21:19:51.767523+00:00",
+  "updated_at": "2026-08-15T21:23:35.103894+00:00",
   "products": [
     {
       "keyword": "MOCHILA",
@@ -2261,6 +2261,14 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "MAQUINA",
+      "title": "Máquina de Lavar Panasonic 15kg Titânio 220v NA-F150B1T",
+      "url": "https://www.amazon.com.br/dp/B00I3ZWJZI?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
