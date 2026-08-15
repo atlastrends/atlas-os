@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-15T19:26:57.018257+00:00",
+  "updated_at": "2026-08-15T19:27:38.367825+00:00",
   "products": [
+    {
+      "keyword": "PENTEL",
+      "title": "Pentel Fita Corretiva Azul + Refil SM/ZTP205R-S",
+      "url": "https://www.amazon.com.br/dp/B08YHD24HC?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18162832570462317",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "PACK",
       "title": "Pack Nestlé Purina Friskies Ração Úmida Para Gatos Adultos Carne Ao Molho - Com 15 Sachês 85g",
@@ -2101,14 +2109,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PENTEL",
-      "title": "Pentel Fita Corretiva Azul + Refil SM/ZTP205R-S",
-      "url": "https://www.amazon.com.br/dp/B08YHD24HC?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
