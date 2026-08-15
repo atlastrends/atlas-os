@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-15T21:12:38.861351+00:00",
+  "updated_at": "2026-08-15T21:13:15.074571+00:00",
   "products": [
+    {
+      "keyword": "TENIS",
+      "title": "Tenis Masculino Fila Racer Fastpace",
+      "url": "https://www.amazon.com.br/dp/B0FH3K8GRR?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18006441005986131",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "SECULO",
       "title": "O século dos imbecis",
@@ -2229,14 +2237,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "TENIS",
-      "title": "Tenis Masculino Fila Racer Fastpace",
-      "url": "https://www.amazon.com.br/dp/B0FH3K8GRR?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
