@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-15T17:47:09.350154+00:00",
+  "updated_at": "2026-08-15T17:50:50.666447+00:00",
   "products": [
+    {
+      "keyword": "CONTROLE",
+      "title": "Controle DualSense - PlayStation 5",
+      "url": "https://www.amazon.com.br/dp/B088GNW267?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "TILIBRA",
       "title": "Tilibra - Caderno Espiral Capa Dura Universitário 20 Matérias Zip Preto 320 Folhas",
@@ -2082,9 +2090,9 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "CONTROLE",
-      "title": "Controle DualSense - PlayStation 5",
-      "url": "https://www.amazon.com.br/dp/B088GNW267?tag=achadosatlasb-20",
+      "keyword": "TORK",
+      "title": "Pro Tork Capacete Sport Moto 788 58 Preto/Laranja",
+      "url": "https://www.amazon.com.br/dp/B07YDW9YWB?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
