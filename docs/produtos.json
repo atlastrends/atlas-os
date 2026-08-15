@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-15T20:55:50.113216+00:00",
+  "updated_at": "2026-08-15T20:57:33.892211+00:00",
   "products": [
+    {
+      "keyword": "ISOTONICO",
+      "title": "Isotônico Gatorade, Tangerina, Garrafa 500ml, Pack com 6 unidades",
+      "url": "https://www.amazon.com.br/dp/B0CGY4RKK3?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "MODUS",
       "title": "MODUS Garrafa Térmica Esportiva De Inox Com Isolamento A Vácuo 950ML | Preto",
@@ -2178,9 +2186,9 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "ISOTONICO",
-      "title": "Isotônico Gatorade, Tangerina, Garrafa 500ml, Pack com 6 unidades",
-      "url": "https://www.amazon.com.br/dp/B0CGY4RKK3?tag=achadosatlasb-20",
+      "keyword": "SUGGAR",
+      "title": "SUGGAR DEPURADOR DE AR SLIM 80CM 3 VEL. PRETO 110V DPS181PT",
+      "url": "https://www.amazon.com.br/dp/B0B3SHMB2W?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
