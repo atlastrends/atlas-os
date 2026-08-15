@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-15T20:45:08.642063+00:00",
+  "updated_at": "2026-08-15T20:45:46.508872+00:00",
   "products": [
+    {
+      "keyword": "PENTEL",
+      "title": "Pentel Cola em Fita Rosa ERTP126PO",
+      "url": "https://www.amazon.com.br/dp/B0BSVBGBBJ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18114203050981696",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "FLAUTA",
       "title": "Flauta Doce Soprano Barroca C, Yamaha, YRS-24B",
@@ -2141,14 +2149,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PENTEL",
-      "title": "Pentel Cola em Fita Rosa ERTP126PO",
-      "url": "https://www.amazon.com.br/dp/B0BSVBGBBJ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
