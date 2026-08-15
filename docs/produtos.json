@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-15T19:29:57.973053+00:00",
+  "updated_at": "2026-08-15T19:32:06.328632+00:00",
   "products": [
     {
       "keyword": "BOLSA",
@@ -2117,6 +2117,14 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "ULTIMA",
+      "title": "A última carta",
+      "url": "https://www.amazon.com.br/dp/6555658479?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
