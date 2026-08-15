@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-15T17:39:29.883246+00:00",
+  "updated_at": "2026-08-15T17:47:09.350154+00:00",
   "products": [
+    {
+      "keyword": "TILIBRA",
+      "title": "Tilibra - Caderno Espiral Capa Dura Universitário 20 Matérias Zip Preto 320 Folhas",
+      "url": "https://www.amazon.com.br/dp/B0B52HPF8D?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "MAQUINA",
       "title": "Máquina de Lavar Electrolux 15kg Branca Essential Care com Cesto Inox e Jet&Clean (LED15) - 220V",
@@ -2074,9 +2082,9 @@
       "facebook_post_id": ""
     },
     {
-      "keyword": "TILIBRA",
-      "title": "Tilibra - Caderno Espiral Capa Dura Universitário 20 Matérias Zip Preto 320 Folhas",
-      "url": "https://www.amazon.com.br/dp/B0B52HPF8D?tag=achadosatlasb-20",
+      "keyword": "CONTROLE",
+      "title": "Controle DualSense - PlayStation 5",
+      "url": "https://www.amazon.com.br/dp/B088GNW267?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
