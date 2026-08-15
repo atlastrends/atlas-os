@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-15T19:35:09.229019+00:00",
+  "updated_at": "2026-08-15T20:19:59.014335+00:00",
   "products": [
+    {
+      "keyword": "MASCARA",
+      "title": "Máscara de Equlíbrio Amend Essencial Acidificante Ph 250g",
+      "url": "https://www.amazon.com.br/dp/B0DJMP5Z6Z?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "ULTIMA",
       "title": "A última carta",
@@ -2125,14 +2133,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "MASCARA",
-      "title": "Máscara de Equlíbrio Amend Essencial Acidificante Ph 250g",
-      "url": "https://www.amazon.com.br/dp/B0DJMP5Z6Z?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
@@ -4621,6 +4621,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "WALL",
+      "title": "Wall Charger, Surge Protector, QINLIANF 5 Outlet Extender with 4 USB Ports | 1680 Joules, 3-Sided Power Strip, Multi Plug Wal",
+      "url": "https://www.amazon.com/dp/B08R6S1M1K?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
