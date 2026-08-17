@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-17T19:03:47.026413+00:00",
+  "updated_at": "2026-08-17T19:04:57.688064+00:00",
   "products": [
+    {
+      "keyword": "HOBBIT",
+      "title": "O Hobbit + pôster",
+      "url": "https://www.amazon.com.br/dp/8595084742?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17953690329244090",
+      "facebook_post_id": "1060642189844784"
+    },
     {
       "keyword": "QUANDO",
       "title": "Quando",
@@ -2303,14 +2311,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "HOBBIT",
-      "title": "O Hobbit + pôster",
-      "url": "https://www.amazon.com.br/dp/8595084742?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17953690329244090",
       "facebook_post_id": ""
     },
     {
