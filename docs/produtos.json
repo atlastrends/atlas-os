@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-17T19:11:30.099432+00:00",
+  "updated_at": "2026-08-17T19:12:16.299649+00:00",
   "products": [
+    {
+      "keyword": "LEGO",
+      "title": "LEGO Classic Caixa Grande De Peças Criativas",
+      "url": "https://www.amazon.com.br/dp/B00NHQF6MG?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18108812456327449",
+      "facebook_post_id": "1030566056520406"
+    },
     {
       "keyword": "HOBBIT",
       "title": "O Hobbit + pôster",
@@ -2311,14 +2319,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "LEGO",
-      "title": "LEGO Classic Caixa Grande De Peças Criativas",
-      "url": "https://www.amazon.com.br/dp/B00NHQF6MG?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18108812456327449",
       "facebook_post_id": ""
     },
     {
