@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-17T11:44:09.720201+00:00",
+  "updated_at": "2026-08-17T11:44:24.377835+00:00",
   "products": [
+    {
+      "keyword": "MARVEL",
+      "title": "Marvel&#x27;s Wolverine - PlayStation 5",
+      "url": "https://www.amazon.com.br/dp/B0GWCCBDRR?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18115569494488312",
+      "facebook_post_id": "2055763948638674"
+    },
     {
       "keyword": "FONE",
       "title": "Fone de Ouvido com Fio USB‑C Intra‑Auricular – Microfone Integrado Som Estéreo, Controle de Volume Compatível para Tipo C Cel",
@@ -2287,14 +2295,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "MARVEL",
-      "title": "Marvel&#x27;s Wolverine - PlayStation 5",
-      "url": "https://www.amazon.com.br/dp/B0GWCCBDRR?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18115569494488312",
       "facebook_post_id": ""
     },
     {
