@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-18T06:16:28.765214+00:00",
+  "updated_at": "2026-08-18T06:16:54.882841+00:00",
   "products": [
+    {
+      "keyword": "EXTERNO",
+      "title": "HDD Externo Seagate 2TB Expansion USB 3.0 Portatil 2,5\"",
+      "url": "https://www.amazon.com.br/dp/B07CRG94G3?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18120428072487722",
+      "facebook_post_id": "1604885424618580"
+    },
     {
       "keyword": "GRANADO",
       "title": "Granado Refil Sabonete Líquido Bebê, Tradicional, 250ml",
@@ -2423,14 +2431,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "EXTERNO",
-      "title": "HDD Externo Seagate 2TB Expansion USB 3.0 Portatil 2,5\"",
-      "url": "https://www.amazon.com.br/dp/B07CRG94G3?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18120428072487722",
       "facebook_post_id": ""
     },
     {
