@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-18T06:10:50.750718+00:00",
+  "updated_at": "2026-08-18T06:11:43.089915+00:00",
   "products": [
+    {
+      "keyword": "DURACELL",
+      "title": "Duracell Pilha Alcalina AAA Palito Com 16 Unidades – Dura Mais – Ideal para Controles Remotos, Brinquedos e Lanternas",
+      "url": "https://www.amazon.com.br/dp/B078GSWP44?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18008621447954085",
+      "facebook_post_id": "1031238539737167"
+    },
     {
       "keyword": "GLADE",
       "title": "Glade Aromatizador de Ambiente Automático Frutas e Flores, Refil 260ml",
@@ -2407,14 +2415,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "DURACELL",
-      "title": "Duracell Pilha Alcalina AAA Palito Com 16 Unidades – Dura Mais – Ideal para Controles Remotos, Brinquedos e Lanternas",
-      "url": "https://www.amazon.com.br/dp/B078GSWP44?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18008621447954085",
       "facebook_post_id": ""
     },
     {
