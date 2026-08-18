@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-18T04:33:16.360168+00:00",
+  "updated_at": "2026-08-18T04:33:50.685802+00:00",
   "products": [
+    {
+      "keyword": "GLADE",
+      "title": "Glade Aromatizador de Ambiente Automático Frutas e Flores, Refil 260ml",
+      "url": "https://www.amazon.com.br/dp/B08FTSG8FN?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18102245171252461",
+      "facebook_post_id": "2337882270370489"
+    },
     {
       "keyword": "MOUSE",
       "title": "Mouse sem fio Logitech M170 com Design Ambidestro Compacto, Conexão USB e Pilha Inclusa - Preto",
@@ -2399,14 +2407,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "GLADE",
-      "title": "Glade Aromatizador de Ambiente Automático Frutas e Flores, Refil 260ml",
-      "url": "https://www.amazon.com.br/dp/B08FTSG8FN?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18102245171252461",
       "facebook_post_id": ""
     },
     {
