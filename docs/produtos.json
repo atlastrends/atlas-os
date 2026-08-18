@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-18T18:02:41.513428+00:00",
+  "updated_at": "2026-08-18T18:03:03.928720+00:00",
   "products": [
+    {
+      "keyword": "KIKO",
+      "title": "KIKO MILANO, 3D Hydra Lipgloss, Gloss Hidratante Para Os Lábios, Com Efeito 3D, Fórmula Com Extrato de Bidens",
+      "url": "https://www.amazon.com.br/dp/B07DBS1RV9?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18126973594673275",
+      "facebook_post_id": "1378513397750409"
+    },
     {
       "keyword": "LINK",
       "title": "TP-Link Switch Gigabit De Mesa Com 8 Portas 10/100/1000 Ls1008G Smb, Preto",
@@ -2543,14 +2551,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "KIKO",
-      "title": "KIKO MILANO, 3D Hydra Lipgloss, Gloss Hidratante Para Os Lábios, Com Efeito 3D, Fórmula Com Extrato de Bidens",
-      "url": "https://www.amazon.com.br/dp/B07DBS1RV9?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18126973594673275",
       "facebook_post_id": ""
     },
     {
