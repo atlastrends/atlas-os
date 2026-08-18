@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-18T02:18:27.833592+00:00",
+  "updated_at": "2026-08-18T02:19:33.553720+00:00",
   "products": [
+    {
+      "keyword": "NEUTROGENA",
+      "title": "Neutrogena Hidratante Facial Hydro Boost Water Gel, 50g",
+      "url": "https://www.amazon.com.br/dp/B06XQ27YLL?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17985527841021355",
+      "facebook_post_id": "1525894702622070"
+    },
     {
       "keyword": "FORMULA",
       "title": "WD-40 Fórmula Original - Produto Multiusos Aerossol 300ml, 200g - Desengripa, lubrifica e protege contra ferrugem",
@@ -2359,14 +2367,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "NEUTROGENA",
-      "title": "Neutrogena Hidratante Facial Hydro Boost Water Gel, 50g",
-      "url": "https://www.amazon.com.br/dp/B06XQ27YLL?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17985527841021355",
       "facebook_post_id": ""
     },
     {
