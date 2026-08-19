@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-19T02:36:08.746101+00:00",
+  "updated_at": "2026-08-19T02:36:39.864192+00:00",
   "products": [
+    {
+      "keyword": "GRANADO",
+      "title": "Granado Sabonete Líquido Bebê, Tradicional, 500ml",
+      "url": "https://www.amazon.com.br/dp/B08LK15F8N?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17883744525476394",
+      "facebook_post_id": "37703166499328570"
+    },
     {
       "keyword": "LEGO",
       "title": "LEGO Classic ─ 10713 Maleta da Criatividade ─ Kit de construção (213 peças)",
@@ -2567,14 +2575,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "GRANADO",
-      "title": "Granado Sabonete Líquido Bebê, Tradicional, 500ml",
-      "url": "https://www.amazon.com.br/dp/B08LK15F8N?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17883744525476394",
       "facebook_post_id": ""
     },
     {
