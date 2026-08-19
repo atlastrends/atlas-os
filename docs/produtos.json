@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-19T07:39:07.135360+00:00",
+  "updated_at": "2026-08-19T07:39:27.315512+00:00",
   "products": [
+    {
+      "keyword": "ADAPTADOR",
+      "title": "Adaptador de corrente USB-C de 20 W",
+      "url": "https://www.amazon.com.br/dp/B0CX5DHV4Q?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17913646269444698",
+      "facebook_post_id": "1447006890601677"
+    },
     {
       "keyword": "WHEELS",
       "title": "Hot Wheels Diecast Veículo de Brinquedo Pacote Surpresa 10 carros para crianças a partir de 3 anos",
@@ -2647,14 +2655,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "ADAPTADOR",
-      "title": "Adaptador de corrente USB-C de 20 W",
-      "url": "https://www.amazon.com.br/dp/B0CX5DHV4Q?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17913646269444698",
       "facebook_post_id": ""
     },
     {
