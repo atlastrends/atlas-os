@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-19T05:12:21.541534+00:00",
+  "updated_at": "2026-08-19T05:13:22.990191+00:00",
   "products": [
+    {
+      "keyword": "FONE",
+      "title": "JBL, Fone de Ouvido On-ear, Headphone, Tune 520BT, Sem Fio - Branco",
+      "url": "https://www.amazon.com.br/dp/B0C6SPNVF5?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18011468084951656",
+      "facebook_post_id": "2796343577406370"
+    },
     {
       "keyword": "JOHNSON",
       "title": "Johnson&#x27;s Baby Sabonete Líquido Recém Nascido, 200ml",
@@ -2599,14 +2607,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "FONE",
-      "title": "JBL, Fone de Ouvido On-ear, Headphone, Tune 520BT, Sem Fio - Branco",
-      "url": "https://www.amazon.com.br/dp/B0C6SPNVF5?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18011468084951656",
       "facebook_post_id": ""
     },
     {
