@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-19T05:15:23.913434+00:00",
+  "updated_at": "2026-08-19T05:15:46.305542+00:00",
   "products": [
+    {
+      "keyword": "NEOSTRATA",
+      "title": "Neostrata Minesol Protetor Solar Facial Oil Control, Sem Cor, FPS 70, 40g",
+      "url": "https://www.amazon.com.br/dp/B07Y2BK4GJ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18118139911927731",
+      "facebook_post_id": "3115669855304713"
+    },
     {
       "keyword": "FONE",
       "title": "JBL, Fone de Ouvido On-ear, Headphone, Tune 520BT, Sem Fio - Branco",
@@ -2607,14 +2615,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "NEOSTRATA",
-      "title": "Neostrata Minesol Protetor Solar Facial Oil Control, Sem Cor, FPS 70, 40g",
-      "url": "https://www.amazon.com.br/dp/B07Y2BK4GJ?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18118139911927731",
       "facebook_post_id": ""
     },
     {
