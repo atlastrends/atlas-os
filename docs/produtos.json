@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-19T02:29:12.686523+00:00",
+  "updated_at": "2026-08-19T02:30:01.869561+00:00",
   "products": [
+    {
+      "keyword": "LEGO",
+      "title": "LEGO Classic ─ 10713 Maleta da Criatividade ─ Kit de construção (213 peças)",
+      "url": "https://www.amazon.com.br/dp/B075QRWRYP?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18102366860597567",
+      "facebook_post_id": "2542756969499908"
+    },
     {
       "keyword": "FLASH",
       "title": "Flash Limp - Mop Giratório Fit, Balde 8 litros - MOP5010",
@@ -2559,14 +2567,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "LEGO",
-      "title": "LEGO Classic ─ 10713 Maleta da Criatividade ─ Kit de construção (213 peças)",
-      "url": "https://www.amazon.com.br/dp/B075QRWRYP?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18102366860597567",
       "facebook_post_id": ""
     },
     {
