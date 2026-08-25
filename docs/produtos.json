@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-25T03:34:29.442107+00:00",
+  "updated_at": "2026-08-25T03:36:20.347127+00:00",
   "products": [
+    {
+      "keyword": "DEMON",
+      "title": "Demon slayer - kimetsu no yaiba vol. 1",
+      "url": "https://www.amazon.com.br/dp/8542629280?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18150298894474237",
+      "facebook_post_id": "1077140851349413"
+    },
     {
       "keyword": "COTONETES",
       "title": "Cotonetes Hastes Flexíveis,300un",
@@ -2727,14 +2735,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "DEMON",
-      "title": "Demon slayer - kimetsu no yaiba vol. 1",
-      "url": "https://www.amazon.com.br/dp/8542629280?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18150298894474237",
       "facebook_post_id": ""
     },
     {
