@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T16:59:35.301614+00:00",
+  "updated_at": "2026-08-28T17:00:03.348546+00:00",
   "products": [
+    {
+      "keyword": "CHINELO",
+      "title": "Chinelo Havaianas Brasil | Sandálias casuais",
+      "url": "https://www.amazon.com.br/dp/B000RMC2J8?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17889627729433932",
+      "facebook_post_id": "1378996320426995"
+    },
     {
       "keyword": "NIVEA",
       "title": "NIVEA Hidratante Labial Morango Shine 4,8g - Cuidado intensivo para seus lábios, hidratação prolongada, delicioso aroma de mo",
@@ -2807,14 +2815,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CHINELO",
-      "title": "Chinelo Havaianas Brasil | Sandálias casuais",
-      "url": "https://www.amazon.com.br/dp/B000RMC2J8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17889627729433932",
       "facebook_post_id": ""
     },
     {
