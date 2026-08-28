@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T14:37:36.526978+00:00",
+  "updated_at": "2026-08-28T14:46:46.680639+00:00",
   "products": [
+    {
+      "keyword": "NEUTROGENA",
+      "title": "Neutrogena Hidratante Facial Hydro Boost Water Gel Refil, 50g",
+      "url": "https://www.amazon.com.br/dp/B0CB716LLZ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1383099006577179"
+    },
     {
       "keyword": "MUSTELA",
       "title": "Mustela Gel Lavante Suave 500ml Sabonete Líquido Corpo e Cabelo Infantil",
@@ -2757,14 +2765,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "NEUTROGENA",
-      "title": "Neutrogena Hidratante Facial Hydro Boost Water Gel Refil, 50g",
-      "url": "https://www.amazon.com.br/dp/B0CB716LLZ?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
