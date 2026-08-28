@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T19:55:46.485875+00:00",
+  "updated_at": "2026-08-28T19:56:07.978186+00:00",
   "products": [
+    {
+      "keyword": "ROCHE",
+      "title": "La Roche-Posay Anthelios Airlicium",
+      "url": "https://www.amazon.com.br/dp/B0BJ347WND?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18551165923075307",
+      "facebook_post_id": "1599682078564111"
+    },
     {
       "keyword": "ZOETIS",
       "title": "Zoetis Simparic 20Mg 5 1 Até 10Kg 1Cp Para Cães",
@@ -2959,14 +2967,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "ROCHE",
-      "title": "La Roche-Posay Anthelios Airlicium",
-      "url": "https://www.amazon.com.br/dp/B0BJ347WND?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18551165923075307",
       "facebook_post_id": ""
     },
     {
