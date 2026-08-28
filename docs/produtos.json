@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T18:55:42.613129+00:00",
+  "updated_at": "2026-08-28T18:56:04.618279+00:00",
   "products": [
+    {
+      "keyword": "CERAVE",
+      "title": "CeraVe, Gel de Limpeza Facial para pele oleosa, com Ácido Hialurônico e Niacinamida",
+      "url": "https://www.amazon.com.br/dp/B07XP6N3BC?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17942908863322343",
+      "facebook_post_id": "1733434647773064"
+    },
     {
       "keyword": "BRINQUEDO",
       "title": "Brinquedo Educativo Girafa Didática com Blocos Merco Toys, cores sortidas, 1 unidade",
@@ -2911,14 +2919,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CERAVE",
-      "title": "CeraVe, Gel de Limpeza Facial para pele oleosa, com Ácido Hialurônico e Niacinamida",
-      "url": "https://www.amazon.com.br/dp/B07XP6N3BC?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17942908863322343",
       "facebook_post_id": ""
     },
     {
