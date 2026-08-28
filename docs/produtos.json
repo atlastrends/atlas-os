@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-28T17:26:34.792211+00:00",
+  "updated_at": "2026-08-28T17:26:52.653751+00:00",
   "products": [
     {
       "keyword": "CHINELO",
@@ -3874,6 +3874,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "THRILLER",
+      "title": "Thriller",
+      "url": "https://www.amazon.com/dp/B01B2M9H76?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17983981746114510",
+      "facebook_post_id": "1022165604149917"
+    },
+    {
       "keyword": "REYNOLDS",
       "title": "Reynolds Kitchens Unbleached Parchment Paper Roll, 45sq ft | Chlorine-Free, Nonstick Baking Parchment Paper, Microwave and Ov",
       "url": "https://www.amazon.com/dp/B07PFYT8MC?tag=atlasfindsus-20",
@@ -6167,14 +6175,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "THRILLER",
-      "title": "Thriller",
-      "url": "https://www.amazon.com/dp/B01B2M9H76?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "17983981746114510",
       "facebook_post_id": ""
     },
     {
