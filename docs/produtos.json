@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T19:53:32.802118+00:00",
+  "updated_at": "2026-08-28T19:53:56.938710+00:00",
   "products": [
+    {
+      "keyword": "ZOETIS",
+      "title": "Zoetis Simparic 20Mg 5 1 Até 10Kg 1Cp Para Cães",
+      "url": "https://www.amazon.com.br/dp/B07NGRY9V1?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18576909766069740",
+      "facebook_post_id": "1250398577214905"
+    },
     {
       "keyword": "BAGGIO",
       "title": "Baggio Café Café Torrado e Moído Aroma de Chocolate com Avelã 250g",
@@ -2951,14 +2959,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "ZOETIS",
-      "title": "Zoetis Simparic 20Mg 5 1 Até 10Kg 1Cp Para Cães",
-      "url": "https://www.amazon.com.br/dp/B07NGRY9V1?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18576909766069740",
       "facebook_post_id": ""
     },
     {
