@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T17:59:50.882805+00:00",
+  "updated_at": "2026-08-28T18:00:08.267666+00:00",
   "products": [
+    {
+      "keyword": "ROCHE",
+      "title": "La Roche-Posay Effaclar Gel Concentrado",
+      "url": "https://www.amazon.com.br/dp/B07KYVSKWR?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18101883311351232",
+      "facebook_post_id": "1063166566602033"
+    },
     {
       "keyword": "CLEAR",
       "title": "Clear Shampoo Men Anticaspa Ice Cool Menthol 400Ml",
@@ -2847,14 +2855,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "ROCHE",
-      "title": "La Roche-Posay Effaclar Gel Concentrado",
-      "url": "https://www.amazon.com.br/dp/B07KYVSKWR?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18101883311351232",
       "facebook_post_id": ""
     },
     {
