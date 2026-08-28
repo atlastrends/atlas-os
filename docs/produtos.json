@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T21:37:29.879656+00:00",
+  "updated_at": "2026-08-28T21:37:51.202803+00:00",
   "products": [
+    {
+      "keyword": "PLAYSTATION",
+      "title": "PlayStation DualSense Controle sem fio – Branco",
+      "url": "https://www.amazon.com.br/dp/B0CQKLS4RP?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18021124325909243",
+      "facebook_post_id": "1569393368262373"
+    },
     {
       "keyword": "HADA",
       "title": "Hada Labo® Gokujyun Oil Cleasing - Óleo de limpeza facial demaquilante com Ácido Hialurônico 200ml",
@@ -3015,14 +3023,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PLAYSTATION",
-      "title": "PlayStation DualSense Controle sem fio – Branco",
-      "url": "https://www.amazon.com.br/dp/B0CQKLS4RP?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18021124325909243",
       "facebook_post_id": ""
     },
     {
