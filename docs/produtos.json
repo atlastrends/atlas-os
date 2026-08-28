@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T20:03:56.486473+00:00",
+  "updated_at": "2026-08-28T20:04:18.565761+00:00",
   "products": [
+    {
+      "keyword": "REFIL",
+      "title": "Refil Tiliflex Universitário 200F Academie",
+      "url": "https://www.amazon.com.br/dp/B077SFWN7J?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17939907837086633",
+      "facebook_post_id": "1630296555373861"
+    },
     {
       "keyword": "ROCHE",
       "title": "La Roche-Posay Anthelios Airlicium",
@@ -2967,14 +2975,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "REFIL",
-      "title": "Refil Tiliflex Universitário 200F Academie",
-      "url": "https://www.amazon.com.br/dp/B077SFWN7J?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17939907837086633",
       "facebook_post_id": ""
     },
     {
