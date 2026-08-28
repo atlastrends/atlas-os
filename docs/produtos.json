@@ -1,6 +1,22 @@
 {
-  "updated_at": "2026-08-28T22:13:23.507520+00:00",
+  "updated_at": "2026-08-28T22:19:35.983604+00:00",
   "products": [
+    {
+      "keyword": "PALISAD",
+      "title": "PALISAD Pulverizador Manual – Pulverizador de Jardim Alta Pressão",
+      "url": "https://www.amazon.com.br/dp/B07BB1TQCY?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18058988744522393",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "COALA",
+      "title": "Coala Home Spray Ambientes e Tecidos 260ml Cha Branco",
+      "url": "https://www.amazon.com.br/dp/B0C6R8G61Z?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "RAID",
       "title": "Raid Repelente Elétrico Líquido 45 Noites, Aparelho e Refil de 32,9ml",
@@ -3077,14 +3093,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "COALA",
-      "title": "Coala Home Spray Ambientes e Tecidos 260ml Cha Branco",
-      "url": "https://www.amazon.com.br/dp/B0C6R8G61Z?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
