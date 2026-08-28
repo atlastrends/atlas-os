@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T18:38:19.444256+00:00",
+  "updated_at": "2026-08-28T18:38:45.380341+00:00",
   "products": [
+    {
+      "keyword": "PANTENE",
+      "title": "Pantene Pro-V Óleo Capilar Queratina Milagroso Finalizador Leave-in 95 ml",
+      "url": "https://www.amazon.com.br/dp/B0CVXT2K1S?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17986433168865350",
+      "facebook_post_id": "1553634273171467"
+    },
     {
       "keyword": "VONDER",
       "title": "Vonder, Banqueta Plástica Dobrável, Branca, Altura 220 Mm",
@@ -2879,14 +2887,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PANTENE",
-      "title": "Pantene Pro-V Óleo Capilar Queratina Milagroso Finalizador Leave-in 95 ml",
-      "url": "https://www.amazon.com.br/dp/B0CVXT2K1S?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17986433168865350",
       "facebook_post_id": ""
     },
     {
