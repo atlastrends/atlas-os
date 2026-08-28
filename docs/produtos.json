@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T17:51:00.919201+00:00",
+  "updated_at": "2026-08-28T17:51:38.698302+00:00",
   "products": [
+    {
+      "keyword": "SPIDER",
+      "title": "Spider-Man: Far from Home",
+      "url": "https://www.amazon.com.br/dp/B07SWQ1C9S?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18012794093748567",
+      "facebook_post_id": "1449858326963838"
+    },
     {
       "keyword": "PARAFUSADEIRA",
       "title": "WAP Parafusadeira e Furadeira à Bateria 12V BPF-12K3, Kit de 13 Acessórios e Maleta, Empunhadura Emborrachada, Bivolt",
@@ -2823,14 +2831,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "SPIDER",
-      "title": "Spider-Man: Far from Home",
-      "url": "https://www.amazon.com.br/dp/B07SWQ1C9S?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18012794093748567",
       "facebook_post_id": ""
     },
     {
