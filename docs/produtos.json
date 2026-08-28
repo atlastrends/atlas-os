@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T14:54:46.105813+00:00",
+  "updated_at": "2026-08-28T14:55:33.726152+00:00",
   "products": [
+    {
+      "keyword": "TECH",
+      "title": "G-Tech Oxímetro De Pulso Portátil Modelo Oled Graph",
+      "url": "https://www.amazon.com.br/dp/B07MRZ2R3V?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18125395307506516",
+      "facebook_post_id": "2250657069089713"
+    },
     {
       "keyword": "NEUTROGENA",
       "title": "Neutrogena Hidratante Facial Hydro Boost Water Gel Refil, 50g",
@@ -2767,14 +2775,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "TECH",
-      "title": "G-Tech Oxímetro De Pulso Portátil Modelo Oled Graph",
-      "url": "https://www.amazon.com.br/dp/B07MRZ2R3V?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18125395307506516",
       "facebook_post_id": ""
     },
     {
