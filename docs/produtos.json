@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T22:03:42.059345+00:00",
+  "updated_at": "2026-08-28T22:08:15.142533+00:00",
   "products": [
+    {
+      "keyword": "RAID",
+      "title": "Raid Repelente Elétrico Líquido 45 Noites, Aparelho e Refil de 32,9ml",
+      "url": "https://www.amazon.com.br/dp/B07DPWXP63?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18093840662383869",
+      "facebook_post_id": ""
+    },
     {
       "keyword": "EUCERIN",
       "title": "EUCERIN Dual Sérum Facial Antimanchas e Anti-idade 30ml, Anti-Pigment, Clareador, Thiamidol, Ácido Hialurônico",
@@ -3071,14 +3079,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "RAID",
-      "title": "Raid Repelente Elétrico Líquido 45 Noites, Aparelho e Refil de 32,9ml",
-      "url": "https://www.amazon.com.br/dp/B07DPWXP63?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18093840662383869",
       "facebook_post_id": ""
     },
     {
@@ -6701,6 +6701,14 @@
       "keyword": "SUPERER",
       "title": "Superer Micro USB Charger Cable Fit for PS4 Controller, Kindle Paperwhite, Amazon Fire Tablet, Roku Streaming Stick, Fire TV",
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "AILUN",
+      "title": "Ailun 3 Pack Screen Protector for iPhone 17 Pro Max, Tempered Glass | 6.9 inch, Installation Frame, Sensor Protection, Dynami",
+      "url": "https://www.amazon.com/dp/B0FDQK69GQ?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
