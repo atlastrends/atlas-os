@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-08-28T21:39:55.363756+00:00",
+  "updated_at": "2026-08-28T21:40:16.590675+00:00",
   "products": [
+    {
+      "keyword": "AROMATIZADOR",
+      "title": "Aromatizador Elétrico Bivolt Original Via Aroma",
+      "url": "https://www.amazon.com.br/dp/B07B42VCSC?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17997991760797863",
+      "facebook_post_id": "2135622893658372"
+    },
     {
       "keyword": "PLAYSTATION",
       "title": "PlayStation DualSense Controle sem fio – Branco",
@@ -3023,14 +3031,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "AROMATIZADOR",
-      "title": "Aromatizador Elétrico Bivolt Original Via Aroma",
-      "url": "https://www.amazon.com.br/dp/B07B42VCSC?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17997991760797863",
       "facebook_post_id": ""
     },
     {
