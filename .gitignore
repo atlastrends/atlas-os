@@ -143,6 +143,15 @@ bin/cloudflared.exe
 /app/assets/teen_diary_3d/*.blend
 /app/assets/teen_diary_3d/*.vrm
 
+# --- Artefatos locais restaurados por backup/inventário, não pelo Git ---
+/_diff_pipeline.txt
+/_diff_scraper.txt
+/_scene7_debug/
+/app/assets/
+/tools/agnes-video-generator/
+/tools/blender_studio_characters/
+/tools/kenney_mini-characters/
+
 # --- Docker compose de backup ---
 docker-compose.*.yml
 !docker-compose.yml

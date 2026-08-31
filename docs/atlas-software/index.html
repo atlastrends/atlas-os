@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Atlas transforma ideias e produtos em vídeos prontos para publicação. Comece com o Core e adicione apenas os plugins que sua operação precisa.">
+  <title>Atlas Software | Criação de vídeo modular</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:#11131a;
+      --muted:#626978;
+      --paper:#f5f5f7;
+      --card:#fff;
+      --line:#e2e3e8;
+      --red:#b22234;
+      --red-dark:#7d1423;
+      --blue:#3c3b6e;
+      --blue-dark:#17162f;
+      --gold:#f6c85f;
+      --green:#079455;
+      --grad:linear-gradient(135deg,var(--blue) 0%,var(--red) 100%);
+      --shadow:0 24px 70px rgba(23,22,47,.12);
+    }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      margin:0; color:var(--ink); background:
+        radial-gradient(circle at 12% 4%,rgba(60,59,110,.11),transparent 28rem),
+        radial-gradient(circle at 92% 22%,rgba(178,34,52,.1),transparent 30rem),
+        var(--paper);
+      font-family:"Inter",system-ui,sans-serif; overflow-x:hidden;
+    }
+    a { color:inherit; }
+    .shell { width:min(1180px,calc(100% - 32px)); margin:auto; }
+    .top {
+      position:sticky; top:0; z-index:20;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      background:rgba(17,19,26,.88); backdrop-filter:blur(14px);
+    }
+    .top-inner {
+      min-height:68px; display:flex; align-items:center; justify-content:space-between; gap:18px;
+    }
+    .brand { display:flex; align-items:center; gap:11px; color:#fff; text-decoration:none; font-weight:900; }
+    .brand-mark {
+      width:38px; height:38px; border-radius:12px; display:grid; place-items:center;
+      background:var(--grad); box-shadow:0 8px 24px rgba(178,34,52,.35);
+    }
+    .brand small { display:block; color:#aeb2c2; font-size:10px; letter-spacing:.17em; margin-top:2px; }
+    .nav { display:flex; align-items:center; gap:20px; color:#d9dbe3; font-size:13px; font-weight:700; }
+    .nav a { text-decoration:none; }
+    .nav .nav-cta { padding:10px 15px; border-radius:10px; background:#fff; color:var(--ink); }
+    .hero {
+      position:relative; overflow:hidden; color:#fff; min-height:640px;
+      background:
+        linear-gradient(90deg,rgba(10,11,24,.97) 0%,rgba(10,11,24,.88) 48%,rgba(10,11,24,.42) 100%),
+        url("../banner-us.jpg") center/cover;
+    }
+    .hero::after {
+      content:""; position:absolute; inset:auto 0 0; height:180px;
+      background:linear-gradient(transparent,var(--paper));
+    }
+    .hero-grid {
+      position:relative; z-index:2; display:grid; grid-template-columns:1.08fr .92fr;
+      align-items:center; gap:60px; min-height:590px; padding:74px 0 96px;
+    }
+    .hero-grid > * { min-width:0; }
+    .eyebrow {
+      display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08);
+      color:#f4d27f; font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    }
+    h1 { margin:20px 0 18px; font-size:clamp(42px,6vw,76px); line-height:.98; letter-spacing:-.055em; }
+    .hero-copy { max-width:680px; color:#d8dae4; font-size:18px; line-height:1.65; overflow-wrap:anywhere; }
+    .hero-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:30px; }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:9px; min-height:48px;
+      padding:0 20px; border:0; border-radius:12px; cursor:pointer; text-decoration:none;
+      font:800 14px "Inter"; transition:transform .18s ease,box-shadow .18s ease;
+    }
+    .btn:hover { transform:translateY(-2px); }
+    .btn-primary { color:#fff; background:linear-gradient(135deg,#d42a43,#8f1829); box-shadow:0 12px 32px rgba(178,34,52,.35); }
+    .btn-light { color:#151620; background:#fff; }
+    .hero-panel {
+      padding:22px; border:1px solid rgba(255,255,255,.17); border-radius:24px;
+      background:rgba(17,19,34,.76); backdrop-filter:blur(16px); box-shadow:var(--shadow);
+      max-width:100%; overflow:hidden;
+    }
+    .window-head { display:flex; gap:7px; padding-bottom:17px; border-bottom:1px solid rgba(255,255,255,.1); }
+    .dot { width:9px; height:9px; border-radius:50%; background:#bdc0cb; }
+    .dot:first-child { background:#e44e61; } .dot:nth-child(2) { background:#f5c85b; } .dot:nth-child(3) { background:#40c98d; }
+    .pipeline { display:grid; gap:10px; margin-top:18px; }
+    .pipe-row {
+      display:grid; grid-template-columns:40px 1fr auto; align-items:center; gap:12px;
+      padding:13px; border-radius:14px; background:rgba(255,255,255,.065);
+    }
+    .pipe-icon { width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--grad); font-weight:900; }
+    .pipe-row strong { font-size:13px; } .pipe-row small { display:block; margin-top:4px; color:#aeb2c2; font-size:11px; }
+    .status { padding:5px 8px; border-radius:999px; color:#7ff0b8; background:rgba(7,148,85,.18); font-size:10px; font-weight:800; }
+    section { padding:84px 0; }
+    .section-head { max-width:760px; margin-bottom:34px; }
+    .kicker { color:var(--red); font-size:12px; font-weight:900; letter-spacing:.14em; text-transform:uppercase; }
+    h2 { margin:10px 0 13px; font-size:clamp(32px,4.5vw,54px); line-height:1.04; letter-spacing:-.045em; }
+    .section-head p,.muted { color:var(--muted); line-height:1.7; }
+    .core-grid { display:grid; grid-template-columns:.9fr 1.1fr; gap:22px; }
+    .core-card,.card {
+      border:1px solid var(--line); border-radius:22px; background:var(--card); box-shadow:0 10px 34px rgba(23,22,47,.06);
+    }
+    .core-card { padding:32px; background:linear-gradient(145deg,#17162f,#272552); color:#fff; }
+    .price { margin:18px 0; font-size:48px; font-weight:900; letter-spacing:-.05em; }
+    .price small { font-size:13px; color:#b9bdca; letter-spacing:0; }
+    .tag { display:inline-flex; padding:7px 10px; border-radius:999px; color:#ffe09a; background:rgba(246,200,95,.12); font-size:11px; font-weight:800; }
+    .list { display:grid; gap:12px; padding:0; margin:24px 0; list-style:none; }
+    .list li { display:flex; gap:10px; line-height:1.45; }
+    .list li::before { content:"✓"; flex:0 0 22px; color:#6ee7a8; font-weight:900; }
+    .not-included li::before { content:"–"; color:#9ea3b2; }
+    .core-detail { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:22px; }
+    .mini { padding:20px; border-radius:16px; background:#f7f7fa; }
+    .mini strong { display:block; margin-bottom:7px; }
+    .mini p { margin:0; color:var(--muted); font-size:13px; line-height:1.6; }
+    .plugin-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .plugin { position:relative; padding:22px; }
+    .plugin input { position:absolute; opacity:0; pointer-events:none; }
+    .plugin label { display:block; cursor:pointer; }
+    .plugin-icon { width:44px; height:44px; display:grid; place-items:center; border-radius:13px; color:#fff; background:var(--grad); font-weight:900; }
+    .plugin h3 { margin:18px 0 8px; font-size:17px; }
+    .plugin p { min-height:62px; margin:0; color:var(--muted); font-size:13px; line-height:1.55; }
+    .plugin-foot { display:flex; align-items:center; justify-content:space-between; margin-top:18px; font-size:12px; font-weight:800; }
+    .check {
+      width:22px; height:22px; display:grid; place-items:center; border:2px solid #c8cad3; border-radius:7px;
+      color:transparent; transition:.16s ease;
+    }
+    .plugin:has(input:checked) { border-color:#7772c8; box-shadow:0 16px 40px rgba(60,59,110,.14); }
+    .plugin input:checked + label .check { color:#fff; border-color:var(--blue); background:var(--blue); }
+    .builder {
+      position:sticky; bottom:16px; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:18px;
+      margin-top:24px; padding:18px 22px; border-radius:18px; color:#fff; background:rgba(17,19,26,.94);
+      backdrop-filter:blur(12px); box-shadow:0 18px 60px rgba(17,19,26,.24);
+    }
+    .builder strong { font-size:25px; } .builder small { display:block; color:#aeb2c2; margin-top:4px; }
+    .builder-actions { display:flex; gap:10px; align-items:center; }
+    .currency { display:flex; padding:4px; border-radius:10px; background:#2b2d36; }
+    .currency button { padding:8px 10px; border:0; border-radius:7px; color:#aeb2c2; background:transparent; cursor:pointer; font-weight:800; }
+    .currency button.active { color:#11131a; background:#fff; }
+    .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; counter-reset:step; }
+    .step { padding:24px; }
+    .step::before {
+      counter-increment:step; content:counter(step,decimal-leading-zero); display:block;
+      color:var(--red); font-size:12px; font-weight:900; letter-spacing:.12em;
+    }
+    .step h3 { margin:13px 0 8px; } .step p { margin:0; color:var(--muted); font-size:13px; line-height:1.6; }
+    .guard {
+      display:grid; grid-template-columns:1fr 1fr; gap:30px; align-items:center; padding:38px;
+      border-radius:26px; color:#fff; background:var(--grad); box-shadow:var(--shadow);
+    }
+    .guard h2 { margin-top:0; } .guard p { color:#e4e5ee; line-height:1.7; }
+    .guard-list { display:grid; gap:11px; }
+    .guard-item { padding:14px 16px; border-radius:13px; background:rgba(255,255,255,.11); font-size:13px; font-weight:700; }
+    .faq { display:grid; gap:10px; }
+    details { border:1px solid var(--line); border-radius:14px; background:#fff; padding:18px 20px; }
+    summary { cursor:pointer; font-weight:800; }
+    details p { color:var(--muted); line-height:1.65; }
+    .final-cta { text-align:center; padding:74px 22px; border-radius:30px; color:#fff; background:#11131a; }
+    .final-cta p { max-width:650px; margin:0 auto 26px; color:#b9bdca; line-height:1.7; }
+    footer { padding:34px 0 54px; color:#7c8290; font-size:12px; text-align:center; }
+    @media (max-width:940px) {
+      .hero-grid,.core-grid,.guard { grid-template-columns:minmax(0,1fr); }
+      .hero-panel { max-width:620px; }
+      .plugin-grid { grid-template-columns:repeat(2,1fr); }
+    }
+    @media (max-width:640px) {
+      .shell { width:min(100% - 22px,1180px); }
+      .nav { display:none; }
+      .hero-grid { padding-top:48px; gap:28px; }
+      .hero { min-height:760px; }
+      .hero-actions .btn { width:100%; }
+      .core-detail,.plugin-grid,.steps { grid-template-columns:1fr; }
+      .plugin p { min-height:0; }
+      .builder { position:static; align-items:flex-start; flex-direction:column; }
+      .builder-actions { width:100%; flex-wrap:wrap; }
+      .builder .btn { flex:1; }
+      .guard { padding:26px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="shell top-inner">
+      <a class="brand" href="../">
+        <span class="brand-mark">A</span>
+        <span>ATLAS<small>CREATOR SOFTWARE</small></span>
+      </a>
+      <nav class="nav" aria-label="Navegação principal">
+        <a href="#core">Core</a>
+        <a href="#plugins">Plugins</a>
+        <a href="#onboarding">Configuração</a>
+        <a class="nav-cta" href="#montar">Montar meu Atlas</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div>
+          <span class="eyebrow">◆ Em preparação · acesso antecipado</span>
+          <h1>Comece simples.<br>Expanda quando precisar.</h1>
+          <p class="hero-copy">
+            Atlas transforma ideias e produtos em vídeos verticais prontos para revisão.
+            Compre o núcleo local uma vez e adicione publicação, vozes, IA, afiliados,
+            analytics e automação somente quando sua operação pedir.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#montar">Montar minha configuração →</a>
+            <a class="btn btn-light" href="#onboarding">Ver como funciona</a>
+          </div>
+        </div>
+        <div class="hero-panel" aria-label="Fluxo visual do Atlas">
+          <div class="window-head"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="pipeline">
+            <div class="pipe-row"><span class="pipe-icon">1</span><div><strong>Importe ou descreva</strong><small>Produto, ideia, roteiro ou mídia própria</small></div><span class="status">PRONTO</span></div>
+            <div class="pipe-row"><span class="pipe-icon">2</span><div><strong>Crie e revise</strong><small>Vídeo vertical, texto essencial e preview</small></div><span class="status">LOCAL</span></div>
+            <div class="pipe-row"><span class="pipe-icon">3</span><div><strong>Baixe o arquivo</strong><small>Core funciona sem conectar suas redes</small></div><span class="status">CORE</span></div>
+            <div class="pipe-row"><span class="pipe-icon">+</span><div><strong>Adicione plugins</strong><small>Vozes, IA, publicação, afiliados e dados</small></div><span class="status">VOCÊ ESCOLHE</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="core">
+      <div class="shell">
+        <div class="section-head">
+          <span class="kicker">Produto principal</span>
+          <h2>Atlas Core. O essencial para criar.</h2>
+          <p>Uma licença local e perpétua para quem ainda trabalha manualmente e quer começar com organização, qualidade e controle.</p>
+        </div>
+        <div class="core-grid">
+          <article class="core-card">
+            <span class="tag">LICENÇA PERPÉTUA · 1 USUÁRIO</span>
+            <h3>Atlas Core Basic</h3>
+            <div class="price" data-core-price>R$ 497<small> pagamento único</small></div>
+            <ul class="list">
+              <li>Biblioteca local de projetos e vídeos</li>
+              <li>Criação e montagem de vídeo vertical</li>
+              <li>Preview e revisão antes da exportação</li>
+              <li>Títulos, ganchos e CTAs essenciais</li>
+              <li>Até 5 exportações finais por dia</li>
+              <li>Download manual em Full HD</li>
+            </ul>
+            <a class="btn btn-light" href="#plugins">Escolher plugins</a>
+          </article>
+          <div class="core-card core-detail">
+            <div class="mini"><strong>Seus arquivos ficam locais</strong><p>Projetos e mídias permanecem no computador. Conexões externas só são ativadas quando você instala um plugin.</p></div>
+            <div class="mini"><strong>Sem assinatura obrigatória</strong><p>O Core comprado continua funcionando. Serviços de nuvem e APIs são opcionais e identificados separadamente.</p></div>
+            <div class="mini"><strong>Sem publicação automática</strong><p>No Core, você revisa e baixa o vídeo. Publicação em redes sociais pertence ao plugin de plataformas.</p></div>
+            <div class="mini"><strong>Atualização por nível</strong><p>Quando precisar de mais volume, poderá migrar para Creator ou Studio sem perder seus projetos.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="plugins">
+      <div class="shell">
+        <div class="section-head">
+          <span class="kicker">Monte por partes</span>
+          <h2>Pague somente pelo que usa.</h2>
+          <p>Selecione os módulos abaixo para simular sua configuração. Custos cobrados pelos provedores de IA, voz ou redes sociais não estão incluídos.</p>
+        </div>
+        <div class="plugin-grid" id="plugin-grid">
+          <article class="card plugin"><input id="social" type="checkbox" data-brl="197" data-usd="39"><label for="social"><span class="plugin-icon">↗</span><h3>Social Publisher</h3><p>Conectores oficiais para organizar uploads em YouTube, Meta e TikTok, conforme aprovação de cada plataforma.</p><div class="plugin-foot"><span data-price-brl="197" data-price-usd="39">R$ 197</span><span class="check">✓</span></div></label></article>
+          <article class="card plugin"><input id="voice" type="checkbox" data-brl="147" data-usd="29"><label for="voice"><span class="plugin-icon">◖</span><h3>Voice Studio</h3><p>Escolha vozes modernas e conecte provedores compatíveis. Uso do provedor é pago separadamente.</p><div class="plugin-foot"><span data-price-brl="147" data-price-usd="29">R$ 147</span><span class="check">✓</span></div></label></article>
+          <article class="card plugin"><input id="ai" type="checkbox" data-brl="197" data-usd="39"><label for="ai"><span class="plugin-icon">✦</span><h3>AI Writer</h3><p>Roteiros, variações, descrições e adaptação de idioma usando as chaves de IA escolhidas pelo cliente.</p><div class="plugin-foot"><span data-price-brl="197" data-price-usd="39">R$ 197</span><span class="check">✓</span></div></label></article>
+          <article class="card plugin"><input id="affiliate" type="checkbox" data-brl="247" data-usd="49"><label for="affiliate"><span class="plugin-icon">$</span><h3>Affiliate Commerce</h3><p>Catálogo, links e organização para Amazon e Shopee, com disclosures e validação de produto.</p><div class="plugin-foot"><span data-price-brl="247" data-price-usd="49">R$ 247</span><span class="check">✓</span></div></label></article>
+          <article class="card plugin"><input id="analytics" type="checkbox" data-brl="247" data-usd="49"><label for="analytics"><span class="plugin-icon">↗</span><h3>Analytics Pro</h3><p>Métricas consolidadas, ranking de vídeos, cliques e acompanhamento por plataforma.</p><div class="plugin-foot"><span data-price-brl="247" data-price-usd="49">R$ 247</span><span class="check">✓</span></div></label></article>
+          <article class="card plugin"><input id="automation" type="checkbox" data-brl="297" data-usd="59"><label for="automation"><span class="plugin-icon">∞</span><h3>Automation Queue</h3><p>Filas, agendamento, tentativas controladas e limites. Nunca cria anúncios ou gastos sem confirmação.</p><div class="plugin-foot"><span data-price-brl="297" data-price-usd="59">R$ 297</span><span class="check">✓</span></div></label></article>
+          <article class="card plugin"><input id="studio" type="checkbox" data-brl="297" data-usd="59"><label for="studio"><span class="plugin-icon">▶</span><h3>Live & Stories</h3><p>Ferramentas adicionais para histórias seriadas, cenas e preparação de conteúdo ao vivo.</p><div class="plugin-foot"><span data-price-brl="297" data-price-usd="59">R$ 297</span><span class="check">✓</span></div></label></article>
+          <article class="card plugin"><input id="ebook" type="checkbox" data-brl="147" data-usd="29"><label for="ebook"><span class="plugin-icon">▤</span><h3>Ebook Studio</h3><p>Transforme conteúdo em materiais digitais, guias e lead magnets com exportação organizada.</p><div class="plugin-foot"><span data-price-brl="147" data-price-usd="29">R$ 147</span><span class="check">✓</span></div></label></article>
+        </div>
+        <div class="builder" id="montar">
+          <div><small>Atlas Core + plugins selecionados</small><strong id="total">R$ 497</strong><small id="selection">Core Basic</small></div>
+          <div class="builder-actions">
+            <div class="currency" aria-label="Moeda"><button class="active" data-currency="BRL">BRL</button><button data-currency="USD">USD</button></div>
+            <a class="btn btn-primary" id="interest-link" href="mailto:atlastrendbr@gmail.com?subject=Interesse%20no%20Atlas%20Core">Quero acesso antecipado</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="onboarding">
+      <div class="shell">
+        <div class="section-head">
+          <span class="kicker">Configuração assistida</span>
+          <h2>O cliente conecta cada peça, passo a passo.</h2>
+          <p>O Atlas não entrega um arquivo de configuração confuso. Cada plugin abre somente os campos necessários e testa a conexão antes de salvar.</p>
+        </div>
+        <div class="steps">
+          <article class="card step"><h3>Crie o espaço</h3><p>Nome do projeto, idioma, país, fuso horário e pasta onde os arquivos serão armazenados.</p></article>
+          <article class="card step"><h3>Escolha o objetivo</h3><p>Conteúdo próprio, afiliados, negócio local, agência ou produto digital. Isso personaliza os módulos sugeridos.</p></article>
+          <article class="card step"><h3>Adicione suas IAs</h3><p>O cliente escolhe o provedor e insere a própria chave em uma tela segura. Cada conexão é validada separadamente.</p></article>
+          <article class="card step"><h3>Escolha as vozes</h3><p>Voz local básica ou plugin de voz premium. Clonagem exige consentimento documentado.</p></article>
+          <article class="card step"><h3>Conecte plataformas</h3><p>OAuth oficial para cada rede. O cliente vê permissões, conta conectada e limitações antes de publicar.</p></article>
+          <article class="card step"><h3>Ative comércio e dados</h3><p>Tags de afiliado, páginas, e-mails operacionais, pixels e tokens aparecem apenas nos plugins comprados.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell guard">
+        <div><span class="eyebrow">Controle por padrão</span><h2>Seu Atlas não gasta por você.</h2><p>Publicação paga, APIs com cobrança e anúncios exigem confirmação clara. Não há renovação escondida nem promessa de “IA vitalícia” com custo variável.</p></div>
+        <div class="guard-list">
+          <div class="guard-item">✓ Licença do Core claramente separada de serviços mensais</div>
+          <div class="guard-item">✓ Chaves e contas pertencem ao cliente</div>
+          <div class="guard-item">✓ APIs de terceiros identificadas antes da ativação</div>
+          <div class="guard-item">✓ Plugins podem ser adicionados sem reinstalar projetos</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell">
+        <div class="section-head"><span class="kicker">Perguntas importantes</span><h2>Sem letras pequenas.</h2></div>
+        <div class="faq">
+          <details><summary>O Atlas Core publica automaticamente?</summary><p>Não. O Core cria, organiza, revisa e exporta. Conectores de publicação são plugins separados e continuam sujeitos às permissões de cada plataforma.</p></details>
+          <details><summary>As IAs e vozes estão incluídas para sempre?</summary><p>O conector pode ser comprado, mas o consumo cobrado por OpenAI, Fish Audio ou outro provedor é pago pelo cliente diretamente ou por créditos Atlas claramente identificados.</p></details>
+          <details><summary>O que significa licença perpétua?</summary><p>A versão desktop adquirida continua funcionando para os recursos locais daquela licença. Serviços de nuvem, suporte prioritário e APIs externas podem exigir planos separados.</p></details>
+          <details><summary>Posso começar básico e melhorar depois?</summary><p>Sim. O objetivo é exatamente esse: começar com Core, preservar os projetos e ativar plugins conforme a operação amadurece.</p></details>
+          <details><summary>O produto já está à venda?</summary><p>A versão comercial modular está em preparação. A página apresenta a estrutura proposta para acesso antecipado; nenhum pagamento é processado aqui.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell final-cta">
+        <span class="eyebrow">Lista de acesso antecipado</span>
+        <h2>Construa o Atlas do tamanho da sua operação.</h2>
+        <p>Conte quais vídeos você produz e quais plugins realmente precisa. A configuração será revisada antes de qualquer pagamento.</p>
+        <a class="btn btn-primary" id="final-interest-link" href="mailto:atlastrendbr@gmail.com?subject=Quero%20conhecer%20o%20Atlas">Entrar na lista de interesse →</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">Atlas Creator Software · Produto em preparação · Sem cobrança nesta página · <a href="../privacy/">Privacidade</a> · <a href="../terms/">Termos</a></div>
+  </footer>
+
+  <script>
+    (() => {
+      const core = { BRL: 497, USD: 99 };
+      const symbols = { BRL: "R$", USD: "US$" };
+      let currency = "BRL";
+      const checks = [...document.querySelectorAll(".plugin input")];
+      const currencyButtons = [...document.querySelectorAll("[data-currency]")];
+
+      function format(value) {
+        return `${symbols[currency]} ${value.toLocaleString(currency === "BRL" ? "pt-BR" : "en-US")}`;
+      }
+
+      function update() {
+        const selected = checks.filter((item) => item.checked);
+        const total = selected.reduce((sum, item) => sum + Number(item.dataset[currency.toLowerCase()]), core[currency]);
+        document.getElementById("total").textContent = format(total);
+        document.querySelector("[data-core-price]").innerHTML = `${format(core[currency])}<small> pagamento único</small>`;
+        document.querySelectorAll("[data-price-brl]").forEach((node) => {
+          node.textContent = format(Number(node.dataset[currency.toLowerCase()]));
+        });
+        const names = selected.map((item) => item.nextElementSibling.querySelector("h3").textContent);
+        document.getElementById("selection").textContent = names.length ? `Core Basic + ${names.join(", ")}` : "Core Basic";
+        const body = encodeURIComponent(`Olá, tenho interesse no Atlas Core com: ${names.length ? names.join(", ") : "sem plugins adicionais"}. Valor simulado: ${format(total)}.`);
+        const href = `mailto:atlastrendbr@gmail.com?subject=${encodeURIComponent("Interesse no Atlas Creator Software")}&body=${body}`;
+        document.getElementById("interest-link").href = href;
+        document.getElementById("final-interest-link").href = href;
+      }
+
+      checks.forEach((item) => item.addEventListener("change", update));
+      currencyButtons.forEach((button) => button.addEventListener("click", () => {
+        currency = button.dataset.currency;
+        currencyButtons.forEach((item) => item.classList.toggle("active", item === button));
+        update();
+      }));
+      update();
+    })();
+  </script>
+</body>
+</html>

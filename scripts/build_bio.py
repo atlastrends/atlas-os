@@ -891,6 +891,7 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     padding:9px 12px; border:none; border-radius:12px; cursor:pointer;
     background:#fff; color:#5b6472; font-family:"Inter"; font-size:14px; font-weight:600;
     box-shadow:0 2px 6px rgba(15,23,42,.05); transition:all .15s ease;
+    text-decoration:none;
   }}
   .tab .tlabel {{ flex:1; text-align:center; }}
   .tab .tflag {{
@@ -1050,6 +1051,9 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
         <button class="tab" data-market="ADS" onclick="showMarket('ADS')">
           <span class="ad-symbol">📣</span><span class="tlabel">Ads</span><span class="ad-symbol">📣</span>
         </button>
+        <a class="tab" href="atlas-software/" aria-label="Conheça o software Atlas">
+          <span class="ad-symbol">◆</span><span class="tlabel">Software</span><span class="ad-symbol">+</span>
+        </a>
       </div>
       <div class="searchrow">
         <div class="searchbar">
