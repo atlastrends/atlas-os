@@ -11,6 +11,7 @@ import Publishing from "./pages/Publishing.jsx";
 import Marketing from "./pages/Marketing.jsx";
 import Analytics from "./pages/Analytics.jsx";
 import AmazonSales from "./pages/AmazonSales.jsx";
+import ShopeeAffiliate from "./pages/ShopeeAffiliate.jsx";
 import PlatformDetail from "./pages/PlatformDetail.jsx";
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Overview />} />
             <Route path="/produtos" element={<Products />} />
+            <Route path="/afiliados-shopee" element={<ShopeeAffiliate />} />
             <Route path="/afiliados" element={<AffiliateVideos />} />
             <Route path="/reels" element={<Reels />} />
             <Route path="/live" element={<Live />} />

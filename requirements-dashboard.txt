@@ -54,3 +54,8 @@ google-auth-httplib2
 moviepy==1.0.3
 imageio-ffmpeg
 numpy
+
+# Cliente da API do Hugging Face Spaces (Diario da Bela: geracao de video
+# com movimento real via GPU gratuita compartilhada - ZeroGPU - sem
+# precisar de GPU propria).
+gradio_client

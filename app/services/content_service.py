@@ -10,6 +10,8 @@ import yt_dlp
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from app.services.ai_providers import build_extra_providers
+
 try:
     from google import genai
 except Exception:
@@ -44,6 +46,10 @@ class ContentService:
                 print(f"⚠️ [CONTENT ENGINE] Falha ao iniciar Gemini: {e}")
                 self.gemini_client = None
 
+        # Provedores extras de TEXTO (OpenAI/ChatGPT, OpenRouter, DeepSeek,
+        # Mistral, Cerebras, Together) — entram so se tiverem chave no .env.
+        # Fallback para quando Groq e Gemini ficam sem cota (o motor nao trava).
+        self.extra_providers = build_extra_providers("CONTENT ENGINE")
 
         self.max_research_items = self._env_int("ATLAS_CONTENT_RESEARCH_ITEMS", 6)
 
@@ -822,6 +828,27 @@ TASK:
                 seen.add(model_name)
                 models_to_try.append(model_name)
 
+        # Monta a mensagem uma vez so; serve tanto para o Groq quanto para os
+        # provedores extras (OpenAI/ChatGPT etc.).
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are an elite short-form video strategist and retention-focused voiceover writer. "
+                    "You write scripts for TikTok, YouTube Shorts, Instagram Reels, and Facebook Reels. "
+                    "You optimize for watch time, replay, comments, shares, saves, and follows. "
+                    "You write only clean spoken narration for text-to-speech. "
+                    "You never include labels, markdown, scene directions, emojis, or unsupported facts. "
+                    "You must use the provided research context when it exists. "
+                    "You must not invent facts beyond the topic, trend source, and research context. "
+                    "When context is missing, you write safely and never guess identities, professions, roles, events, or facts. "
+                    "When asked for a minimum word count, you must satisfy it. "
+                    "You should prefer strong hooks, quick tension, natural flow, and a satisfying payoff."
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ]
+
         last_error = None
 
         for model_name in models_to_try:
@@ -836,24 +863,7 @@ TASK:
                 # raciocinio baixo para sobrar espaco para o roteiro.
                 request_kwargs = dict(
                     model=model_name,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are an elite short-form video strategist and retention-focused voiceover writer. "
-                                "You write scripts for TikTok, YouTube Shorts, Instagram Reels, and Facebook Reels. "
-                                "You optimize for watch time, replay, comments, shares, saves, and follows. "
-                                "You write only clean spoken narration for text-to-speech. "
-                                "You never include labels, markdown, scene directions, emojis, or unsupported facts. "
-                                "You must use the provided research context when it exists. "
-                                "You must not invent facts beyond the topic, trend source, and research context. "
-                                "When context is missing, you write safely and never guess identities, professions, roles, events, or facts. "
-                                "When asked for a minimum word count, you must satisfy it. "
-                                "You should prefer strong hooks, quick tension, natural flow, and a satisfying payoff."
-                            ),
-                        },
-                        {"role": "user", "content": prompt},
-                    ],
+                    messages=messages,
                     max_tokens=self.ai_max_tokens,
                     temperature=temperature,
                     top_p=0.90,
@@ -883,14 +893,93 @@ TASK:
                     print(f"⚠️ [CONTENT ENGINE] Gemini indisponível. Tentando próximo modelo Groq...")
                     continue
 
-                # Erro diferente de limite: também tenta o Gemini antes de desistir
+                # Erro diferente de limite: também tenta o Gemini antes de seguir
                 gemini_result = self._try_gemini(prompt, temperature)
                 if gemini_result:
                     return gemini_result
 
-                raise
+                # Nao desiste: ainda ha provedores extras (ChatGPT etc.) a tentar.
+                continue
+
+        # Groq + Gemini indisponiveis -> provedores extras (OpenAI/ChatGPT,
+        # OpenRouter, DeepSeek, Mistral...) que tiverem chave no .env.
+        extra_text = self._try_extra_providers(messages, temperature, self.ai_max_tokens)
+        if extra_text:
+            return extra_text
 
         raise last_error
+
+    def _try_extra_providers(self, messages, temperature: float, max_tokens: int):
+        """Fallback multi-provedor (OpenAI/ChatGPT, OpenRouter, DeepSeek...).
+        Entra so quando Groq e Gemini falham; cada provedor precisa da sua
+        chave no .env. Serve para o motor NAO travar por limite de cota."""
+        for provider in getattr(self, "extra_providers", []):
+            for model_name in provider["models"]:
+                try:
+                    print(f"🤝 [CONTENT ENGINE] Tentando {provider['label']} ({model_name})...")
+                    response = provider["client"].chat.completions.create(
+                        model=model_name,
+                        messages=messages,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                        top_p=0.90,
+                    )
+                    text = response.choices[0].message.content
+                    if text and text.strip():
+                        print(f"✅ [CONTENT ENGINE] {provider['label']} gerou o texto.")
+                        return text
+                except Exception as exc:  # noqa: BLE001
+                    print(f"⚠️ [CONTENT ENGINE] {provider['label']} ({model_name}) falhou: {exc}")
+                    continue
+        return None
+
+    def _strip_reasoning(self, text: str) -> str:
+        """Remove tags de raciocinio (<think>...</think>) que alguns modelos
+        (ex.: qwen) vazam no lugar do texto final."""
+        if not text:
+            return ""
+        text = re.sub(r"(?is)<think>.*?</think>", " ", text)
+        text = re.sub(r"(?is)</?think>", " ", text)
+        return text.strip()
+
+    def _fallback_hook(self, topic: str, language: str = "en") -> str:
+        """Hook de emergencia (SEM IA), para nunca travar por causa do hook."""
+        t = self._clean_topic_for_prompt(topic) or topic
+        if self._is_portuguese(language):
+            hook = f"Você precisa ver isso sobre {t}"
+        else:
+            hook = f"Here's the truth about {t}"
+        return " ".join(hook.split()[:10])
+
+    def _fallback_script(self, topic: str, language: str = "", research_context: str = "") -> str:
+        """Roteiro de emergencia (SEM IA): garante narracao mesmo com TODA a IA
+        fora do ar. Usa o assunto + o contexto de pesquisa (sem inventar fatos)."""
+        t = self._clean_topic_for_prompt(topic) or (topic or "this")
+        ctx = (research_context or self.last_research_context or "").strip()
+        sentences = []
+        if ctx:
+            for part in re.split(r"[\n.;]+", ctx):
+                p = part.strip()
+                if len(p) >= 25:
+                    sentences.append(p)
+                if len(sentences) >= 4:
+                    break
+        if self._is_portuguese(language):
+            intro = f"Você precisa saber o que está acontecendo com {t}."
+            body = " ".join(sentences) if sentences else (
+                f"{t} virou um dos assuntos mais comentados agora, e as pessoas não param de falar sobre isso. "
+                f"Cada nova informação sobre {t} chama ainda mais atenção e deixa todo mundo curioso pra saber o que vem depois."
+            )
+            outro = "Comenta aqui o que você achou e segue pra não perder as próximas novidades."
+        else:
+            intro = f"Here's what's really going on with {t}."
+            body = " ".join(sentences) if sentences else (
+                f"{t} is blowing up right now, and people can't stop talking about it. "
+                f"Every new detail about {t} grabs even more attention and leaves everyone wondering what happens next."
+            )
+            outro = "Drop your take in the comments and follow so you don't miss what happens next."
+        text = self._clean_script(f"{intro} {body} {outro}")
+        return self._trim_to_word_limit(text, max_words=self.absolute_max_words)
 
     # ====================================================================
     # FUNÇÃO PRINCIPAL
@@ -902,9 +991,14 @@ TASK:
         language: str = "en",
         trend_source: str = "",
         research_context: str = "",
+        allow_fallback: bool = True,
     ):
         if not self.client:
             raise RuntimeError("GROQ_API_KEY não configurada. Roteiro não gerado porque o sistema deve usar IA.")
+
+        # Guardado fora do try para o fallback poder usar a melhor versao parcial.
+        best_script = ""
+        best_count = 0
 
         try:
             active_model = self._get_best_model()
@@ -1087,11 +1181,26 @@ TASK:
                     word_count = final_expanded_count
 
             if word_count < 25:
-                raise RuntimeError(
-                    f"Roteiro gerado pela IA ficou inutilizável ({word_count} palavras). Produção interrompida porque a IA não entregou texto suficiente."
-                )
+                if best_count >= 35:
+                    print("⚠️ [CONTENT ENGINE] Roteiro final curto; usando a melhor versão IA anterior.")
+                    script_text = best_script
+                    word_count = best_count
+                else:
+                    if not allow_fallback:
+                        raise RuntimeError(
+                            "IA não entregou roteiro suficiente; "
+                            "fallback desativado."
+                        )
+                    print("⚠️ [CONTENT ENGINE] IA entregou texto insuficiente; usando roteiro de emergência (sem IA) para não travar.")
+                    script_text = self._fallback_script(topic, language, research_context or self.last_research_context)
+                    word_count = self._word_count(script_text)
 
             if word_count < self.target_min_words:
+                if not allow_fallback:
+                    raise RuntimeError(
+                        f"Roteiro com {word_count} palavras; mínimo "
+                        f"obrigatório {self.target_min_words}."
+                    )
                 print(
                     f"⚠️ [CONTENT ENGINE] Roteiro aprovado, mas curto ({word_count} palavras). "
                     f"Prosseguindo porque o texto é 100% IA e evita derrubar o ciclo."
@@ -1101,8 +1210,14 @@ TASK:
             return script_text
 
         except Exception as e:
-            print(f"❌ [CONTENT ENGINE] Erro ao gerar roteiro com IA: {e}")
-            raise
+            if not allow_fallback:
+                raise RuntimeError(
+                    f"Roteiro Trending indisponível sem fallback: {e}"
+                ) from e
+            print(f"⚠️ [CONTENT ENGINE] IA indisponível ({e}). Usando o melhor texto possível para NÃO travar a produção.")
+            if best_count >= 35 and best_script:
+                return best_script
+            return self._fallback_script(topic, language, research_context or self.last_research_context)
 
     def expand_script(
         self,
@@ -1179,7 +1294,8 @@ Return ONLY the hook text, nothing else.
         try:
             active_model = self._get_best_model()
             hook = self._generate_with_ai(prompt=prompt, active_model=active_model, temperature=0.85)
-            hook = self._clean_script(hook or "").strip().strip('"').strip("'")
+            hook = self._strip_reasoning(hook or "")
+            hook = self._clean_script(hook).strip().strip('"').strip("'")
             # Segura no máximo 1 linha
             hook = hook.split("\n")[0].strip()
             words = hook.split()
@@ -1191,4 +1307,5 @@ Return ONLY the hook text, nothing else.
         except Exception as e:
             print(f"⚠️ [CONTENT ENGINE] Falha ao gerar hook por IA: {e}")
 
-        return ""
+        # Sem hook util da IA -> hook de emergencia (nunca trava por causa do hook).
+        return self._fallback_hook(topic, language)

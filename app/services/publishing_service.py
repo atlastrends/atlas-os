@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import os
+import re
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -65,6 +66,11 @@ def _platform_enabled(platform: str) -> bool:
     return (platform or "").lower().strip() not in _disabled_platforms()
 
 
+def _asset_marketplace(asset: VideoAsset) -> str:
+    payload = asset.payload or {}
+    return str(payload.get("platform") or "amazon").strip().lower()
+
+
 # Trechos que indicam BLOQUEIO TEMPORARIO da plataforma (limite diario/cota),
 # NAO um erro real. Nesses casos o video deve aguardar reenvio, e nao virar
 # "erro". So retentar amanha resolve.
@@ -97,6 +103,14 @@ _RATE_LIMIT_HINTS = (
     "too_many_pending",
     "pending_share",
     "rascunhos demais pendentes",
+    # Facebook: protecao temporaria contra frequencia de postagem (erro 368).
+    "limitamos a frequência",
+    "limitamos a frequencia",
+    "tentar novamente mais tarde",
+    "'code': 368",
+    '"code": 368',
+    "error_subcode': 1390008",
+    '"error_subcode": 1390008',
 )
 
 
@@ -198,6 +212,91 @@ def _meta_trip_cooldown() -> None:
             fh.write(str(time.time() + minutes * 60))
     except OSError:
         pass
+
+
+# ----------------------------------------------------------------------------
+# COOLDOWN GENERICO POR PLATAFORMA (limite DIARIO / frequencia).
+#
+# Diferente do (#4) da Meta (limite do APP, curto), este cobre os limites que
+# so voltam apos HORAS/no dia seguinte e que NAO adianta retentar antes:
+#   - YouTube "uploadLimitExceeded": cota diaria de uploads da conta.
+#   - Facebook 368/1390008: protecao de frequencia (anti-spam) da Meta.
+#   - Qualquer "daily limit"/"quota exceeded" de outra rede.
+# Quando um desses aparece, ABRIMOS uma janela por plataforma e passamos a
+# PULAR (sem chamar a API) ate ela expirar, em vez de martelar e manter o
+# bloqueio + encher o log de erros. O estado fica em arquivo (cross-processo).
+# ----------------------------------------------------------------------------
+_YOUTUBE_DAILY_LIMIT_HINTS = (
+    "uploadlimitexceeded",
+    "exceeded the number of videos",
+)
+_FACEBOOK_FREQUENCY_HINTS = (
+    "'code': 368",
+    '"code": 368',
+    "error_subcode': 1390008",
+    '"error_subcode": 1390008',
+    "limitamos a frequência",
+    "limitamos a frequencia",
+)
+_GENERIC_DAILY_LIMIT_HINTS = (
+    "daily limit",
+    "quotaexceeded",
+    "quota exceeded",
+)
+
+
+def _platform_cooldown_file(platform: str, market: str = "") -> str:
+    plat = re.sub(r"[^a-z0-9]+", "_", (platform or "").lower().strip()) or "unknown"
+    mkt = re.sub(r"[^a-z0-9]+", "_", (market or "").lower().strip())
+    name = f"cooldown_{plat}_{mkt}" if mkt else f"cooldown_{plat}"
+    return os.path.join(project_root(), "storage", "state", name)
+
+
+def _platform_cooldown_remaining(platform: str, market: str = "") -> float:
+    """Segundos restantes do cooldown deste CANAL (plataforma+mercado). O
+    limite do YouTube/Meta e por CONTA/canal, entao o bloqueio do canal BR
+    nao deve pausar o US (arquivos de estado separados)."""
+    try:
+        with open(_platform_cooldown_file(platform, market), "r", encoding="utf-8") as fh:
+            expiry = float((fh.read() or "0").strip() or "0")
+    except (OSError, ValueError):
+        return 0.0
+    remaining = expiry - time.time()
+    return remaining if remaining > 0 else 0.0
+
+
+def _cooldown_hours_for(platform: str, error_text: str | None) -> float:
+    """Horas de cooldown a abrir para (plataforma, erro). 0 = nao abrir
+    (erro transitorio tratado em outro lugar, ex.: (#4) da Meta)."""
+    text = str(error_text or "").lower()
+    plat = (platform or "").lower().strip()
+    if plat == "youtube" and any(h in text for h in _YOUTUBE_DAILY_LIMIT_HINTS):
+        return float(os.getenv("ATLAS_YOUTUBE_UPLOAD_COOLDOWN_HOURS", "24") or "24")
+    if plat == "facebook" and any(h in text for h in _FACEBOOK_FREQUENCY_HINTS):
+        return float(os.getenv("ATLAS_FACEBOOK_368_COOLDOWN_HOURS", "48") or "48")
+    if any(h in text for h in _GENERIC_DAILY_LIMIT_HINTS):
+        return float(os.getenv("ATLAS_PLATFORM_DAILY_COOLDOWN_HOURS", "12") or "12")
+    return 0.0
+
+
+def _trip_platform_cooldown(platform: str, hours: float, market: str = "") -> None:
+    """Abre a janela de cooldown deste CANAL (plataforma+mercado) por `hours`."""
+    hours = max(0.1, float(hours))
+    path = _platform_cooldown_file(platform, market)
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(str(time.time() + hours * 3600.0))
+    except OSError:
+        pass
+
+
+def _fmt_cooldown_remaining(seconds: float) -> str:
+    """Texto amigavel do tempo restante (ex.: '3h 12min' ou '18min')."""
+    total_min = int(seconds // 60) + 1
+    if total_min >= 60:
+        return f"{total_min // 60}h {total_min % 60}min"
+    return f"{total_min}min"
 
 
 class PublishingService:
@@ -335,11 +434,33 @@ class PublishingService:
             .filter(Publication.status == PublicationStatusEnum.RATE_LIMITED)
             .distinct()
         )
+        facebook_frequency_cutoff = _now() - timedelta(
+            hours=max(
+                1,
+                _env_int("ATLAS_FACEBOOK_368_COOLDOWN_HOURS", 48),
+            )
+        )
+        facebook_frequency_blocked_ids = (
+            self.db.query(Publication.video_asset_id)
+            .filter(
+                Publication.platform == "facebook",
+                Publication.status == PublicationStatusEnum.RATE_LIMITED,
+                Publication.updated_at >= facebook_frequency_cutoff,
+                or_(
+                    Publication.error.contains("'code': 368"),
+                    Publication.error.contains('"code": 368'),
+                    Publication.error.contains("Limitamos a frequência"),
+                    Publication.error.contains("Limitamos a frequencia"),
+                ),
+            )
+            .distinct()
+        )
         query = self.db.query(VideoAsset).filter(
             or_(
                 VideoAsset.status == VideoStatusEnum.RETRY_PENDING,
                 VideoAsset.id.in_(rate_limited_asset_ids),
-            )
+            ),
+            ~VideoAsset.id.in_(facebook_frequency_blocked_ids),
         )
         if kind:
             try:
@@ -520,6 +641,23 @@ class PublishingService:
         notes: str | None = None,
     ) -> dict:
         """Aprova e tenta publicar nas plataformas alvo."""
+        source_marketplace = _asset_marketplace(asset)
+        if source_marketplace == "shopee" and "shopee" not in PLATFORMS:
+            asset.status = VideoStatusEnum.APPROVED
+            asset.review_notes = (
+                "Aguardando conector oficial do Shopee Vídeos. "
+                "Publicação em outras plataformas bloqueada."
+            )
+            asset.reviewed_at = _now()
+            self.db.commit()
+            return {
+                "asset_id": asset.id,
+                "status": asset.status.value,
+                "publications": [],
+                "held": True,
+                "reason": asset.review_notes,
+            }
+
         # Guard anti-direitos autorais: nao publica reel com midia de origem
         # nao licenciada/desconhecida (ex.: b-roll do YouTube = Content ID).
         hold_reason = self._copyright_hold_reason(asset)
@@ -541,9 +679,14 @@ class PublishingService:
         asset.reviewed_at = _now()
         self.db.commit()
 
+        requested_platforms = (
+            ["shopee"]
+            if source_marketplace == "shopee"
+            else (platforms or PLATFORMS)
+        )
         targets = [
             p
-            for p in (platforms or PLATFORMS)
+            for p in requested_platforms
             if p in PLATFORMS and _platform_enabled(p)
         ]
 
@@ -719,6 +862,23 @@ class PublishingService:
                 self.db.commit()
                 return pub
 
+        # CIRCUIT BREAKER POR CANAL: se este CANAL (plataforma + mercado) bateu
+        # o limite DIARIO/frequencia ha pouco (YouTube uploadLimitExceeded,
+        # Facebook 368, etc.), NAO tentamos de novo ate a janela expirar. Chave
+        # por mercado: o limite do canal BR nao pausa o US.
+        asset_market = (getattr(asset, "country_code", "") or "").strip().upper()
+        platform_cd = _platform_cooldown_remaining(platform, asset_market)
+        if platform_cd > 0:
+            pub.status = PublicationStatusEnum.RATE_LIMITED
+            pub.error = (
+                f"Em espera: canal {platform}/{asset_market or '-'} atingiu o "
+                f"limite diario/frequencia. Retomo automaticamente em "
+                f"~{_fmt_cooldown_remaining(platform_cd)} "
+                "(nao chamo a API agora para nao manter o bloqueio)."
+            )
+            self.db.commit()
+            return pub
+
         request = self._build_request(asset, platform)
 
         publisher = get_publisher(platform)
@@ -752,6 +912,13 @@ class PublishingService:
             # cota se recuperar (circuit breaker acima).
             if platform in _META_PLATFORMS and _is_meta_app_limit(result.error):
                 _meta_trip_cooldown()
+            # Se foi limite DIARIO/frequencia (YouTube uploadLimitExceeded,
+            # Facebook 368, quota diaria de outra rede), abre o cooldown POR
+            # CANAL (plataforma+mercado): paramos de tentar nesse canal ate a
+            # janela expirar, em vez de repetir o mesmo erro a cada video/ciclo.
+            cooldown_hours = _cooldown_hours_for(platform, result.error)
+            if cooldown_hours > 0:
+                _trip_platform_cooldown(platform, cooldown_hours, asset_market)
         elif _needs_reconnect(result.error):
             # Conta precisa de acao do usuario (token revogado/expirado, app nao
             # auditado, sem permissao). Reenviar nao resolve: marca como
@@ -801,29 +968,60 @@ class PublishingService:
         any_published = any(p.status == PublicationStatusEnum.PUBLISHED for p in pubs)
         any_rate_limited = any(p.status == PublicationStatusEnum.RATE_LIMITED for p in pubs)
         any_failed = any(p.status == PublicationStatusEnum.FAILED for p in pubs)
+        public_url_failed = any(
+            p.status == PublicationStatusEnum.FAILED
+            and "URL PUBLICA" in str(p.error or "").upper()
+            for p in pubs
+        )
+        facebook_frequency_blocked = any(
+            p.platform == "facebook"
+            and p.status in (
+                PublicationStatusEnum.FAILED,
+                PublicationStatusEnum.RATE_LIMITED,
+            )
+            and _is_rate_limited(p.error)
+            and (
+                "368" in str(p.error or "")
+                or "frequência" in str(p.error or "").lower()
+                or "frequencia" in str(p.error or "").lower()
+            )
+            for p in pubs
+        )
 
         # Plataformas que ainda PRECISAM de reenvio (nao concluidas): bloqueio
         # temporario (rate_limited) ou erro (failed). SKIPPED e terminal (nada
         # a reenviar) e nao conta aqui.
         needs_resend = any_rate_limited or any_failed
 
-        if any_published and needs_resend:
-            # Subiu em ALGUMAS redes, mas outras ficaram bloqueadas/com erro.
-            # NAO marca como concluido: fica aguardando reenvio para completar
-            # somente as plataformas que faltaram.
-            asset.status = VideoStatusEnum.RETRY_PENDING
-            if not asset.published_at:
-                asset.published_at = _now()
-        elif any_published:
-            # Todas as plataformas alvo concluiram (publicado ou skipped): pronto.
+        # PEDIDO DO USUARIO: se o video subiu em >=1 rede mas outra bloqueou por
+        # limite (rate_limited) ou falhou, NAO reter em "aguardando reenvio":
+        # marca CONCLUIDO e libera o espaco. A rede que bloqueou volta a aceitar
+        # novos videos apos o reset do dia seguinte. Desligavel com
+        # ATLAS_COMPLETE_ON_PARTIAL_PUBLISH=false (volta a aguardar reenvio).
+        complete_on_partial = _env_bool("ATLAS_COMPLETE_ON_PARTIAL_PUBLISH", True)
+
+        if any_published and (
+            not needs_resend
+            or (
+                complete_on_partial
+                and not public_url_failed
+                and not facebook_frequency_blocked
+            )
+        ):
+            # Subiu em pelo menos uma rede e (concluiu tudo OU o usuario optou
+            # por concluir mesmo com pendencias): marca pronto e libera disco.
             asset.status = VideoStatusEnum.PUBLISHED
             if not asset.published_at:
                 asset.published_at = _now()
-            # POLITICA: nao guardar video ja publicado. Apaga o arquivo pesado
-            # (.mp4 + miniatura) mantendo o metadata (.json + banco, p/ dedup) e
-            # a versao de live (.live.mp4). O file_purged e persistido no commit
-            # abaixo, junto com o status PUBLISHED.
+            # Apaga o arquivo pesado (.mp4 + miniatura), mantendo o metadata
+            # (.json + banco, p/ dedup) e a versao de live (.live.mp4).
             self._purge_after_publish(asset)
+        elif any_published:
+            # Flag desligada: comportamento antigo (aguardando reenvio somente
+            # das plataformas que faltaram, sem duplicar as ja publicadas).
+            asset.status = VideoStatusEnum.RETRY_PENDING
+            if not asset.published_at:
+                asset.published_at = _now()
         elif any_rate_limited:
             # A plataforma bloqueou por limite. Guarda para reenviar depois,
             # sem marcar como erro.
@@ -853,9 +1051,10 @@ class PublishingService:
           - a VERSAO DE LIVE (.live.mp4), que NAO e referenciada pelo asset
             (video_path aponta so para o reels), entao nunca e tocada aqui -- a
             montagem da live continua usando.
-        Controlado por ATLAS_AUTO_PURGE_AFTER_PUBLISH (padrao: ligado). Nunca
-        levanta excecao: uma falha ao apagar jamais quebra a publicacao."""
-        if not _env_bool("ATLAS_AUTO_PURGE_AFTER_PUBLISH", True):
+        Controlado por ATLAS_AUTO_PURGE_AFTER_PUBLISH (padrao: DESLIGADO -- a
+        limpeza so acontece quando o usuario aperta o botao "Liberar espaco").
+        Nunca levanta excecao: uma falha ao apagar jamais quebra a publicacao."""
+        if not _env_bool("ATLAS_AUTO_PURGE_AFTER_PUBLISH", False):
             return
         payload = asset.payload if isinstance(asset.payload, dict) else {}
         if payload.get("file_purged"):
@@ -1076,24 +1275,54 @@ class PublishingService:
         market = (asset.country_code or payload.get("marketplace_code") or "").strip().upper()
         lang = (asset.language or payload.get("language") or "").lower()
         is_en = market == "US" or lang.startswith("en")
+        marketplace = str(payload.get("platform") or "amazon").strip().lower()
 
         def slug(text: str) -> str:
             s = unicodedata.normalize("NFKD", str(text or "")).encode("ascii", "ignore").decode()
             return re.sub(r"[^A-Za-z0-9]+", "", s).lower()
 
         if is_en:
-            base_tags = [
-                "#amazonfinds", "#amazondeals", "#founditonamazon",
-                "#tiktokmademebuyit", "#dealsoftheday", "#amazonmusthaves",
-                "#onlineshopping",
-            ]
-            caption_text = f"{short} \U0001f60d\nAmazon find you need \u2014 grab it before it's gone! \U0001f525\U0001f447"
+            if marketplace == "shopee":
+                base_tags = [
+                    "#shopeefinds", "#shopeedeals", "#shopeehaul",
+                    "#tiktokmademebuyit", "#dealsoftheday",
+                    "#onlineshopping",
+                ]
+                caption_text = (
+                    f"{short} \U0001f60d\nShopee find worth checking out "
+                    "\u2014 see the current listing! \U0001f525\U0001f447"
+                )
+            else:
+                base_tags = [
+                    "#amazonfinds", "#amazondeals", "#founditonamazon",
+                    "#tiktokmademebuyit", "#dealsoftheday",
+                    "#amazonmusthaves", "#onlineshopping",
+                ]
+                caption_text = (
+                    f"{short} \U0001f60d\nAmazon find you need "
+                    "\u2014 grab it before it's gone! \U0001f525\U0001f447"
+                )
         else:
-            base_tags = [
-                "#achadosdaamazon", "#achadinhos", "#ofertas", "#promocao",
-                "#amazonbrasil", "#comprasonline", "#ofertadodia",
-            ]
-            caption_text = f"{short} \U0001f60d\nAchadinho que vale a pena \u2014 corre que o pre\u00e7o t\u00e1 bom! \U0001f525\U0001f447"
+            if marketplace == "shopee":
+                base_tags = [
+                    "#achadosshopee", "#shopee", "#achadinhos",
+                    "#shopeebrasil", "#ofertas", "#comprasonline",
+                    "#ofertadodia",
+                ]
+                caption_text = (
+                    f"{short} \U0001f60d\nAchadinho da Shopee para conferir "
+                    "no an\u00fancio atualizado! \U0001f525\U0001f447"
+                )
+            else:
+                base_tags = [
+                    "#achadosdaamazon", "#achadinhos", "#ofertas",
+                    "#promocao", "#amazonbrasil", "#comprasonline",
+                    "#ofertadodia",
+                ]
+                caption_text = (
+                    f"{short} \U0001f60d\nAchadinho que vale a pena "
+                    "\u2014 corre que o pre\u00e7o t\u00e1 bom! \U0001f525\U0001f447"
+                )
 
         # ------------------------------------------------------------------
         # HASHTAGS FIEIS AO PRODUTO. Antes saiam quase so tags genericas
@@ -1109,7 +1338,7 @@ class PublishingService:
             "ao", "aos", "ou", "mais", "ate", "sob", "sobre", "entre", "tipo",
             "cor", "kit", "und", "pcs", "the", "and", "with", "without", "for",
             "of", "to", "by", "from", "plus", "set", "pack", "size", "color",
-            "colour", "new",
+            "colour", "new", "recente",
         }
 
         def content_words(text: str) -> list[str]:
@@ -1139,6 +1368,26 @@ class PublishingService:
 
         title_words = content_words(title)
 
+        # Frases que uma pessoa realmente digitaria ao procurar o produto.
+        # Mantem a mesma estrategia de fidelidade da Amazon, mas aproveita
+        # combinacoes fortes do titulo Shopee em vez de tags soltas genericas.
+        if marketplace == "shopee":
+            exact_phrases = (
+                ("airspro", ("airs", "pro")),
+                ("fonesbluetooth", ("fones", "bluetooth")),
+                ("fonessemfio", ("fones", "sem", "fio")),
+                ("superbass", ("super", "bass")),
+                (
+                    "cancelamentoderuido",
+                    ("cancelamento", "de", "ruido"),
+                ),
+                ("anc", ("anc",)),
+            )
+            title_lower = str(title or "").lower()
+            for tag_name, words in exact_phrases:
+                if all(word in title_lower for word in words):
+                    add_tag(tag_name)
+
         # 1) Marca real (se o anuncio informou) -- a hashtag mais forte.
         add_tag(str(payload.get("brand") or ""))
 
@@ -1155,20 +1404,49 @@ class PublishingService:
         # Lista final: lidera com o TIPO do produto (fiel) + 1 tag viral de
         # alcance logo em seguida, depois o resto das fieis e das virais. O
         # corte por plataforma vem logo abaixo.
+        # Lidera com as hashtags FIEIS AO PRODUTO (tipo, marca, nome) e so depois
+        # as virais de alcance -> assim ate redes com limite menor (YouTube)
+        # recebem a info do produto, e nao so tags genericas.
         flagship = base_tags[0] if base_tags else ""
-        lead = product_tags[0] if product_tags else flagship
         tags: list[str] = []
-        for tag in [lead, flagship, *product_tags, *base_tags]:
+        if marketplace == "shopee":
+            required_shopee = [
+                "#achadosshopee",
+                "#shopee",
+                "#achadinhos",
+            ]
+            exact_product = [
+                tag
+                for tag in (
+                    "#airspro",
+                    "#fonesbluetooth",
+                    "#fonessemfio",
+                    "#superbass",
+                    "#cancelamentoderuido",
+                    "#anc",
+                )
+                if tag in product_tags
+            ]
+            ordered_tags = [
+                *exact_product[:3],
+                *required_shopee,
+                *exact_product[3:],
+                *product_tags,
+                *base_tags,
+            ]
+        else:
+            ordered_tags = [*product_tags, flagship, *base_tags]
+        for tag in ordered_tags:
             if tag and tag not in tags:
                 tags.append(tag)
 
         # Ajuste inteligente da quantidade por plataforma. As primeiras da lista
-        # sao as mais fortes/relevantes; cada rede recebe a sua quantidade ideal.
+        # sao as do PRODUTO; cada rede recebe a sua quantidade ideal.
         platform_limits = {
             "instagram": 15,
-            "tiktok": 5,
-            "youtube": 4,
-            "facebook": 4,
+            "tiktok": 6,
+            "youtube": 10,
+            "facebook": 8,
         }
         limit = platform_limits.get((platform or "").strip().lower(), 15)
         tags = tags[:limit]

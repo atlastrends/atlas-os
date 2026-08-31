@@ -133,6 +133,15 @@ release_readiness.txt
 cloudflared.exe
 cloudflared*.log
 bin/cloudflared.exe
+/tools/blender-*/
+/tools/mpfb2-source/
+/tools/*.zip
+
+# --- Produção 3D local / assets ainda não aprovados ---
+/stories/
+/ebooks/
+/app/assets/teen_diary_3d/*.blend
+/app/assets/teen_diary_3d/*.vrm
 
 # --- Docker compose de backup ---
 docker-compose.*.yml

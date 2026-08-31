@@ -20,6 +20,9 @@ const STATUS_LABEL = {
   active: { txt: "Ativa (gastando)", cls: "badge badge-ok" },
   failed: { txt: "Falhou", cls: "badge badge-err" },
   credentials_missing: { txt: "Falta conta de anúncios", cls: "badge badge-warn" },
+  processing: { txt: "Em processamento", cls: "badge badge-warn" },
+  in_process: { txt: "Em processamento", cls: "badge badge-warn" },
+  with_issues: { txt: "Com problemas", cls: "badge badge-err" },
 };
 
 // -------------------------------------------------------------------
@@ -152,6 +155,7 @@ export default function Marketing() {
   const [msg, setMsg] = useState(null);
   const [recLoading, setRecLoading] = useState(false);
   const [roiRanking, setRoiRanking] = useState([]);
+  const [campaignsUpdatedAt, setCampaignsUpdatedAt] = useState(null);
 
   async function loadAll() {
     setLoading(true);
@@ -160,11 +164,12 @@ export default function Marketing() {
         Api.marketingStatus(),
         Api.marketingBestVideo(),
         Api.listVideos({}),
-        Api.marketingCampaigns(),
+        Api.marketingCampaigns(true),
         Api.marketingRoiRanking(10).catch(() => ({ items: [] })),
       ]);
       setStatus(st);
       setCampaigns(camps || []);
+      setCampaignsUpdatedAt(new Date());
       setRoiRanking(roi?.items || []);
       const vids = (list?.items || list || []).filter((v) => v?.id);
       setVideos(vids);
@@ -179,6 +184,20 @@ export default function Marketing() {
 
   useEffect(() => {
     loadAll();
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(async () => {
+      if (document.hidden) return;
+      try {
+        const camps = await Api.marketingCampaigns(true);
+        setCampaigns(camps || []);
+        setCampaignsUpdatedAt(new Date());
+      } catch {
+        // O alerta principal continua sendo controlado pelo carregamento manual.
+      }
+    }, 60000);
+    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -218,6 +237,14 @@ export default function Marketing() {
       setMsg({ type: "err", text: "Digite um valor de orçamento maior que zero." });
       return;
     }
+    if (
+      publish &&
+      !window.confirm(
+        `AUTORIZAÇÃO DE GASTO\n\nVocê autoriza publicar somente esta campanha com orçamento de ${money(amt, currency)}?\n\nO Atlas nunca renovará nem criará outra cobrança automaticamente.`
+      )
+    ) {
+      return;
+    }
     setLoading(true);
     setMsg(null);
     try {
@@ -226,6 +253,7 @@ export default function Marketing() {
         budget_amount: amt,
         budget_period: period,
         publish,
+        confirm_spend: publish,
       });
       const st = STATUS_LABEL[res.status]?.txt || res.status;
       if (res.status === "credentials_missing") {
@@ -252,8 +280,9 @@ export default function Marketing() {
             "os detalhes e clicar em \"Publicar\" quando estiver pronto."
         );
       }
-      const camps = await Api.marketingCampaigns();
+      const camps = await Api.marketingCampaigns(true);
       setCampaigns(camps || []);
+      setCampaignsUpdatedAt(new Date());
     } catch (e) {
       const detail = e?.response?.data?.detail || e?.message || String(e);
       setMsg({ type: "err", text: detail });
@@ -263,10 +292,18 @@ export default function Marketing() {
   }
 
   async function launchExisting(id) {
+    const campaign = campaigns.find((item) => item.id === id);
+    if (
+      !window.confirm(
+        `AUTORIZAÇÃO DE GASTO\n\nVocê autoriza publicar somente esta campanha com orçamento de ${money(campaign?.budget_amount, campaign?.currency)}?\n\nEsta autorização não vale para renovações nem para campanhas futuras.`
+      )
+    ) {
+      return;
+    }
     setLoading(true);
     setMsg(null);
     try {
-      const res = await Api.launchCampaign(id);
+      const res = await Api.launchCampaign(id, true);
       if (res.status === "credentials_missing") {
         setMsg({ type: "warn", text: res.error });
       } else if (res.status === "failed") {
@@ -274,8 +311,9 @@ export default function Marketing() {
       } else {
         setMsg({ type: "ok", text: "Campanha enviada ao Gerenciador de Anúncios." });
       }
-      const camps = await Api.marketingCampaigns();
+      const camps = await Api.marketingCampaigns(true);
       setCampaigns(camps || []);
+      setCampaignsUpdatedAt(new Date());
     } catch (e) {
       setMsg({ type: "err", text: e?.message || String(e) });
     } finally {
@@ -345,6 +383,12 @@ export default function Marketing() {
       )}
 
       {msg && <div className={`alert alert-${msg.type}`}>{msg.text}</div>}
+
+      <div className="alert alert-warn">
+        <b>Trava permanente de gastos:</b> o Atlas não renova anúncios e não
+        cria novas cobranças automaticamente. Cada publicação exige uma nova
+        confirmação explícita do orçamento.
+      </div>
 
       <RoiRanking
         items={roiRanking}
@@ -549,18 +593,33 @@ export default function Marketing() {
 
       {/* Campanhas criadas */}
       <div className="card">
-        <h3>Campanhas</h3>
+        <div className="page-head">
+          <div>
+            <h3>Campanhas e desempenho Meta</h3>
+            <p className="muted small">
+              Sincronização automática a cada minuto enquanto esta página estiver aberta.
+              {campaignsUpdatedAt
+                ? ` Última atualização: ${campaignsUpdatedAt.toLocaleTimeString("pt-BR")}.`
+                : ""}
+            </p>
+          </div>
+        </div>
         {campaigns.length === 0 && (
           <p className="muted">Nenhuma campanha ainda.</p>
         )}
         {campaigns.length > 0 && (
+          <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
                 <th>Vídeo</th>
-                <th>Objetivo</th>
-                <th>Mercado</th>
                 <th>Orçamento</th>
+                <th>Gasto</th>
+                <th>Impressões</th>
+                <th>Alcance</th>
+                <th>Cliques no link</th>
+                <th>Visitas à landing</th>
+                <th>CTR</th>
                 <th>Status</th>
                 <th></th>
               </tr>
@@ -571,14 +630,22 @@ export default function Marketing() {
                 return (
                   <tr key={c.id}>
                     <td>{c.video_title || `#${c.video_id}`}</td>
-                    <td>{c.goal === "sales" ? "Vendas" : "Alcance"}</td>
-                    <td>{c.market}</td>
                     <td>
-                      {money(c.budget_amount, c.currency)}/
-                      {c.budget_period === "monthly" ? "mês" : "sem"}
+                      {money(c.budget_amount, c.currency)} total
                     </td>
+                    <td>{money(c.spend, c.currency)}</td>
+                    <td>{Number(c.impressions || 0).toLocaleString("pt-BR")}</td>
+                    <td>{Number(c.reach || 0).toLocaleString("pt-BR")}</td>
+                    <td>{Number(c.link_clicks || 0).toLocaleString("pt-BR")}</td>
+                    <td>{Number(c.landing_page_views || 0).toLocaleString("pt-BR")}</td>
+                    <td>{Number(c.ctr || 0).toFixed(2)}%</td>
                     <td>
                       <span className={s.cls}>{s.txt}</span>
+                      {c.sync_error && (
+                        <div className="small" style={{ color: "var(--danger, #dc2626)" }}>
+                          {c.sync_error}
+                        </div>
+                      )}
                     </td>
                     <td>
                       {c.external_url ? (
@@ -600,6 +667,7 @@ export default function Marketing() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

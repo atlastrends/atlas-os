@@ -47,7 +47,7 @@ class TrendService:
         self.youtube_api_key = os.getenv("YOUTUBE_API_KEY")
         # Recencia: so entra video publicado dentro dessa janela (horas). <=0 desliga.
         try:
-            self.max_age_hours = float(os.getenv("ATLAS_TREND_MAX_AGE_HOURS", "48"))
+            self.max_age_hours = float(os.getenv("ATLAS_TREND_MAX_AGE_HOURS", "168"))
         except Exception:
             self.max_age_hours = 48.0
         # Fontes com termos FIXOS ficam desligadas por padrao (so trending real ao vivo).
@@ -193,16 +193,57 @@ class TrendService:
 
         return clean[:10]
 
-    def _add_trend(self, trends: list, topic: str, score: float, source: str, geo: str):
+    def _detect_category(self, topic: str, source: str) -> str:
+        """
+        Classifica a trend numa categoria fixa para permitir COTA/rodizio de
+        assuntos (evita cair sempre em games/trailers). "busca" = tendencia de
+        busca em ascensao do Google Trends (o sinal do que esta URGENTE no dia).
+        """
+        s = (source or "").lower()
+        t = self._normalize(topic)
+
+        if "google trends" in s:
+            return "busca"
+        if "esporte" in s or "sport" in s:
+            return "esporte"
+        if "games" in s or "game" in s:
+            return "games"
+        if any(k in s for k in ("tecnolog", "ciência", "ciencia", "science", "tech")):
+            return "tech"
+        if any(k in s for k in ("filme", "movie", "entretenimento", "animaç", "animac")):
+            return "entretenimento"
+
+        # YouTube MostPopular sem categoria explicita: infere pelo titulo.
+        game_hints = (
+            "minecraft", "roblox", "brawl", "fortnite", "gta", "free fire",
+            "gameplay", "efootball", "warhammer", "descendant", "valorant",
+            "league of legends", "call of duty", "battlefield",
+        )
+        if any(k in t for k in game_hints):
+            return "games"
+
+        return "popular"
+
+    def _add_trend(
+        self,
+        trends: list,
+        topic: str,
+        score: float,
+        source: str,
+        geo: str,
+        *,
+        views: int = 0,
+        published_at: str = "",
+        description: str = "",
+        video_id: str = "",
+    ):
         """
         Adiciona tendência com validação e deduplicação.
         """
         if not self._is_good_topic(topic):
             return
 
-        # Prioriza assuntos que rendem em video curto (A).
-        score = float(score) + self._appeal_adjustment(topic, geo)
-        score = max(0.0, min(score, 100.0))
+        category = self._detect_category(topic, source)
 
         topic_clean = topic.strip()
         topic_norm = self._normalize(topic_clean)
@@ -212,17 +253,34 @@ class TrendService:
 
             if existing_norm == topic_norm:
                 existing["score"] = max(existing["score"], float(score))
+                existing["views"] = max(
+                    int(existing.get("views") or 0),
+                    int(views or 0),
+                )
+
+                # Uma busca em ascensao prevalece como categoria (sinal de urgencia).
+                if category == "busca":
+                    existing["category"] = "busca"
 
                 if source not in existing["source"]:
                     existing["source"] = f"{existing['source']} + {source}"
+                if len(description) > len(existing.get("description") or ""):
+                    existing["description"] = description
+                if video_id and not existing.get("video_id"):
+                    existing["video_id"] = video_id
 
                 return
 
         trends.append({
             "topic": topic_clean,
             "score": float(score),
+            "views": max(0, int(views or 0)),
+            "published_at": published_at,
+            "description": str(description or "").strip(),
+            "video_id": str(video_id or "").strip(),
             "source": source,
             "geo": geo,
+            "category": category,
             "hashtags": self._make_hashtags(topic_clean, geo),
         })
 
@@ -308,6 +366,8 @@ class TrendService:
 
                 title = snippet.get("title", "")
                 channel_title = snippet.get("channelTitle", "")
+                description = snippet.get("description", "")
+                video_id = item.get("id", "")
 
                 try:
                     views = int(stats.get("viewCount", 0))
@@ -349,7 +409,11 @@ class TrendService:
                     topic=topic,
                     score=min(score, 99.0),
                     source=f"YouTube MostPopular / {channel_title}",
-                    geo=geo
+                    geo=geo,
+                    views=views,
+                    published_at=published_at,
+                    description=description,
+                    video_id=video_id,
                 )
 
         except Exception as e:
@@ -409,6 +473,8 @@ class TrendService:
                         continue
 
                     title = snippet.get("title", "")
+                    description = snippet.get("description", "")
+                    video_id = item.get("id", "")
 
                     try:
                         views = int(stats.get("viewCount", 0))
@@ -431,7 +497,11 @@ class TrendService:
                         topic=topic,
                         score=min(score, 99.0),
                         source=f"YouTube {cat_name}",
-                        geo=geo
+                        geo=geo,
+                        views=views,
+                        published_at=published_at,
+                        description=description,
+                        video_id=video_id,
                     )
 
             except Exception as e:
@@ -527,16 +597,6 @@ class TrendService:
 
         all_trends = []
 
-        google_trends = self._fetch_google_trends(geo)
-        for t in google_trends:
-            self._add_trend(
-                trends=all_trends,
-                topic=t["topic"],
-                score=t["score"],
-                source=t["source"],
-                geo=geo
-            )
-
         youtube_popular = self._fetch_youtube_most_popular(geo)
         for t in youtube_popular:
             self._add_trend(
@@ -544,7 +604,11 @@ class TrendService:
                 topic=t["topic"],
                 score=t["score"],
                 source=t["source"],
-                geo=geo
+                geo=geo,
+                views=t.get("views", 0),
+                published_at=t.get("published_at", ""),
+                description=t.get("description", ""),
+                video_id=t.get("video_id", ""),
             )
 
         youtube_categories = self._fetch_youtube_categories(geo)
@@ -554,7 +618,11 @@ class TrendService:
                 topic=t["topic"],
                 score=t["score"],
                 source=t["source"],
-                geo=geo
+                geo=geo,
+                views=t.get("views", 0),
+                published_at=t.get("published_at", ""),
+                description=t.get("description", ""),
+                video_id=t.get("video_id", ""),
             )
 
         # Fonte com termos de busca FIXOS (evergreen). Desligada por padrao:
@@ -570,33 +638,24 @@ class TrendService:
                     geo=geo
                 )
 
-        # Fallback com assunto FIXO. Desligado por padrao: so entra se
-        # ATLAS_TREND_EDITORIAL_FALLBACK=true. Sem ele, ciclo sem trend real
-        # nao gera reel (nada de assunto inventado).
-        if not all_trends and self.editorial_fallback:
-            fallback = (
-                "Major viral story everyone is talking about today"
-                if geo == "US"
-                else "Assunto viral que o Brasil inteiro está comentando hoje"
-            )
-
-            self._add_trend(
-                trends=all_trends,
-                topic=fallback,
-                score=75.0,
-                source="Fallback Editorial",
-                geo=geo
-            )
-
-        all_trends = sorted(
-            all_trends,
-            key=lambda x: x["score"],
-            reverse=True
+        # Regra Trending: somente candidatos com visualizacoes reais do
+        # YouTube na janela semanal, do mais visto para o menos visto.
+        all_trends = [
+            trend
+            for trend in all_trends
+            if int(trend.get("views") or 0) > 0
+        ]
+        all_trends.sort(
+            key=lambda trend: int(trend.get("views") or 0),
+            reverse=True,
         )
 
         print(f"🎯 [DECISÃO ESTRATÉGICA] {len(all_trends)} tendências qualificadas.")
 
         for t in all_trends[:8]:
-            print(f"   - {t['topic']} | Score: {t['score']:.1f} | Fonte: {t['source']}")
+            print(
+                f"   - {t['topic']} | Views: "
+                f"{int(t.get('views') or 0):,} | Fonte: {t['source']}"
+            )
 
         return all_trends

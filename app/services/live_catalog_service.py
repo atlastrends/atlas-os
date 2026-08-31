@@ -26,6 +26,7 @@ _ASIN_RE = re.compile(r"/dp/([A-Z0-9]{10})", re.IGNORECASE)
 # Plataformas conhecidas. "ready" = ja da' para puxar produtos hoje.
 _PLATFORMS = [
     {"id": "amazon", "name": "Amazon", "ready": True},
+    {"id": "shopee", "name": "Shopee", "ready": True},
     {"id": "tiktok", "name": "TikTok Shop", "ready": False},
     {"id": "mercadolivre", "name": "Mercado Livre", "ready": False},
 ]
@@ -47,13 +48,15 @@ def is_ready(platform: str) -> bool:
 def get_products(platform: str, market: str = "", *, limit: int = 0) -> list[dict]:
     """Devolve os produtos normalizados de uma plataforma.
 
-    platform: "amazon" | "tiktok" | "mercadolivre".
-    market:   opcional ("BR"/"US") - usado hoje pela Amazon.
+    platform: "amazon" | "shopee" | "tiktok" | "mercadolivre".
+    market:   opcional ("BR"/"US").
     limit:    0 = todos; N = no maximo N produtos.
     """
     pid = (platform or "amazon").strip().lower()
     if pid == "amazon":
         items = _amazon_products(market)
+    elif pid == "shopee":
+        items = _shopee_products(market)
     elif pid == "tiktok":
         items = _tiktok_products(market)
     elif pid == "mercadolivre":
@@ -108,6 +111,36 @@ def _amazon_products(market: str = "") -> list[dict]:
                 "price": (p.get("price") or "").strip() if isinstance(p, dict) else "",
                 "platform": "amazon",
                 "market": mk,
+            }
+        )
+    return out
+
+
+def _shopee_products(market: str = "") -> list[dict]:
+    """Produtos validados importados do portal oficial de afiliados Shopee."""
+    try:
+        from app.services.shopee_catalog_service import list_products
+
+        raw = list_products()
+    except (ImportError, OSError, ValueError):
+        return []
+
+    out: list[dict] = []
+    for product in raw:
+        if not product.get("ready_for_video"):
+            continue
+        out.append(
+            {
+                "id": str(product.get("product_id") or ""),
+                "title": html.unescape(str(product.get("title") or "").strip()),
+                "url": str(product.get("affiliate_url") or "").strip(),
+                "image": str(product.get("image_url") or "").strip(),
+                "price": str(product.get("price_display") or "").strip(),
+                "platform": "shopee",
+                "market": (market or "BR").upper(),
+                "commission_rate": float(product.get("commission_rate") or 0),
+                "commission_amount": float(product.get("commission_amount") or 0),
+                "sold_count": int(product.get("sold_count") or 0),
             }
         )
     return out

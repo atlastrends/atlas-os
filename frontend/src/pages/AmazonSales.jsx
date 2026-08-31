@@ -69,7 +69,7 @@ export default function AmazonSales() {
       } else if (novos > 0) {
         setToast({
           type: "success",
-          msg: `Encontrei e importei ${novos} venda(s) nova(s) automaticamente.`,
+          msg: `Importei ${novos} registro(s) novo(s) do relatório da Amazon.`,
         });
       } else if (manual) {
         // Feedback explicito quando o usuario clica em "Atualizar" e nao
@@ -215,12 +215,6 @@ export default function AmazonSales() {
               value={`${num(t.conversion)}%`}
               foot="itens vendidos ÷ cliques"
               icon="🎯"
-            />
-            <StatCard
-              label="Cliques rastreados pelo ATLAS"
-              value={num(stats?.internal_clicks)}
-              foot="contados automaticamente"
-              icon="🔗"
             />
             <StatCard label="Devoluções" value={num(t.returns)} icon="↩️" />
           </div>

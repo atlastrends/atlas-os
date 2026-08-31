@@ -70,6 +70,18 @@ export const Api = {
   availableProducts: () => api.get("/products/available").then((r) => r.data),
   generateSelected: (selections) =>
     api.post("/jobs/generate-selected", { selections }).then((r) => r.data),
+  shopeeStatus: () => api.get("/shopee/status").then((r) => r.data),
+  shopeeProducts: () => api.get("/shopee/products").then((r) => r.data),
+  shopeeImport: (file, rightsConfirmed) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("rights_confirmed", rightsConfirmed ? "true" : "false");
+    return api
+      .post("/shopee/catalog/import", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data);
+  },
   generateReels: () => api.post("/jobs/generate-reels").then((r) => r.data),
   startAutoReels: (intervalMinutes = 30) =>
     api
@@ -127,12 +139,20 @@ export const Api = {
         params: force ? { force: true } : {},
       })
       .then((r) => r.data),
-  marketingCampaigns: () =>
-    api.get("/marketing/campaigns").then((r) => r.data),
+  marketingCampaigns: (syncMeta = false) =>
+    api
+      .get("/marketing/campaigns", {
+        params: syncMeta ? { sync_meta: true } : {},
+      })
+      .then((r) => r.data),
   createCampaign: (body) =>
     api.post("/marketing/campaigns", body).then((r) => r.data),
-  launchCampaign: (id) =>
-    api.post(`/marketing/campaigns/${id}/launch`).then((r) => r.data),
+  launchCampaign: (id, confirmSpend = false) =>
+    api
+      .post(`/marketing/campaigns/${id}/launch`, {
+        confirm_spend: confirmSpend,
+      })
+      .then((r) => r.data),
 
   // ----- Live (canal de lives com avatar de IA) -----
   liveStatus: () => api.get("/live/status").then((r) => r.data),
@@ -173,14 +193,17 @@ export const Api = {
     api.get(`/live/recorded/${encodeURIComponent(name)}/manifest`).then((r) => r.data),
   liveRecordedUrl: (name) => `/api/live/recorded/${encodeURIComponent(name)}`,
   // Live montada com os videos de produto JA gerados (sem avatar)
-  liveSources: (market, language) =>
+  liveSources: (market, language, platform) =>
     api
       .get("/live/sources", {
-        params: { ...(market ? { market } : {}), ...(language ? { language } : {}) },
+        params: {
+          ...(market ? { market } : {}),
+          ...(language ? { language } : {}),
+          ...(platform ? { platform } : {}),
+        },
       })
       .then((r) => r.data),
   liveBuildMontage: (body) => api.post("/live/build-montage", body).then((r) => r.data),
 };
 
 export default Api;
-

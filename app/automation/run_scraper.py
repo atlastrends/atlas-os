@@ -1,6 +1,7 @@
 import json
 import os
 import hashlib
+import html as html_lib
 import requests
 import re
 from pathlib import Path
@@ -55,7 +56,7 @@ def _stable_asin(real_asin):
     # Gera um codigo estavel (sempre o mesmo para o mesmo produto) a partir
     # do ASIN real. Assim o mesmo produto nao gera video novo em cada busca,
     # ao mesmo tempo que mantem o ASIN real mascarado.
-    digest = hashlib.sha1(real_asin.encode("utf-8")).hexdigest().upper()
+    digest = hashlib.sha1(real_asin.upper().encode("utf-8")).hexdigest().upper()
     return "M" + digest[:9]
 
 
@@ -140,40 +141,192 @@ def _get_html(url, headers, tries=3):
         time.sleep(2 + attempt)  # espera crescente entre as tentativas
     return last
 
-def fetch_category(domain, market, category, tag, limit, tries=3):
-    # "Mais Vendidos" da categoria (ranking do mais vendido -> menos vendido).
-    path = MARKET_CATEGORY_PATH.get((market, category), category)
-    url = f"https://www.{domain}/gp/bestsellers/{path}/"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept": "text/html",
-        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8"
+def _subcats_enabled():
+    # Ligado por padrao: quando os "mais vendidos" do topo de cada categoria
+    # se esgotam (viram video), o robo desce nas SUBCATEGORIAS de cada
+    # categoria (tambem em ordem de mais vendido -> menos vendido), o que
+    # multiplica o numero de produtos disponiveis. Desligavel com
+    # ATLAS_SCRAPER_SUBCATEGORIES=0.
+    return (os.getenv("ATLAS_SCRAPER_SUBCATEGORIES", "1").strip().lower()
+            not in {"0", "false", "no", "off"})
+
+
+def _env_int(name, default):
+    try:
+        return int(os.getenv(name, str(default)))
+    except Exception:
+        return default
+
+
+def _max_subcats():
+    return max(0, _env_int("ATLAS_SCRAPER_MAX_SUBCATS", 12))
+
+
+def _sub_limit(default_limit):
+    return max(1, _env_int("ATLAS_SCRAPER_LIMIT_PER_SUBCATEGORY", default_limit))
+
+
+def _max_depth():
+    # Profundidade da arvore: 0 = so o topo do departamento, 1 = departamento
+    # + subcategorias diretas, 2 = + sub-subcategorias, e assim por diante.
+    return max(0, _env_int("ATLAS_SCRAPER_MAX_DEPTH", 1))
+
+
+def _max_departments():
+    # 0 = TODOS os departamentos que a Amazon oferece.
+    return max(0, _env_int("ATLAS_SCRAPER_MAX_DEPARTMENTS", 0))
+
+
+def _request_budget():
+    # Teto de paginas por mercado, para a busca completa nao ficar infinita.
+    return max(1, _env_int("ATLAS_SCRAPER_MAX_REQUESTS", 2000))
+
+
+def _headers(market):
+    return {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                      "(KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8" if market == "BR" else "en-US,en;q=0.9",
     }
-    label = CATEGORIES.get(category, category)
-    print(f"Buscando MAIS VENDIDOS [{market}] - {label}...")
-
-    # A Amazon as vezes devolve a pagina (status 200) mas SEM produtos no
-    # bloco esperado (variacao de layout / bloqueio brando). Tenta de novo
-    # algumas vezes antes de desistir da categoria, para nao perder
-    # categorias inteiras por causa de UMA tentativa ruim.
-    for attempt in range(tries):
-        products = _parse_bestsellers_html(url, headers, market, domain, category, label, tag, limit)
-        if products:
-            return products
-        if attempt < tries - 1:
-            time.sleep(2 + attempt * 2)
-    print(f"Categoria sem produtos [{market}] - {label} apos {tries} tentativa(s).")
-    return []
 
 
-def _parse_bestsellers_html(url, headers, market, domain, category, label, tag, limit):
+def _clean_name(text):
+    return html_lib.unescape(str(text or "")).strip()
+
+
+# Departamentos do topo (nivel 0) na pagina raiz de "Mais Vendidos".
+#   BR: /gp/bestsellers/<slug>/ref=zg_bs_nav_<slug>_0
+#   US: /Best-Sellers-.../zgbs/<slug>/ref=zg_bs_nav_<slug>_0
+_DEPT_RE = re.compile(
+    r'<a[^>]+href="/[^"]*?(?:zgbs|gp/bestsellers)/([a-zA-Z0-9-]+)/ref=zg_bs_nav_'
+    r'[a-zA-Z0-9-]+_0[^"]*"[^>]*>\s*([^<]{2,70}?)\s*</a>'
+)
+
+# Links de SUBCATEGORIA (tem nodeId) e o nivel deles:
+#   .../<slug>/<nodeId>/ref=zg_bs_nav_<x>_<level>
+_NAV_RE = re.compile(
+    r'<a[^>]+href="(/[^"]*?(?:zgbs|gp/bestsellers)/[a-zA-Z0-9-]+/\d+/ref=zg_bs_nav_'
+    r'[a-zA-Z0-9-]+_(\d+)[^"]*)"[^>]*>\s*([^<]{2,70}?)\s*</a>'
+)
+
+
+def discover_departments(domain, headers):
+    """Descobre TODOS os departamentos de 'Mais Vendidos' na raiz do site.
+
+    Retorna [(slug, nome, url)] na ordem em que a Amazon os lista (aprox. dos
+    mais relevantes para os menos)."""
+    root = f"https://www.{domain}/gp/bestsellers/"
+    page = ""
+    for _ in range(4):
+        page = _get_html(root, headers)
+        if page and _DEPT_RE.search(page):
+            break
+        time.sleep(3)
+    out = []
+    seen = set()
+    for slug, name in _DEPT_RE.findall(page):
+        if slug in seen:
+            continue
+        seen.add(slug)
+        out.append((slug, _clean_name(name), f"https://www.{domain}/gp/bestsellers/{slug}/"))
+    return out
+
+
+def _child_nodes(page, domain, level):
+    """Extrai os links de subcategoria de UM nivel especifico a partir do HTML
+    ja baixado. Retorna [(url, nome)] na ordem da pagina (mais -> menos)."""
+    out = []
+    seen = set()
+    for href, lvl, name in _NAV_RE.findall(page or ""):
+        if int(lvl) != level:
+            continue
+        key = href.split("/ref=")[0]
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append((f"https://www.{domain}{href}", _clean_name(name)))
+    return out
+
+
+def _get_page(url, headers, tries=4, min_len=80000):
+    """Baixa a pagina garantindo a versao COMPLETA. A Amazon as vezes responde
+    200 com uma variante enxuta (tem produtos, mas sem a arvore de navegacao),
+    o que faz o crawler nao achar as subcategorias. Retenta ate vir a pagina
+    cheia (ou esgotar as tentativas)."""
+    page = ""
+    for _ in range(tries):
+        page = _get_html(url, headers)
+        if page and len(page) >= min_len:
+            return page
+        time.sleep(2)
+    return page
+
+
+def crawl_department(domain, market, tag, slug, label, dept_url, headers,
+                     top_limit, sub_limit, max_depth, max_subcats, budget):
+    """Percorre um departamento e suas subcategorias (mais vendido -> menos),
+    ate a profundidade configurada. Retorna os produtos (dedup por ASIN), todos
+    marcados com o departamento (slug/label) para agrupar no painel."""
+    products = []
+    seen_asins = set()
+
+    def _add(items):
+        for item in items:
+            asin = item.get("asin")
+            if asin and asin not in seen_asins:
+                seen_asins.add(asin)
+                products.append(item)
+
+    # Fila (nivel a nivel): (url, level, source).
+    queue = [(dept_url, 0, f"bestsellers_{slug}")]
+    visited = set()
+    while queue:
+        if budget["n"] <= 0:
+            break
+        url, level, source = queue.pop(0)
+        node_key = url.split("/ref=")[0]
+        if node_key in visited:
+            continue
+        visited.add(node_key)
+        budget["n"] -= 1
+
+        # Nos que ainda vao descer precisam da pagina COMPLETA (com a arvore de
+        # navegacao). Folhas (ultimo nivel) so precisam dos produtos, entao usam
+        # o fetch rapido - isso acelera MUITO a busca completa.
+        need_children = level < max_depth
+        page = _get_page(url, headers) if need_children else _get_html(url, headers)
+        limit = top_limit if level == 0 else sub_limit
+        _add(_extract_products_from_html(
+            page, market, domain, slug, label, tag, limit, source=source
+        ))
+        time.sleep(1)  # Previne bloqueio instantaneo do servidor
+
+        if need_children:
+            for child_url, _child_name in _child_nodes(page, domain, level + 1)[:max_subcats]:
+                queue.append((child_url, level + 1, f"bestsellers_{slug}_sub"))
+    return products
+
+
+def _parse_bestsellers_html(url, headers, market, domain, category, label, tag, limit, source=None):
+    """Baixa a pagina e extrai os produtos (mantido por compatibilidade)."""
+    html = _get_html(url, headers)
+    products = _extract_products_from_html(
+        html, market, domain, category, label, tag, limit, source=source
+    )
+    if not products:
+        print(f"Erro ou pagina vazia [{market}] - {label}: pulando...")
+    time.sleep(1)  # Previne bloqueio instantaneo do servidor
+    return products
+
+
+def _extract_products_from_html(html, market, domain, category, label, tag, limit, source=None):
     products = []
     seen = set()
     try:
-        html = _get_html(url, headers)
         # Divide a pagina em blocos de produto. Cada produto comeca em
         # id="gridItemRoot"; pegamos um trecho generoso de cada.
-        chunks = html.split('id="gridItemRoot"')[1:]
+        chunks = (html or "").split('id="gridItemRoot"')[1:]
 
         for chunk in chunks:
             block = chunk[:3000]
@@ -215,13 +368,12 @@ def _parse_bestsellers_html(url, headers, market, domain, category, label, tag, 
                     "category_label": label,
                     "rating": rating_val,
                     "review_count": reviews_val,
-                    "source": f"bestsellers_{category}"
+                    "source": source or f"bestsellers_{category}"
                 })
             if len(products) >= limit:
                 break  # Pega os TOP mais vendidos (ordem: mais vendido -> menos vendido)
     except Exception:
-        print(f"Erro ao buscar [{market}] - {label}: pulando...")
-    time.sleep(1)  # Previne bloqueio instantaneo do servidor
+        print(f"Erro ao extrair produtos [{market}] - {label}: pulando...")
     return products
 
 def _selected_categories():
@@ -235,54 +387,16 @@ def _selected_categories():
     # nao deixa a busca muito mais lenta.)
     return list(CATEGORIES.keys())
 
-def main():
-    # Grava no mesmo lugar em que o pipeline LE os produtos (ATLAS_ROOT/storage).
-    # Antes estava fixo em "/atlas/..." e nao funcionava no Windows.
-    root = Path(os.getenv("ATLAS_ROOT", "")).resolve() if os.getenv("ATLAS_ROOT") else Path.cwd().resolve()
-    if not (root / "app").exists():
-        root = Path.cwd().resolve()
-    imports_dir = root / "storage" / "amazon" / "imports"
-    imports_dir.mkdir(parents=True, exist_ok=True)
-    out_path = imports_dir / "bestsellers_OMNI.json"
-
-    categories = _selected_categories()
-
-    # Quantos produtos coletar por categoria/mercado (so metadados, rapido).
-    # E' a mesma pagina, entao pegar mais itens nao custa requisicoes extras.
-    # Busca uma margem acima do minimo de 10 "disponiveis" exigido no painel:
-    # produtos ja transformados em video sao filtrados depois (dedup), entao
-    # pedir so 10 brutos poderia sobrar menos de 10 disponiveis.
-    try:
-        limit = int(os.getenv("ATLAS_SCRAPER_LIMIT_PER_CATEGORY", "15"))
-    except Exception:
-        limit = 15
-    limit = max(1, limit)
-
-    all_products = []
-    # Categorias que voltaram COM produtos nesta busca (market, slug).
-    fetched_keys = set()
-
-    def _collect(domain, market, tag):
-        for cat in categories:
-            prods = fetch_category(domain, market, cat, tag, limit)
-            if prods:
-                fetched_keys.add((market, cat))
-                all_products.extend(prods)
-
-    # BRASIL e EUA - Mais Vendidos por categoria
-    _collect("amazon.com.br", "BR", "achadosatlasb-20")
-    _collect("amazon.com", "US", "atlasfindsus-20")
-
-    # IMPORTANTE: nao apagar o que ja tinhamos. Se a rede bloqueou uma
-    # categoria agora (voltou vazia), mantemos os produtos anteriores dela.
-    # Assim uma busca bloqueada nunca "encolhe" a lista do painel.
+def _persist(out_path, labels_path, all_products, fetched_keys, discovered_labels):
+    """Salva o pool (merge com o existente, sem encolher categorias nao buscadas
+    nesta rodada) e os rotulos de categoria. Chamado incrementalmente para que o
+    progresso nunca se perca e o painel atualize ao vivo."""
     existing = []
     if out_path.exists():
         try:
             existing = json.loads(out_path.read_text(encoding="utf-8"))
         except Exception:
             existing = []
-
     merged = list(all_products)
     kept = 0
     for item in existing:
@@ -290,14 +404,89 @@ def main():
         if key not in fetched_keys:
             merged.append(item)
             kept += 1
-
-    # Salva o arquivo
-    with open(out_path, "w", encoding="utf-8") as f:
+    tmp = out_path.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
         json.dump(merged, f, ensure_ascii=False, indent=2)
+    tmp.replace(out_path)
 
+    labels = {}
+    if labels_path.exists():
+        try:
+            labels = json.loads(labels_path.read_text(encoding="utf-8"))
+        except Exception:
+            labels = {}
+    labels.update(discovered_labels)
+    with open(labels_path, "w", encoding="utf-8") as f:
+        json.dump(labels, f, ensure_ascii=False, indent=2)
+    return len(merged), kept
+
+
+def main():
+    # Grava no mesmo lugar em que o pipeline LE os produtos (ATLAS_ROOT/storage).
+    default_root = Path(__file__).resolve().parents[2]
+    root = Path(os.getenv("ATLAS_ROOT") or default_root).resolve()
+    if not (root / "app").exists():
+        root = default_root
+    imports_dir = root / "storage" / "amazon" / "imports"
+    imports_dir.mkdir(parents=True, exist_ok=True)
+    out_path = imports_dir / "bestsellers_OMNI.json"
+    labels_path = imports_dir / "category_labels.json"
+
+    top_limit = max(1, _env_int("ATLAS_SCRAPER_LIMIT_PER_CATEGORY", 15))
+    sub_limit = _sub_limit(top_limit)
+    max_depth = _max_depth() if _subcats_enabled() else 0
+    max_subcats = _max_subcats()
+    max_departments = _max_departments()
+
+    all_products = []
+    fetched_keys = set()          # (market, slug) com produtos nesta rodada
+    discovered_labels = {}        # slug -> rotulo (inclui categorias NOVAS)
+
+    markets = [
+        ("amazon.com", "US", "atlasfindsus-20"),
+        ("amazon.com.br", "BR", "achadosatlasb-20"),
+    ]
+    for domain, market, tag in markets:
+        headers = _headers(market)
+        budget = {"n": _request_budget()}
+        departments = discover_departments(domain, headers)
+        if not departments:
+            print(f"[{market}] nenhum departamento descoberto (bloqueio?). Pulando.")
+            continue
+        if max_departments > 0:
+            departments = departments[:max_departments]
+        print(f"[{market}] {len(departments)} departamentos descobertos (TODOS os da Amazon).")
+
+        for slug, name, dept_url in departments:
+            # Rotulo: mantem o nome PT curado quando conhecido; senao usa o
+            # nome que a Amazon deu (CRIA a categoria nova automaticamente).
+            label = (CATEGORIES.get(slug)
+                     or name or slug.replace("-", " ").title())
+            discovered_labels[slug] = label
+            print(f"  [{market}] {label} ...", flush=True)
+            prods = crawl_department(
+                domain, market, tag, slug, label, dept_url, headers,
+                top_limit, sub_limit, max_depth, max_subcats, budget,
+            )
+            if prods:
+                fetched_keys.add((market, slug))
+                all_products.extend(prods)
+            # Salva a cada departamento: progresso nunca se perde.
+            total, kept = _persist(
+                out_path, labels_path, all_products, fetched_keys, discovered_labels
+            )
+            print(f"     -> {len(prods)} produtos | pool {total} | orcamento {budget['n']}.")
+            if budget["n"] <= 0:
+                print(f"  [{market}] orcamento de requisicoes esgotado; parando cedo.")
+                break
+
+    total, kept = _persist(
+        out_path, labels_path, all_products, fetched_keys, discovered_labels
+    )
     print(
         f"SUCESSO: {len(all_products)} produtos novos + {kept} mantidos "
-        f"= {len(merged)} no total (MAIS VENDIDOS por categoria)."
+        f"= {total} no total | {len(discovered_labels)} categorias "
+        f"(TODAS as que a Amazon oferece, mais vendido -> menos vendido)."
     )
 
 if __name__ == "__main__":

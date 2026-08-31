@@ -48,20 +48,15 @@ export default function Analytics() {
     setAccounts(Array.isArray(a) ? a : []);
   };
 
-  const refresh = async () => {
-    setRefreshing(true);
-    try {
-      await load();
-    } catch (e) {
-      setMsg("Falha ao atualizar.");
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  const collect = async () => {
-    setCollecting(true);
-    setMsg("Coleta iniciada… os números vão atualizando aos poucos.");
+  // Dispara a coleta REAL de metricas (Instagram, Facebook, YouTube, TikTok)
+  // e so entao rele o banco. Usada tanto pelo botao "Atualizar" quanto por
+  // "Coletar metricas" - ambos precisam buscar dados novos, nao so reler o
+  // que ja esta salvo (senao os numeros do Instagram/Facebook parecem
+  // travados, ja que a coleta automatica deles fica desligada por padrao
+  // para nao gastar a cota da API da Meta).
+  const runCollection = async (setBusy) => {
+    setBusy(true);
+    setMsg("Buscando números novos… pode levar alguns minutos.");
     try {
       await Api.collectMetrics();
       // A coleta roda em segundo plano no servidor e pode levar alguns
@@ -85,11 +80,11 @@ export default function Analytics() {
         if (!state || state.status !== "running") break;
         const secs = Math.round((Date.now() - started) / 1000);
         setMsg(
-          `Coletando métricas… (${secs}s) — os números vão atualizando aos poucos.`
+          `Buscando números novos… (${secs}s) — os números vão atualizando aos poucos.`
         );
       }
       if (state?.status === "error") {
-        setMsg("Falha ao coletar métricas: " + (state.error || ""));
+        setMsg("Falha ao buscar números novos: " + (state.error || ""));
       } else if (state?.result) {
         const r = state.result;
         const errs = Array.isArray(r.errors) ? r.errors : [];
@@ -98,7 +93,7 @@ export default function Analytics() {
             typeof e === "string" &&
             (e.includes("#4") || e.toLowerCase().includes("cooldown"))
         );
-        let m = `Coleta concluída: ${r.video_snapshots ?? 0} vídeos, ${
+        let m = `Atualizado: ${r.video_snapshots ?? 0} vídeos, ${
           r.platform_snapshots ?? 0
         } contas.`;
         if (cooldown) {
@@ -113,11 +108,14 @@ export default function Analytics() {
       }
       await load();
     } catch (e) {
-      setMsg("Falha ao coletar métricas.");
+      setMsg("Falha ao buscar números novos.");
     } finally {
-      setCollecting(false);
+      setBusy(false);
     }
   };
+
+  const refresh = () => runCollection(setRefreshing);
+  const collect = () => runCollection(setCollecting);
 
   useEffect(() => {
     // Carrega uma vez ao abrir (ligar o ATLAS). Sem auto-refresh:
@@ -174,7 +172,7 @@ export default function Analytics() {
           <button
             className="btn"
             onClick={collect}
-            disabled={collecting}
+            disabled={collecting || refreshing}
             style={
               collecting
                 ? { background: "#f59e0b", borderColor: "#f59e0b", color: "#1a1205" }
@@ -191,7 +189,7 @@ export default function Analytics() {
         <StatCard icon="❤️" tone="pink" label="Curtidas" value={fmt(ov?.likes)} />
         <StatCard icon="💬" tone="cyan" label="Comentários" value={fmt(ov?.comments)} />
         <StatCard icon="🔁" tone="cyan" label="Compartilhamentos" value={fmt(ov?.shares)} />
-        <StatCard icon="🔗" tone="amber" label="Cliques afiliados" value={fmt(ov?.affiliate_clicks)} foot={`CTR ${pct(ov?.click_through_rate)}`} />
+        <StatCard icon="🔗" tone="amber" label="Cliques afiliados" value={fmt(ov?.affiliate_clicks)} foot="Só link curto do ATLAS — veja Vendas Amazon p/ total real" />
         <StatCard icon="👥" tone="pink" label="Seguidores" value={fmt(ov?.followers)} />
       </div>
 

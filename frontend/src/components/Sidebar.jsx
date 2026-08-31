@@ -11,9 +11,13 @@ const groups = [
     title: "Produção",
     items: [
       { to: "/produtos", icon: "🛒", label: "Produtos Amazon" },
+      { to: "/afiliados-shopee", icon: "🛍️", label: "Afiliados Shopee" },
       { to: "/afiliados", icon: "🎬", label: "Vídeos Afiliados" },
       { to: "/reels", icon: "🔥", label: "Reels Trending" },
       { to: "/live", icon: "🔴", label: "Live (Ao Vivo)" },
+      // Pagina propria do backend (fora do SPA React), por isso e link
+      // externo (<a> normal) em vez de rota interna (NavLink).
+      { to: "/stories", icon: "📖", label: "Histórias", external: true },
     ],
   },
   {
@@ -93,12 +97,19 @@ export default function Sidebar() {
         {groups.map((g) => (
           <React.Fragment key={g.title}>
             <div className="nav-group">{g.title}</div>
-            {g.items.map((it) => (
-              <NavLink key={it.to} to={it.to} end={it.end}>
-                <span className="ico">{it.icon}</span>
-                {it.label}
-              </NavLink>
-            ))}
+            {g.items.map((it) =>
+              it.external ? (
+                <a key={it.to} href={it.to}>
+                  <span className="ico">{it.icon}</span>
+                  {it.label}
+                </a>
+              ) : (
+                <NavLink key={it.to} to={it.to} end={it.end}>
+                  <span className="ico">{it.icon}</span>
+                  {it.label}
+                </NavLink>
+              )
+            )}
           </React.Fragment>
         ))}
         <div className="nav-group">Bio</div>

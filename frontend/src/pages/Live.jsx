@@ -393,7 +393,7 @@ export default function Live() {
   async function loadSources() {
     setSourcesLoading(true);
     try {
-      const r = await Api.liveSources(market, language);
+      const r = await Api.liveSources(market, language, buildPlatform);
       setSources(r?.videos || []);
     } catch {
       setSources([]);
@@ -406,7 +406,7 @@ export default function Live() {
   useEffect(() => {
     if (mode === "gravada" && recSource === "videos") loadSources();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, recSource, market, language]);
+  }, [mode, recSource, market, language, buildPlatform]);
 
   function toggleSource(id) {
     setSelectedIds((cur) =>
@@ -425,6 +425,7 @@ export default function Live() {
     try {
       await Api.liveBuildMontage({
         video_ids: selectedIds,
+        platform: buildPlatform,
         market,
         language,
         persona,

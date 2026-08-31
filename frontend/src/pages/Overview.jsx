@@ -277,6 +277,25 @@ export default function Overview() {
               </span>
             ))}
           </div>
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--text-faint)",
+              marginTop: 8,
+              lineHeight: 1.4,
+            }}
+          >
+            Só conta cliques no link curto do ATLAS (exige domínio público
+            configurado) — não é o total real. Veja o número que a Amazon
+            reporta em{" "}
+            <span
+              style={{ color: "#06b6d4", cursor: "pointer", textDecoration: "underline" }}
+              onClick={() => nav("/vendas-amazon")}
+            >
+              Vendas Amazon
+            </span>
+            .
+          </div>
         </div>
       </div>
 

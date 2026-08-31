@@ -21,6 +21,7 @@ PROJECT_ROOT = os.path.abspath(os.getenv("ATLAS_ROOT", os.getcwd()))
 ALLOWED_PREFIXES = (
     "output_videos",
     os.path.join("storage", "video_pipeline", "outputs"),
+    "stories",
 )
 
 ALLOWED_EXTENSIONS = (".mp4", ".mov", ".webm", ".jpg", ".jpeg", ".png", ".gif")

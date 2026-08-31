@@ -334,9 +334,17 @@ def build_status():
 # ============================================================
 
 @router.get("/sources")
-def montage_sources(market: str = "", language: str = ""):
+def montage_sources(
+    market: str = "",
+    language: str = "",
+    platform: str = "",
+):
     """Lista os videos de produto JA gerados que podem virar live."""
-    items = montage.list_sources(market=market, language=language)
+    items = montage.list_sources(
+        market=market,
+        language=language,
+        platform=platform,
+    )
     return {"ok": True, "count": len(items), "videos": items}
 
 
@@ -365,6 +373,7 @@ def _run_montage(params: dict) -> None:
 
 class MontageRequest(BaseModel):
     video_ids: list[str] = []
+    platform: str = ""
     market: str = ""
     language: str = "pt"
     persona: str = ""
@@ -387,6 +396,7 @@ def build_montage(req: MontageRequest):
         )
     params = dict(
         video_ids=list(req.video_ids or []),
+        platform=req.platform,
         market=req.market,
         language=req.language,
         persona=req.persona,

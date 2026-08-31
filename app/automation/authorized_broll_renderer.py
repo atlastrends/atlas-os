@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+from urllib.parse import urljoin, urlparse
 import html as _htmlmod
 import json
 import os
@@ -10,9 +11,12 @@ import shutil
 import subprocess
 import sys
 import time
+import unicodedata
 
 import qrcode
 import requests
+
+from app.automation.spoken_units import expand_spoken_units
 
 
 MIN_DURATION = 30.0
@@ -745,16 +749,18 @@ def _product_facts(product: Any) -> str:
 
 def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
     facts = _product_facts(product)
+    platform = clean(getattr(product, "platform", "amazon"), 30).lower()
+    marketplace = "Shopee" if platform == "shopee" else "Amazon"
 
     if mode == "live":
         if market == "US":
             return (
                 "You are a warm, professional LIVE shopping host presenting "
-                "this Amazon product RIGHT NOW to viewers watching your "
+                f"this {marketplace} product RIGHT NOW to viewers watching your "
                 "livestream. Write her spoken lines in ENGLISH as 6 short "
                 "blocks, for about 55 to 75 seconds, talking ONLY about THIS "
                 "product, using its real details.\n\n"
-                f"PRODUCT DATA (from the Amazon listing):\n{facts}\n\n"
+                f"PRODUCT DATA (from the {marketplace} listing):\n{facts}\n\n"
                 "RULES:\n"
                 "- Real LIVE tone: warm, natural, talking WITH the customer in "
                 "real time. Explain calmly and give MORE detail (it is live).\n"
@@ -775,6 +781,12 @@ def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
                 "description (live language).\n"
                 "- No emojis. Each block = 1 to 2 spoken sentences that flow "
                 "naturally into the next.\n"
+                "- In every spoken line, write measurement abbreviations in full: "
+                "for example, say '5 liters', '200 watts', '30 centimeters', "
+                "and '2 kilograms', never '5L', '200W', '30cm', or '2kg'.\n"
+                "- Product model codes are NOT measurements. Preserve codes such "
+                "as WD11M exactly as model names; never turn letters inside a "
+                "model code into meters, liters, watts, volts, or other units.\n"
                 "- Return ONLY valid JSON, no markdown, in this exact shape:\n"
                 '{"scenes":[{"caption":"...","voice":"..."}, ... 6 items]}\n'
                 "where 'voice' is the spoken line and 'caption' is a tiny "
@@ -782,11 +794,11 @@ def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
             )
         return (
             "Voce e uma APRESENTADORA de live de vendas, profissional e "
-            "carismatica, apresentando AO VIVO este produto da Amazon para "
+            f"carismatica, apresentando AO VIVO este produto da {marketplace} para "
             "quem esta assistindo agora. Escreva a fala dela, em PORTUGUES DO "
             "BRASIL, em 6 blocos curtos, para cerca de 55 a 75 segundos, "
             "falando SO deste produto, com os dados reais dele.\n\n"
-            f"DADOS DO PRODUTO (do anuncio da Amazon):\n{facts}\n\n"
+            f"DADOS DO PRODUTO (do anuncio da {marketplace}):\n{facts}\n\n"
             "REGRAS:\n"
             "- Tom de LIVE de verdade: acolhedor, natural, como quem conversa "
             "com o cliente em tempo real. Explique com calma e de MAIS "
@@ -809,6 +821,20 @@ def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
             "(linguagem de live).\n"
             "- Sem emojis. Cada bloco = 1 a 2 frases faladas que se encadeiam "
             "naturalmente.\n"
+            "- Em toda fala, escreva unidades e medidas por extenso: por exemplo, "
+            "diga '5 litros', '200 watts', '30 centimetros' e '2 quilogramas', "
+            "nunca '5L', '200W', '30cm' ou '2kg'.\n"
+            "- Codigo de modelo NAO e medida. Preserve modelos como WD11M "
+            "exatamente como nome de modelo; nunca transforme letras dentro do "
+            "codigo em metros, litros, watts, volts ou qualquer outra unidade.\n"
+            "- Palavras em ingles de verdade (nomes de marca e termos tecnicos "
+            "como Smart TV, Wireless, Power Bank, Air Fryer, Notebook, Gamer, "
+            "Bluetooth) devem ficar na grafia ORIGINAL em ingles - a voz as "
+            "pronuncia corretamente em ingles. NAO escreva a pronuncia "
+            "aportuguesada (nao escreva 'Uai-arles' nem 'Ismartchi') e NUNCA "
+            "soletre letra por letra. Se houver um termo natural e usual em "
+            "portugues, pode usa-lo (ex.: 'fone de ouvido' no lugar de "
+            "'headphone'), mas nunca traduza nem aportuguese nomes de marca.\n"
             "- Retorne SOMENTE JSON valido, sem markdown, neste formato "
             "exato:\n"
             '{"scenes":[{"caption":"...","voice":"..."}, ... 6 itens]}\n'
@@ -818,12 +844,12 @@ def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
 
     if market == "US":
         return (
-            "You are a top-tier short-form video copywriter for an Amazon "
+            f"You are a top-tier short-form video copywriter for a {marketplace} "
             "affiliate channel. Write a punchy, SPECIFIC 7-scene script in "
             "ENGLISH for a 45-55 second vertical video about the product "
             "below. The script MUST be about THIS exact product, using its "
             "real details.\n\n"
-            f"PRODUCT DATA (from the Amazon listing):\n{facts}\n\n"
+            f"PRODUCT DATA (from the {marketplace} listing):\n{facts}\n\n"
             "RULES:\n"
             "- Scenes 1 to 6 are ONLY about THIS product. Do NOT open with a "
             "generic line ('stop scrolling', 'almost nobody knows', 'you need "
@@ -844,6 +870,12 @@ def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
             "'everyday problem', and do NOT assume how often they use it. "
             "Talk ONLY about THIS product's real features and value.\n"
             "- Natural creator tone, not corporate. No emojis in 'voice'.\n"
+            "- In every spoken line, write measurement abbreviations in full: "
+            "for example, say '5 liters', '200 watts', '30 centimeters', "
+            "and '2 kilograms', never '5L', '200W', '30cm', or '2kg'.\n"
+            "- Product model codes are NOT measurements. Preserve codes such "
+            "as WD11M exactly as model names; never turn letters inside a "
+            "model code into meters, liters, watts, volts, or other units.\n"
             "- Scene 5 must tell viewers to scan the QR code to see the full, "
             "updated listing for THIS product (mention the price can change).\n"
             "- Scene 6: close STILL on THIS product - restate the main benefit "
@@ -860,11 +892,11 @@ def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
 
     return (
         "Voce e um copywriter TOP de video curto para um canal de afiliados "
-        "da Amazon. Escreva um roteiro ESPECIFICO e chamativo, com 7 cenas, "
+        f"da {marketplace}. Escreva um roteiro ESPECIFICO e chamativo, com 7 cenas, "
         "em PORTUGUES DO BRASIL, para um video vertical de 45 a 55 segundos "
         "sobre o produto abaixo. O roteiro TEM que ser sobre ESTE produto "
         "exato, usando os detalhes reais dele.\n\n"
-        f"DADOS DO PRODUTO (do anuncio da Amazon):\n{facts}\n\n"
+        f"DADOS DO PRODUTO (do anuncio da {marketplace}):\n{facts}\n\n"
         "REGRAS:\n"
         "- As cenas 1 a 6 falam SO deste produto. NAO abra com frase generica "
         "('para de rolar o feed', 'quase ninguem sabe', 'voce precisa ver "
@@ -885,6 +917,20 @@ def _story_prompt(product: Any, market: str, mode: str = "reel") -> str:
         "dia' e NAO suponha com que frequencia a pessoa usa. Fale SO das "
         "caracteristicas e do valor reais DESTE produto.\n"
         "- Tom de criador de conteudo, natural. Sem emojis no 'voice'.\n"
+        "- Em toda fala, escreva unidades e medidas por extenso: por exemplo, "
+        "diga '5 litros', '200 watts', '30 centimetros' e '2 quilogramas', "
+        "nunca '5L', '200W', '30cm' ou '2kg'.\n"
+        "- Codigo de modelo NAO e medida. Preserve modelos como WD11M "
+        "exatamente como nome de modelo; nunca transforme letras dentro do "
+        "codigo em metros, litros, watts, volts ou qualquer outra unidade.\n"
+        "- Palavras em ingles de verdade (nomes de marca e termos tecnicos "
+        "como Smart TV, Wireless, Power Bank, Air Fryer, Notebook, Gamer, "
+        "Bluetooth) devem ficar na grafia ORIGINAL em ingles - a voz as "
+        "pronuncia corretamente em ingles. NAO escreva a pronuncia "
+        "aportuguesada (nao escreva 'Uai-arles' nem 'Ismartchi') e NUNCA "
+        "soletre letra por letra. Se houver um termo natural e usual em "
+        "portugues, pode usa-lo (ex.: 'fone de ouvido' no lugar de "
+        "'headphone'), mas nunca traduza nem aportuguese nomes de marca.\n"
         "- A cena 5 deve pedir para escanear o QR Code e ver o anuncio "
         "completo e atualizado DESTE produto (diga que o preco pode mudar).\n"
         "- Cena 6: FECHE ainda falando DESTE produto - retome o principal "
@@ -1015,6 +1061,7 @@ def _gemini_story_text(prompt: str) -> str | None:
 
 _CONTENT_SERVICE: Any = None
 _CONTENT_SERVICE_READY = False
+_EXTRA_STORY_PROVIDERS: list[dict[str, Any]] | None = None
 
 
 def _content_service() -> Any:
@@ -1052,7 +1099,6 @@ def _groq_story_text(prompt: str) -> str | None:
     service = _content_service()
     if service is None or getattr(service, "client", None) is None:
         return None
-
     messages = [
         {
             "role": "system",
@@ -1097,6 +1143,223 @@ def _groq_story_text(prompt: str) -> str | None:
         if text and text.strip():
             return text
 
+    return None
+
+
+def _shopee_groq_story_text(prompt: str) -> str | None:
+    """Groq direto para Shopee, sem alterar o ContentService usado pela Amazon."""
+    key = (os.getenv("GROQ_API_KEY") or "").strip()
+    if not key:
+        return None
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(
+            api_key=key,
+            base_url="https://api.groq.com/openai/v1",
+        )
+    except Exception as exc:
+        print(f"[BROLL] Groq Shopee indisponivel: {exc}")
+        return None
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You output ONLY valid JSON, no markdown, no comments. "
+                "You are a compliance-first affiliate script editor. Every "
+                "product claim must be copied or conservatively paraphrased "
+                "from the supplied product data. Never infer capabilities."
+            ),
+        },
+        {"role": "user", "content": prompt},
+    ]
+    for model in _GROQ_MODELS:
+        kwargs: dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "temperature": 0.2,
+            "max_tokens": 1400,
+            "response_format": {"type": "json_object"},
+        }
+        if "gpt-oss" in model:
+            kwargs["reasoning_effort"] = "low"
+        try:
+            response = client.chat.completions.create(**kwargs)
+            text = response.choices[0].message.content
+        except Exception as exc:
+            print(f"[BROLL] Groq Shopee falhou ({model}): {exc}")
+            continue
+        if text and text.strip():
+            return text
+    return None
+
+
+def _normalized_words(value: Any) -> str:
+    text = unicodedata.normalize("NFKD", str(value or ""))
+    return "".join(
+        character
+        for character in text
+        if not unicodedata.combining(character)
+    ).lower()
+
+
+def _shopee_story_is_grounded(
+    product: Any,
+    scenes: list[dict[str, str]],
+) -> bool:
+    story = _normalized_words(
+        " ".join(scene.get("voice", "") for scene in scenes)
+    )
+    facts = _normalized_words(_product_facts(product))
+    source = _normalized_words(getattr(product, "source", ""))
+    market = clean(getattr(product, "marketplace_code", ""), 10).upper()
+
+    unsupported_terms = {
+        "volume": ("volume",),
+        "troca de faixa": ("troca de faixa", "trocar faixa"),
+        "paus": ("paus",),
+        "avanc": ("avanc",),
+        "atend": ("atend", "chamadas"),
+        "pula music": ("pula music", "troca de faixa"),
+        "celular do bolso": ("celular do bolso",),
+        "nao cair": ("nao cair", "anti queda"),
+        "reconhece": ("reconhece",),
+        "isolamento": ("isolamento",),
+        "resistente": ("resistente", "resistencia"),
+        "a prova": ("a prova",),
+        "microfone": ("microfone",),
+        "baixa latencia": ("baixa latencia", "latencia"),
+        "qualidade perfeita": ("qualidade perfeita",),
+        "alta qualidade": ("alta qualidade",),
+        "longas sessoes": ("longas sessoes",),
+        "garantia": ("garantia",),
+        "ajusta o que quiser": ("ajusta o que quiser",),
+        "caixa de configuracoes": ("caixa de configuracoes",),
+        "em segundos": ("em segundos",),
+        "pronto para usar": ("pronto para usar",),
+        "confort": ("confort",),
+        "estabilidade": ("estabilidade",),
+        "confianca": ("confianca",),
+        "configurac": ("configurac",),
+        "liberdade": ("liberdade",),
+        "praticidade": ("praticidade",),
+        "entregam o que prometem": ("entregam o que prometem",),
+        "som que acompanha": ("som que acompanha",),
+    }
+    for story_term, fact_terms in unsupported_terms.items():
+        if story_term in story and not any(
+            fact_term in facts for fact_term in fact_terms
+        ):
+            print(
+                "[BROLL] Roteiro Shopee rejeitado por afirmacao sem fonte: "
+                f"{story_term}"
+            )
+            return False
+
+    sold_terms = ("sold",) if market == "US" else ("vendid",)
+    if int(getattr(product, "sold_count", 0) or 0) and not any(
+        term in story for term in sold_terms
+    ):
+        print("[BROLL] Roteiro Shopee rejeitado: omitiu vendas do anuncio.")
+        return False
+    rating_terms = (
+        ("rating", "review")
+        if market == "US"
+        else ("avalia", "nota", "rating")
+    )
+    if float(getattr(product, "rating", 0) or 0) and not any(
+        term in story for term in rating_terms
+    ):
+        print("[BROLL] Roteiro Shopee rejeitado: omitiu avaliacao do anuncio.")
+        return False
+    if "vers" in facts and "vers" not in story:
+        print("[BROLL] Roteiro Shopee rejeitado: omitiu as versoes do anuncio.")
+        return False
+    if "pilot" in source and (
+        "bio" in story
+        or "compre agora" in story
+        or "buy now" in story
+    ):
+        print("[BROLL] Roteiro Shopee rejeitado: CTA invalida para piloto.")
+        return False
+    if len(story.split()) > 135:
+        print("[BROLL] Roteiro Shopee rejeitado: excede 135 palavras.")
+        return False
+    return True
+
+
+def _extra_story_text(
+    prompt: str,
+    product: Any,
+) -> tuple[str, str] | None:
+    """Usa a mesma cadeia extra do Content Engine para roteiros Shopee."""
+    global _EXTRA_STORY_PROVIDERS
+    if _EXTRA_STORY_PROVIDERS is None:
+        try:
+            from app.services.ai_providers import build_extra_providers
+
+            _EXTRA_STORY_PROVIDERS = build_extra_providers(
+                "SHOPEE AFFILIATE"
+            )
+        except Exception as exc:
+            print(f"[BROLL] Provedores extras indisponiveis: {exc}")
+            _EXTRA_STORY_PROVIDERS = []
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You output ONLY valid JSON, no markdown, no comments. "
+                "You are a compliance-first affiliate script editor. Every "
+                "product claim must be copied or conservatively paraphrased "
+                "from the supplied product data. Never infer capabilities."
+            ),
+        },
+        {"role": "user", "content": prompt},
+    ]
+    for provider in _EXTRA_STORY_PROVIDERS:
+        for model in provider["models"]:
+            kwargs = {
+                "model": model,
+                "messages": messages,
+                "temperature": 0.2,
+                "max_tokens": 1400,
+            }
+            try:
+                response = provider["client"].chat.completions.create(
+                    **kwargs,
+                    response_format={"type": "json_object"},
+                )
+            except Exception:
+                try:
+                    response = provider["client"].chat.completions.create(
+                        **kwargs
+                    )
+                except Exception as exc:
+                    print(
+                        f"[BROLL] {provider['label']} falhou "
+                        f"({model}): {exc}"
+                    )
+                    continue
+            try:
+                text = response.choices[0].message.content
+            except Exception:
+                text = None
+            if text and text.strip():
+                try:
+                    scenes = _parse_story_json(text)
+                except Exception:
+                    scenes = []
+                if (
+                    len(scenes) >= 5
+                    and _shopee_story_is_grounded(product, scenes)
+                ):
+                    return text, f"{provider['label']}:{model}"
+                print(
+                    f"[BROLL] {provider['label']} ({model}) retornou "
+                    "roteiro incompleto; tentando o proximo."
+                )
     return None
 
 
@@ -1308,16 +1571,19 @@ def make_story(product: Any, mode: str = "reel") -> list[dict[str, str]]:
 
 def narration_from_story(
     story: list[dict[str, str]],
+    market: str = "BR",
 ) -> str:
-    return " ".join(
+    narration = " ".join(
         clean(scene.get("voice", ""), 600)
         for scene in story
     )
+    language = "en" if str(market or "").upper() == "US" else "pt"
+    return expand_spoken_units(narration, language)
 
 
 def approved_terms() -> list[str]:
     path = (
-        Path("/atlas")
+        _ATLAS_ROOT
         / "storage"
         / "video_pipeline"
         / "approved_youtube_channels.json"
@@ -2228,7 +2494,10 @@ def render_authorized_video(
         },
         "broll_path": str(broll["path"]),
         "story": story,
-        "narration": narration_from_story(story),
+        "narration": narration_from_story(
+            story,
+            clean(getattr(product, "marketplace_code", ""), 10),
+        ),
         "duration_seconds": video_duration,
         "static_image_fallback": False,
         "original_audio_used": False,
@@ -2250,7 +2519,25 @@ _LISTING_IMAGE_HOSTS = (
     "images-na.ssl-images-amazon.com",
     "images.amazon.com",
     "images-eu.ssl-images-amazon.com",
+    "down-br.img.susercontent.com",
+    "cf.shopee.com.br",
+    "shopeemobile.com",
 )
+_LISTING_VIDEO_HOSTS = (
+    "media-amazon.com",
+    "susercontent.com",
+    "shopeemobile.com",
+    "shopee.com.br",
+)
+
+
+def _amazon_asin_from_url(url: str) -> str:
+    match = re.search(
+        r"/(?:dp|gp/product)/([A-Z0-9]{10})(?:[/?]|$)",
+        str(url or ""),
+        flags=re.IGNORECASE,
+    )
+    return match.group(1).upper() if match else ""
 
 
 def _listing_headers() -> dict[str, str]:
@@ -2271,6 +2558,14 @@ def _listing_headers() -> dict[str, str]:
 def _listing_image_host_ok(url: str) -> bool:
     lowered = url.lower()
     return any(host in lowered for host in _LISTING_IMAGE_HOSTS)
+
+
+def _listing_video_host_ok(url: str) -> bool:
+    host = (urlparse(url).hostname or "").lower()
+    return any(
+        host == allowed or host.endswith("." + allowed)
+        for allowed in _LISTING_VIDEO_HOSTS
+    )
 
 
 def _clean_image_url(url: str) -> str:
@@ -2387,7 +2682,11 @@ def _extract_listing_image_urls(html: str) -> list[str]:
     return found
 
 
-def _extract_listing_video_url(html: str) -> str | None:
+def _extract_listing_video_url(
+    html: str,
+    platform: str = "amazon",
+    expected_asin: str = "",
+) -> str | None:
     # O JSON da galeria vem HTML-escapado (&quot;) no HTML da Amazon, entao
     # desescapamos antes de procurar. O video DO PRODUTO fica num bloco
     # "isVideo":true (galeria ImageBlock) e a URL costuma ser um HLS .m3u8
@@ -2396,7 +2695,13 @@ def _extract_listing_video_url(html: str) -> str | None:
     page = _htmlmod.unescape(html)
     fallback: str | None = None
     for marker in re.finditer(r'"isVideo"\s*:\s*true', page):
-        block = page[max(0, marker.start() - 400):marker.end() + 900]
+        block = page[max(0, marker.start() - 1000):marker.end() + 8000]
+        if expected_asin and not re.search(
+            rf'"(?:mediaAsin|asin)"\s*:\s*"{re.escape(expected_asin)}"',
+            block,
+            flags=re.IGNORECASE,
+        ):
+            continue
         window = page[marker.end():marker.end() + 900]
         match = re.search(
             r'"url"\s*:\s*"(https:[^"]+?\.(?:m3u8|mp4))"',
@@ -2415,7 +2720,220 @@ def _extract_listing_video_url(html: str) -> str | None:
             return candidate
         if fallback is None:
             fallback = candidate
-    return fallback
+    if fallback:
+        return fallback
+
+    if (platform or "amazon").strip().lower() != "shopee":
+        return None
+
+    # Shopee e outros marketplaces guardam o video em chaves como video_url,
+    # play_url ou url. Aceitamos somente CDNs oficiais conhecidas.
+    patterns = (
+        r'"(?:video_url|play_url|videoUrl|playUrl)"\s*:\s*"(https:[^"]+)"',
+        r'<(?:video|source)[^>]+src=["\'](https:[^"\']+)["\']',
+        r'<meta[^>]+property=["\']og:video(?::url)?["\'][^>]+content=["\'](https:[^"\']+)["\']',
+    )
+    for pattern in patterns:
+        for match in re.finditer(pattern, page, flags=re.IGNORECASE):
+            candidate = (
+                match.group(1)
+                .replace("\\u002F", "/")
+                .replace("\\/", "/")
+            )
+            if _listing_video_host_ok(candidate):
+                return candidate
+    return None
+
+
+def _official_page_candidates(product: Any, listing_html: str) -> list[str]:
+    candidates = [
+        clean(url, 1500)
+        for url in (getattr(product, "official_page_urls", None) or [])
+        if clean(url, 1500).startswith(("https://", "http://"))
+    ]
+    brand = clean(getattr(product, "brand", ""), 100).lower()
+    brand_token = re.sub(r"[^a-z0-9]", "", brand)
+    if not listing_html or len(brand_token) < 3:
+        return candidates
+
+    excluded = (
+        "shopee.",
+        "amazon.",
+        "youtube.",
+        "youtu.be",
+        "tiktok.",
+        "instagram.",
+        "facebook.",
+    )
+    for href in re.findall(
+        r'<a[^>]+href=["\']([^"\']+)["\']',
+        _htmlmod.unescape(listing_html),
+        flags=re.IGNORECASE,
+    ):
+        absolute = urljoin(clean(getattr(product, "detail_url", ""), 1500), href)
+        host = (urlparse(absolute).hostname or "").lower()
+        normalized_host = re.sub(r"[^a-z0-9]", "", host)
+        if (
+            absolute.startswith(("https://", "http://"))
+            and brand_token in normalized_host
+            and not any(term in host for term in excluded)
+            and absolute not in candidates
+        ):
+            candidates.append(absolute)
+    return candidates[:5]
+
+
+def _official_page_video(product: Any, listing_html: str) -> tuple[str, str] | None:
+    for official_url in _official_page_candidates(product, listing_html):
+        page = _fetch_listing_html(official_url)
+        if not page:
+            continue
+        unescaped = _htmlmod.unescape(page)
+        patterns = (
+            r'<meta[^>]+property=["\']og:video(?::url)?["\'][^>]+content=["\']([^"\']+)["\']',
+            r'<(?:video|source)[^>]+src=["\']([^"\']+)["\']',
+            r'"(?:video_url|play_url|videoUrl|playUrl)"\s*:\s*"([^"]+)"',
+        )
+        for pattern in patterns:
+            match = re.search(pattern, unescaped, flags=re.IGNORECASE)
+            if not match:
+                continue
+            video_url = urljoin(official_url, match.group(1).replace("\\/", "/"))
+            if video_url.startswith(("https://", "http://")):
+                return video_url, official_url
+    return None
+
+
+def _authorized_exact_video(product: Any, work: Path) -> dict[str, Any] | None:
+    allowed = approved_terms()
+    brand = clean(getattr(product, "brand", ""), 100).lower()
+
+    identity_tokens = {
+        token.lower()
+        for token in re.findall(
+            r"[A-Za-zÀ-ÿ0-9]+",
+            clean(getattr(product, "title", ""), 300),
+        )
+        if len(token) >= 3
+        and token.lower()
+        not in {
+            "mais", "recente", "fone", "fones", "ouvido", "sem", "com",
+            "para", "produto", "bluetooth", "wireless", "headset",
+        }
+    }
+    if not identity_tokens:
+        return None
+
+    try:
+        candidates = choose_candidates(product)
+    except BrollError:
+        return None
+
+    for candidate in candidates:
+        title = clean(candidate.get("title"), 300).lower()
+        channel = clean(
+            candidate.get("channel")
+            or candidate.get("uploader")
+            or candidate.get("channel_id"),
+            180,
+        ).lower()
+        video_license = clean(candidate.get("license"), 120).lower()
+        duration_seconds = float(candidate.get("duration") or 0)
+        height = int(candidate.get("height") or 0)
+        overlap = sum(token in title for token in identity_tokens)
+        approved_channel = any(term in channel for term in allowed)
+        official_brand_channel = (
+            len(brand) >= 3
+            and brand in channel
+            and ("official" in channel or "oficial" in channel)
+        )
+        shopee_official_channel = (
+            "shopee" in channel
+            and ("official" in channel or "oficial" in channel)
+        )
+        creative_commons = "creative commons" in video_license
+        if overlap < min(2, len(identity_tokens)):
+            continue
+        if duration_seconds < 5 or duration_seconds > 60:
+            continue
+        if height < 720:
+            continue
+        if not (
+            approved_channel
+            or official_brand_channel
+            or shopee_official_channel
+            or creative_commons
+        ):
+            continue
+        try:
+            downloaded = download_broll(candidate, work)
+            downloaded["license_status"] = (
+                "creative_commons"
+                if creative_commons
+                else "official_or_approved_channel"
+            )
+            return downloaded
+        except BrollError:
+            continue
+    return None
+
+
+def _affiliate_video_matches_product(
+    product: Any,
+    video_path: Path,
+    *,
+    structurally_verified: bool = False,
+) -> bool:
+    """Exige confirmacao visual de que o clipe mostra o produto do sidecar."""
+    try:
+        from app.services import trend_relevance_service
+
+        evidence = " ".join(
+            [
+                clean(getattr(product, "description", ""), 800),
+                *[
+                    clean(feature, 220)
+                    for feature in (getattr(product, "features", None) or [])
+                ],
+            ]
+        ).strip()
+        approved, detail = trend_relevance_service.passes_gate(
+            str(video_path),
+            clean(getattr(product, "title", ""), 500),
+            narration=evidence,
+            media_words=clean(getattr(product, "brand", ""), 120),
+        )
+    except Exception as exc:
+        print(f"[BROLL] Validacao visual do produto falhou: {exc}")
+        return False
+
+    if not detail.get("evaluated"):
+        if (
+            structurally_verified
+            and clean(
+                getattr(product, "platform", "amazon"),
+                30,
+            ).lower()
+            == "amazon"
+        ):
+            print(
+                "[BROLL] Juiz visual indisponivel; aceitando video Amazon "
+                "vinculado ao bloco estruturado da galeria do produto."
+            )
+            return True
+        print(
+            "[BROLL] Video do produto descartado: juiz visual indisponivel "
+            f"({detail.get('reason', 'sem detalhe')})."
+        )
+        return False
+    if not approved:
+        print(
+            "[BROLL] Video do produto descartado por divergencia visual: "
+            f"{detail.get('reason', 'produto nao confirmado')} "
+            f"(confianca {detail.get('confidence', 0)}%)."
+        )
+        return False
+    return True
 
 
 def _download_listing_image(url: str, destination: Path) -> bool:
@@ -2440,7 +2958,12 @@ def _download_listing_image(url: str, destination: Path) -> bool:
     return True
 
 
-def _download_listing_video(url: str, work: Path) -> Path | None:
+def _download_listing_video(
+    url: str,
+    work: Path,
+    *,
+    max_seconds: int = 120,
+) -> Path | None:
     # O video principal do anuncio costuma ser HLS (.m3u8); o FFmpeg baixa
     # tanto HLS quanto mp4 direto. Pegamos so o VIDEO (a narracao propria e
     # adicionada depois) e limitamos a duracao para nao baixar algo enorme.
@@ -2452,12 +2975,12 @@ def _download_listing_video(url: str, work: Path) -> Path | None:
         "-i", url,
     ]
     tail_copy = [
-        "-map", "0:v:0", "-c:v", "copy", "-an", "-t", "120",
+        "-map", "0:v:0", "-c:v", "copy", "-an", "-t", str(max_seconds),
         "-movflags", "+faststart", str(destination),
     ]
     tail_transcode = [
         "-map", "0:v:0", "-c:v", "libx264", "-preset", "veryfast",
-        "-crf", "20", "-an", "-t", "120",
+        "-crf", "20", "-an", "-t", str(max_seconds),
         "-movflags", "+faststart", str(destination),
     ]
     downloaded = False
@@ -2492,7 +3015,7 @@ def _download_listing_video(url: str, work: Path) -> Path | None:
 def fetch_listing_media(
     product: Any,
     work: Path,
-) -> tuple[Path | None, list[Path]]:
+) -> tuple[Path | None, list[Path], dict[str, Any]]:
     """Baixa a midia REAL do anuncio: (video_ou_None, lista_de_fotos)."""
     detail_url = clean(getattr(product, "detail_url", ""), 1500)
 
@@ -2500,12 +3023,34 @@ def fetch_listing_media(
     if detail_url.startswith(("https://", "http://")):
         html = _fetch_listing_html(detail_url)
 
-    image_urls: list[str] = []
-    video_url: str | None = None
+    image_urls = [
+        clean(url, 1500)
+        for url in (getattr(product, "listing_image_urls", None) or [])
+        if clean(url, 1500).startswith(("https://", "http://"))
+    ]
+    explicit_video_url = clean(
+        getattr(product, "listing_video_url", ""),
+        1500,
+    )
+    video_url: str | None = (
+        explicit_video_url
+        if explicit_video_url.startswith(("https://", "http://"))
+        else None
+    )
 
     if html:
-        image_urls = _extract_listing_image_urls(html)
-        video_url = _extract_listing_video_url(html)
+        for extracted_url in _extract_listing_image_urls(html):
+            if extracted_url not in image_urls:
+                image_urls.append(extracted_url)
+        if not video_url:
+            video_url = _extract_listing_video_url(
+                html,
+                platform=clean(
+                    getattr(product, "platform", "amazon"),
+                    30,
+                ).lower(),
+                expected_asin=_amazon_asin_from_url(detail_url),
+            )
 
     # Garante pelo menos a foto principal que ja temos do produto.
     main_image = clean(getattr(product, "image_url", ""), 1500)
@@ -2514,17 +3059,77 @@ def fetch_listing_media(
         if cleaned_main not in image_urls:
             image_urls.insert(0, cleaned_main)
 
+    platform = clean(getattr(product, "platform", "amazon"), 30).lower()
+    max_video_seconds = 60 if platform == "shopee" else 120
     images: list[Path] = []
-    for index, url in enumerate(image_urls[:10]):
-        destination = work / f"listing_photo_{index:02d}.jpg"
-        if _download_listing_image(url, destination):
-            images.append(destination)
-
     video_path: Path | None = None
+    media_metadata: dict[str, Any] = {}
     if video_url:
-        video_path = _download_listing_video(video_url, work)
+        video_path = _download_listing_video(
+            video_url,
+            work,
+            max_seconds=max_video_seconds,
+        )
+        if video_path:
+            media_metadata = {
+                "source_url": video_url,
+                "channel": f"{clean(getattr(product, 'platform', 'listing'), 30)}_listing",
+                "license_status": "listing_product_media",
+                "media_kind": "listing_video",
+            }
 
-    return video_path, images
+    if video_path is None and platform == "shopee":
+        official = _official_page_video(product, html)
+        if official:
+            official_video_url, official_page_url = official
+            video_path = _download_listing_video(
+                official_video_url,
+                work,
+                max_seconds=max_video_seconds,
+            )
+            if video_path:
+                media_metadata = {
+                    "source_url": official_page_url,
+                    "channel": "official_product_page",
+                    "license_status": "official_product_page_media",
+                    "media_kind": "official_page_video",
+                }
+
+    if video_path is None and platform == "shopee":
+        authorized = _authorized_exact_video(product, work)
+        if authorized:
+            video_path = Path(authorized["path"])
+            media_metadata = {
+                "source_url": authorized.get("source_url") or "",
+                "channel": authorized.get("channel") or "",
+                "license_status": authorized.get("license_status") or "",
+                "media_kind": "authorized_exact_product_video",
+            }
+
+    if (
+        video_path is not None
+        and not _affiliate_video_matches_product(
+            product,
+            video_path,
+            structurally_verified=(
+                platform == "amazon"
+                and media_metadata.get("media_kind") == "listing_video"
+            ),
+        )
+    ):
+        video_path.unlink(missing_ok=True)
+        video_path = None
+        media_metadata = {}
+
+    # Imagens sao o ultimo recurso: so baixa a galeria quando nenhum video
+    # oficial, autorizado, exato e em HD foi encontrado.
+    if video_path is None:
+        for index, url in enumerate(image_urls[:10]):
+            destination = work / f"listing_photo_{index:02d}.jpg"
+            if _download_listing_image(url, destination):
+                images.append(destination)
+
+    return video_path, images, media_metadata
 
 
 def _build_listing_slideshow(
@@ -2616,7 +3221,7 @@ def render_listing_video(
     work_directory: Path,
     report: Any = None,
 ) -> dict[str, Any]:
-    """Renderiza o reel de afiliado usando a MIDIA REAL do anuncio da Amazon."""
+    """Renderiza o reel de afiliado usando a midia real/licenciada do anuncio."""
     def _sub(fraction: float, stage: str) -> None:
         if not report:
             return
@@ -2627,6 +3232,13 @@ def render_listing_video(
 
     if not audio_path.is_file():
         raise BrollError("A narracao nao foi criada.")
+    if (
+        clean(getattr(product, "platform", "amazon"), 30).lower() == "shopee"
+        and not bool(getattr(product, "media_rights_confirmed", False))
+    ):
+        raise BrollError(
+            "A midia Shopee nao possui confirmacao de direito de reutilizacao."
+        )
 
     audio, final_duration = normalize_audio(
         audio_path,
@@ -2634,7 +3246,10 @@ def render_listing_video(
     )
 
     _sub(0.25, "baixando fotos e vídeo do anúncio")
-    video_path, images = fetch_listing_media(product, work_directory)
+    video_path, images, media_metadata = fetch_listing_media(
+        product,
+        work_directory,
+    )
 
     used_video = video_path is not None
     if used_video:
@@ -2749,21 +3364,30 @@ def render_listing_video(
 
     _sub(0.85, "vídeo renderizado")
 
+    platform = clean(getattr(product, "platform", "amazon"), 30).lower()
+    default_source_url = detail_url
     return {
         "broll": {
-            "source_url": detail_url,
+            "source_url": media_metadata.get("source_url") or default_source_url,
             "title": clean(getattr(product, "title", ""), 300),
-            "channel": "amazon_listing",
+            "channel": media_metadata.get("channel") or f"{platform}_listing",
             "source_duration_seconds": video_duration,
-            "license_status": "amazon_product_media",
+            "license_status": (
+                media_metadata.get("license_status")
+                or f"{platform}_product_media_confirmed"
+            ),
             "media_kind": (
-                "listing_video" if used_video else "listing_photos"
+                media_metadata.get("media_kind")
+                or ("listing_video" if used_video else "listing_photos")
             ),
             "photo_count": 0 if used_video else len(images),
         },
         "broll_path": str(visual_source),
         "story": story,
-        "narration": narration_from_story(story),
+        "narration": narration_from_story(
+            story,
+            clean(getattr(product, "marketplace_code", ""), 10),
+        ),
         "duration_seconds": video_duration,
         "static_image_fallback": not used_video,
         "original_audio_used": False,

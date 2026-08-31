@@ -404,6 +404,7 @@ def list_available_products():
 class CategorySelection(BaseModel):
     marketplace_code: str
     category: str
+    platform: str = "amazon"
     quantity: int = Field(default=1, ge=0, le=50)
 
 
@@ -470,6 +471,25 @@ def trigger_auto_affiliate_stop():
 @router.get("/jobs/auto-affiliate/status")
 def auto_affiliate_status():
     return job_service.auto_affiliate_status()
+
+
+@router.post("/jobs/teen-diary-auto/start")
+def trigger_teen_diary_auto_start():
+    """Liga o Diario da Bela automatico: gera e publica 1 episodio novo por
+    dia (2x/dia, em horarios fixos configurados via ATLAS_TEEN_DIARY_TIMES),
+    continuando a memoria da historia, ate o usuario parar."""
+    return job_service.start_teen_diary_auto()
+
+
+@router.post("/jobs/teen-diary-auto/stop")
+def trigger_teen_diary_auto_stop():
+    """Desliga o agendamento automatico do Diario da Bela."""
+    return job_service.stop_teen_diary_auto()
+
+
+@router.get("/jobs/teen-diary-auto/status")
+def teen_diary_auto_status():
+    return job_service.teen_diary_auto_status()
 
 
 @router.post("/jobs/collect-metrics")
@@ -621,6 +641,11 @@ class CreateCampaignRequest(BaseModel):
     budget_amount: float = Field(ge=0)
     budget_period: str = Field(default="weekly")  # weekly | monthly
     publish: bool = False
+    confirm_spend: bool = False
+
+
+class LaunchCampaignRequest(BaseModel):
+    confirm_spend: bool = False
 
 
 @router.get("/marketing/status")
@@ -649,8 +674,11 @@ def marketing_recommendation(
 
 
 @router.get("/marketing/campaigns")
-def marketing_campaigns(db: Session = Depends(get_db)):
-    return MarketingService(db).list_campaigns()
+def marketing_campaigns(
+    sync_meta: bool = False,
+    db: Session = Depends(get_db),
+):
+    return MarketingService(db).list_campaigns(sync_meta=sync_meta)
 
 
 @router.post("/marketing/campaigns")
@@ -664,14 +692,26 @@ def marketing_create_campaign(
             budget_amount=body.budget_amount,
             budget_period=body.budget_period,
             publish=body.publish,
+            confirm_spend=body.confirm_spend,
         )
+    except PermissionError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
 
 
 @router.post("/marketing/campaigns/{campaign_id}/launch")
-def marketing_launch_campaign(campaign_id: int, db: Session = Depends(get_db)):
+def marketing_launch_campaign(
+    campaign_id: int,
+    body: LaunchCampaignRequest,
+    db: Session = Depends(get_db),
+):
     try:
-        return MarketingService(db).launch_campaign(campaign_id)
+        return MarketingService(db).launch_campaign(
+            campaign_id,
+            confirm_spend=body.confirm_spend,
+        )
+    except PermissionError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))

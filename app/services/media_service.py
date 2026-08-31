@@ -127,6 +127,8 @@ _neutralize_imagemagick_policy()
 import edge_tts
 import yt_dlp
 
+from app.automation.spoken_units import expand_spoken_units
+
 # ffmpeg embutido (via imageio-ffmpeg) para que o yt-dlp consiga juntar
 # video+audio dos trailers HD mesmo sem ffmpeg instalado no sistema Windows.
 try:
@@ -254,6 +256,10 @@ class NoFaithfulBackgroundError(RuntimeError):
     proximo assunto em alta, em vez de usar stock footage ou gradiente."""
 
 
+class NoFaithfulVoiceError(RuntimeError):
+    """Fish Audio não entregou uma narração válida para o Trending."""
+
+
 class MediaService:
     def __init__(self):
         # Resolve a pasta de saida SEMPRE pela raiz do projeto (ATLAS_ROOT ou a
@@ -295,6 +301,12 @@ class MediaService:
         self.min_source_video_seconds = self._env_float("ATLAS_MIN_SOURCE_VIDEO_SECONDS", 20.0)
 
         self.min_asset_match_score = self._env_float("ATLAS_MIN_ASSET_MATCH_SCORE", 0.34)
+        # Criterio APERTADO para confiar no MAIS VISTO quando o juiz de visao
+        # cai: exige match de titulo/descricao ALTO e um minimo de views (senao
+        # "mais visto" nao diz muito). Evita assunto ambiguo (ex.: "roblox stock"
+        # trazendo gameplay de Roblox).
+        self.trust_ai_down_min_score = self._env_float("ATLAS_YOUTUBE_TRUST_MIN_SCORE", 0.80)
+        self.trust_ai_down_min_views = self._env_int("ATLAS_YOUTUBE_TRUST_MIN_VIEWS", 10000)
         # Piso minimo para o "fallback": abaixo disso preferimos um fundo
         # editorial limpo a usar um video sem relacao com o assunto.
         self.asset_match_floor = self._env_float("ATLAS_ASSET_MATCH_FLOOR", 0.25)
@@ -328,7 +340,7 @@ class MediaService:
 
         # Duração obrigatória para publicação
         self.min_video_duration_seconds = self._env_float("ATLAS_MIN_VIDEO_DURATION_SECONDS", 60.0)
-        self.max_video_duration_seconds = self._env_float("ATLAS_MAX_VIDEO_DURATION_SECONDS", 120.0)
+        self.max_video_duration_seconds = self._env_float("ATLAS_MAX_VIDEO_DURATION_SECONDS", 180.0)
 
         self.default_voice = os.getenv("ATLAS_DEFAULT_VOICE", "en-US-ChristopherNeural")
         self.visual_risk_reduction = self._env_bool("ATLAS_VISUAL_RISK_REDUCTION", True)
@@ -1356,6 +1368,92 @@ class MediaService:
     # B + C: YOUTUBE POR ASSUNTO (MAIS VISTOS) + MONTAGEM SINCRONIZADA
     # ============================================================
 
+    def _youtube_api_search_recent(self, query: str, days: int = 2, limit: int = 20):
+        """YouTube Data API: videos do assunto publicados nos ultimos 'days' dias,
+        ORDENADOS POR VIEWS (mais vistos primeiro). Retorna entradas no formato do
+        yt_dlp (title, description, view_count, url, duration) p/ reaproveitar o
+        mesmo pipeline/filtro. Sem YOUTUBE_API_KEY -> [] (cai na busca padrao)."""
+        import datetime
+        import urllib.parse
+        import urllib.request
+
+        key = (os.getenv("YOUTUBE_API_KEY") or "").strip()
+        if not key or not query:
+            return []
+
+        def _dur(iso):
+            m = re.match(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", iso or "")
+            if not m:
+                return 0
+            h, mi, se = (int(x) if x else 0 for x in m.groups())
+            return h * 3600 + mi * 60 + se
+
+        after = (
+            datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=max(1, days))
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")
+        try:
+            sp = urllib.parse.urlencode({
+                "part": "snippet", "q": query, "type": "video", "order": "viewCount",
+                "publishedAfter": after, "maxResults": str(min(max(limit, 5), 50)), "key": key,
+            })
+            sreq = urllib.request.Request(
+                "https://www.googleapis.com/youtube/v3/search?" + sp,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+            )
+            sdata = json.loads(urllib.request.urlopen(sreq, timeout=15).read().decode("utf-8"))
+        except Exception as exc:  # noqa: BLE001
+            print(f"\u26a0\ufe0f [MEDIA ENGINE] YouTube API search falhou: {exc}")
+            return []
+        ids = [
+            it.get("id", {}).get("videoId")
+            for it in sdata.get("items", [])
+            if it.get("id", {}).get("videoId")
+        ]
+        if not ids:
+            return []
+        try:
+            vp = urllib.parse.urlencode({
+                "part": "snippet,statistics,contentDetails", "id": ",".join(ids[:50]), "key": key,
+            })
+            vreq = urllib.request.Request(
+                "https://www.googleapis.com/youtube/v3/videos?" + vp,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+            )
+            vdata = json.loads(urllib.request.urlopen(vreq, timeout=15).read().decode("utf-8"))
+        except Exception as exc:  # noqa: BLE001
+            print(f"\u26a0\ufe0f [MEDIA ENGINE] YouTube API stats falhou: {exc}")
+            return []
+        entries = []
+        for it in vdata.get("items", []):
+            sn = it.get("snippet", {}) or {}
+            st = it.get("statistics", {}) or {}
+            cd = it.get("contentDetails", {}) or {}
+            vid = it.get("id")
+            if not vid or sn.get("liveBroadcastContent", "none") != "none":
+                continue
+            try:
+                views = int(st.get("viewCount", 0))
+            except Exception:  # noqa: BLE001
+                views = 0
+            entries.append({
+                "id": vid,
+                "url": f"https://www.youtube.com/watch?v={vid}",
+                "title": sn.get("title", "") or "",
+                "description": sn.get("description", "") or "",
+                "view_count": views,
+                "duration": _dur(cd.get("duration")),
+                "upload_date": str(sn.get("publishedAt", ""))[:10].replace("-", ""),
+                "channel": sn.get("channelTitle", "") or "",
+            })
+        entries.sort(key=lambda e: e.get("view_count", 0), reverse=True)
+        if entries:
+            top = entries[0]
+            print(
+                f"\U0001f195 [MEDIA ENGINE] YouTube API: {len(entries)} v\u00eddeo(s) dos \u00faltimos {days} dia(s) "
+                f"sobre '{query}' | mais visto: '{top['title']}' ({top['view_count']:,} views)"
+            )
+        return entries
+
     def _youtube_ranked_by_views(self, topic: str, trend_source: str = "", focus_query: str = "", required_terms=None):
         """Procura no YouTube pelo ASSUNTO EXATO e devolve os candidatos
         ORDENADOS POR VIEWS (mais vistos primeiro), ja filtrando lixo/facecam e
@@ -1386,31 +1484,44 @@ class MediaService:
             f"'{query_topic}' (ordenando pelos MAIS VISTOS)..."
         )
 
-        search_query = f"ytsearch{self.search_result_limit}:{query_topic}"
-        search_opts = {
-            "quiet": True,
-            "no_warnings": True,
-            "extract_flat": True,
-            "noplaylist": True,
-            "default_search": f"ytsearch{self.search_result_limit}",
-            "socket_timeout": 10,
-            "retries": 1,
-            "extractor_retries": 1,
-            "http_headers": {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                "Accept-Language": "en-US,en;q=0.9,pt-BR;q=0.8",
-            },
-        }
-        _apply_ytdlp_cookies(search_opts)
-        _apply_ytdlp_bot_bypass(search_opts)
+        # RECENCIA: primeiro tenta a YouTube Data API -> videos RECENTES (<= N dias,
+        # padrao 2) e MAIS VISTOS sobre o assunto. Sem chave/sem resultado recente,
+        # cai na busca padrao do yt_dlp (que ordena so por views, sem recencia).
+        entries = []
+        recency_days = self._env_int("ATLAS_YOUTUBE_RECENCY_DAYS", 2)
+        if recency_days > 0:
+            entries = self._youtube_api_search_recent(query_topic, days=recency_days, limit=self.search_result_limit)
+            if not entries:
+                wide = self._env_int("ATLAS_YOUTUBE_RECENCY_FALLBACK_DAYS", 7)
+                if wide > recency_days:
+                    entries = self._youtube_api_search_recent(query_topic, days=wide, limit=self.search_result_limit)
 
-        try:
-            with yt_dlp.YoutubeDL(search_opts) as ydl:
-                info = ydl.extract_info(search_query, download=False)
-            entries = info.get("entries", []) if info else []
-        except Exception as e:
-            print(f"⚠️ [MEDIA ENGINE] Busca no YouTube falhou: {e}")
-            return [], query_topic
+        if not entries:
+            search_query = f"ytsearch{self.search_result_limit}:{query_topic}"
+            search_opts = {
+                "quiet": True,
+                "no_warnings": True,
+                "extract_flat": True,
+                "noplaylist": True,
+                "default_search": f"ytsearch{self.search_result_limit}",
+                "socket_timeout": 10,
+                "retries": 1,
+                "extractor_retries": 1,
+                "http_headers": {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    "Accept-Language": "en-US,en;q=0.9,pt-BR;q=0.8",
+                },
+            }
+            _apply_ytdlp_cookies(search_opts)
+            _apply_ytdlp_bot_bypass(search_opts)
+
+            try:
+                with yt_dlp.YoutubeDL(search_opts) as ydl:
+                    info = ydl.extract_info(search_query, download=False)
+                entries = info.get("entries", []) if info else []
+            except Exception as e:
+                print(f"⚠️ [MEDIA ENGINE] Busca no YouTube falhou: {e}")
+                return [], query_topic
 
         candidates = []
         for entry in entries:
@@ -1739,23 +1850,25 @@ class MediaService:
                         # descartamos. Para voltar a confiar no titulo quando a IA cai,
                         # defina ATLAS_YOUTUBE_TRUST_WHEN_AI_DOWN=true.
                         if self._env_bool("ATLAS_YOUTUBE_TRUST_WHEN_AI_DOWN", False):
-                            strong = float(candidate.get("score", 0.0)) >= self.min_asset_match_score
+                            score_val = float(candidate.get("score", 0.0))
+                            strong = score_val >= self.trust_ai_down_min_score
+                            popular = int(views or 0) >= self.trust_ai_down_min_views
                             title_norm = self._normalize_text(title)
                             faithful = (not required_terms) or any(
                                 self._normalize_text(t) in title_norm for t in required_terms
                             )
-                            approved = bool(strong and faithful)
+                            approved = bool(strong and faithful and popular)
                             if approved:
                                 print(
                                     f"⚠️ [MEDIA ENGINE] IA de visão indisponível "
-                                    f"({detail.get('reason', '')}). ATLAS_YOUTUBE_TRUST_WHEN_AI_DOWN "
-                                    f"ligado: aceitando '{title}' pelo título (assunto EXATO + "
-                                    f"{views:,} views, match {candidate.get('score', 0.0):.2f})."
+                                    f"({detail.get('reason', '')}). Confiando no MAIS VISTO fiel "
+                                    f"(match {score_val:.2f} ≥ {self.trust_ai_down_min_score:.2f}, "
+                                    f"{views:,} views ≥ {self.trust_ai_down_min_views:,}): aceitando '{title}'."
                                 )
                             else:
                                 print(
-                                    f"🚫 [MEDIA ENGINE] IA indisponível e título não confiável "
-                                    f"(match {candidate.get('score', 0.0):.2f}); descartado."
+                                    f"🚫 [MEDIA ENGINE] IA indisponível; '{title}' não é confiável o "
+                                    f"bastante (match {score_val:.2f}, {views:,} views); segue procurando."
                                 )
                         else:
                             approved = False
@@ -2231,7 +2344,15 @@ class MediaService:
         raw = re.sub(r"\s+([,.!?;:])", r"\1", raw)
         return raw.strip()
 
-    def _synthesize_voice(self, script: str, voice_name: str, temp_dir: str, language: str = ""):
+    def _synthesize_voice(
+        self,
+        script: str,
+        voice_name: str,
+        temp_dir: str,
+        language: str = "",
+        *,
+        allow_edge_fallback: bool = True,
+    ):
         voice_name = voice_name or self.default_voice
         output_path = os.path.join(temp_dir, "voice.mp3")
 
@@ -2239,11 +2360,17 @@ class MediaService:
         # do TTS. Sem isso, o Fish (e o Edge) transformam as quebras de linha do
         # roteiro em PAUSAS, deixando a fala "picotada" em vez de continua.
         script = self._normalize_tts_text(script)
+        script = expand_spoken_units(script, language)
 
         # Fish Audio primeiro (voz natural escolhida pelo usuario); Edge = fallback.
         fish_path, fish_duration = self._try_fish_voice(script, language, output_path)
         if fish_path:
             return fish_path, fish_duration
+        if not allow_edge_fallback:
+            raise NoFaithfulVoiceError(
+                "Fish Audio não entregou uma voz válida; Edge TTS está "
+                "desativado para Trending."
+            )
 
         print(f"🎙️ [MEDIA ENGINE] Sintetizando VOZ NEURAL ({voice_name})...")
 
@@ -2721,6 +2848,11 @@ class MediaService:
             or kwargs.get("db_content")
             or kwargs.get("item")
         )
+        # Servico de roteiro (ContentService) usado para RE-GERAR/EXPANDIR o
+        # script quando a narracao sai curta demais (ver produce_video). E um
+        # kwarg PROPRIO - nao confundir com "content" (dados do video).
+        content_service = kwargs.get("content_service") or kwargs.get("script_service")
+        strict_no_fallback = bool(kwargs.get("strict_no_fallback", False))
 
         content_id = kwargs.get("content_id") or kwargs.get("id") or kwargs.get("video_id") or kwargs.get("record_id")
         topic = kwargs.get("topic") or kwargs.get("theme") or kwargs.get("subject") or kwargs.get("title") or kwargs.get("trend")
@@ -2852,6 +2984,8 @@ class MediaService:
             "voice_name": voice_name,
             "trend_source": trend_source,
             "base_hashtags": base_hashtags,
+            "content_service": content_service,
+            "strict_no_fallback": strict_no_fallback,
         }
 
     # ============================================================
@@ -2926,6 +3060,8 @@ class MediaService:
         voice_name = data["voice_name"]
         trend_source = data["trend_source"]
         base_hashtags = data["base_hashtags"]
+        content_service = data["content_service"]
+        strict_no_fallback = data["strict_no_fallback"]
         print(f"\n🎬 [MEDIA ENGINE] Iniciando produção do vídeo ID {content_id}")
     
         temp_dir = tempfile.mkdtemp(prefix="atlas_media_")
@@ -2941,6 +3077,7 @@ class MediaService:
                     voice_name=voice_name,
                     temp_dir=temp_dir,
                     language=language,
+                    allow_edge_fallback=not strict_no_fallback,
                 )
     
                 if voice_duration >= (self.min_video_duration_seconds - 5.0):
@@ -2951,21 +3088,40 @@ class MediaService:
                     f"Precisamos de pelo menos {self.min_video_duration_seconds - 5.0:.1f}s."
                 )
     
-                if content and hasattr(content, "script_service"):
-                    content_service = content.script_service
-                else:
-                    content_service = None
-    
-                if not content_service:
-                    print("⚠️ [MEDIA ENGINE] Serviço de roteiro não atrelado. Usando áudio como está para avaliação.")
+                if attempt >= max_attempts or not content_service:
+                    print("⚠️ [MEDIA ENGINE] Sem mais tentativas (ou serviço de roteiro não disponível). Usando áudio como está para avaliação.")
                     break
     
-                script = content_service.generate_script(
-                    topic=topic,
-                    language=language,
-                    trend_source=trend_source,
-                    research_context=content_service.last_research_context,
-                )
+                # Calcula quantas PALAVRAS sao necessarias com base na
+                # velocidade REAL desta voz (medida agora, no audio que saiu
+                # curto) - em vez de so pedir "de novo" e torcer para a IA
+                # escrever mais desta vez. Pede com 15% de margem sobre o
+                # alvo COMFORTAVEL (min_video_duration_seconds, nao so o piso
+                # de -5s), para nao cair de novo perto do limite.
+                words_used = len(re.findall(r"\b\w+\b", script))
+                original_min_words = content_service.target_min_words
+                if words_used > 0 and voice_duration > 0:
+                    words_per_second = words_used / voice_duration
+                    safe_words = int(math.ceil(
+                        self.min_video_duration_seconds * words_per_second * 1.15
+                    ))
+                    content_service.target_min_words = max(original_min_words, safe_words)
+                    print(
+                        f"🔧 [MEDIA ENGINE] Voz mede ~{words_per_second * 60:.0f} palavras/min "
+                        f"neste idioma/voz. Pedindo roteiro com pelo menos "
+                        f"{content_service.target_min_words} palavras desta vez."
+                    )
+
+                try:
+                    script = content_service.generate_script(
+                        topic=topic,
+                        language=language,
+                        trend_source=trend_source,
+                        research_context=content_service.last_research_context,
+                        allow_fallback=not strict_no_fallback,
+                    )
+                finally:
+                    content_service.target_min_words = original_min_words
     
             # === FONTE DE FUNDO (B + C) ===
             # PRIMEIRO procura no YouTube pelo assunto EXATO, pega os MAIS
@@ -2996,6 +3152,11 @@ class MediaService:
                     youtube_validated = True
 
             if background_path is None:
+                if strict_no_fallback:
+                    raise NoFaithfulBackgroundError(
+                        "Nenhuma montagem real e fiel do YouTube foi encontrada; "
+                        "stock e fundo genérico estão desativados para Trending."
+                    )
                 background_path, media_provenance = self._acquire_safe_background(
                     topic=topic,
                     temp_dir=temp_dir,
@@ -3033,12 +3194,46 @@ class MediaService:
                         f"(gratis) ou ative ATLAS_SAFE_FALLBACK_BACKGROUND=1."
                     )
             elif youtube_validated:
-                # A montagem do YouTube JA foi validada clipe a clipe (mais
-                # vistos + imagens + narracao) dentro de _acquire_youtube_montage;
-                # nao precisa repassar pelo portao de stock.
+                # Revalida a montagem COMPLETA contra o roteiro final. A checagem
+                # por clipe nao basta quando um titulo vago faz a IA derivar para
+                # outro assunto durante a escrita da narracao.
+                try:
+                    from app.services import trend_relevance_service
+
+                    approved, detail = trend_relevance_service.passes_gate(
+                        background_path,
+                        topic,
+                        narration=script,
+                        media_words=" ".join(
+                            filter(
+                                None,
+                                [
+                                    str(trend_source or ""),
+                                    str(hook_text or ""),
+                                ],
+                            )
+                        ),
+                    )
+                except Exception as gate_exc:
+                    if self._env_bool(
+                        "ATLAS_TREND_RELEVANCE_STRICT",
+                        True,
+                    ):
+                        raise NoFaithfulBackgroundError(
+                            "Portao visual final da montagem falhou; "
+                            f"video descartado: {gate_exc}"
+                        ) from gate_exc
+                    approved, detail = True, {}
+
+                if not approved:
+                    raise NoFaithfulBackgroundError(
+                        "A montagem final nao corresponde ao roteiro/assunto "
+                        f"(confianca {detail.get('confidence', 0)}%; "
+                        f"{detail.get('reason', 'sem detalhe')})."
+                    )
                 print(
-                    "✅ [MEDIA ENGINE] Montagem do YouTube já validada (mais "
-                    "vistos + imagens + narração). Seguindo para composição."
+                    "✅ [MEDIA ENGINE] Montagem do YouTube revalidada contra "
+                    f"o roteiro final ({detail.get('confidence', 0)}%)."
                 )
             else:
                 # ===== PORTAO DE RELEVANCIA (palavras + imagens do clipe) =====
@@ -3060,8 +3255,18 @@ class MediaService:
                         media_words=getattr(self, "_last_stock_query", ""),
                     )
                 except Exception as gate_exc:
-                    # Falha inesperada no portao nao deve travar a producao.
-                    print(f"⚠️ [MEDIA ENGINE] Portao de relevancia falhou ({gate_exc}); seguindo sem bloquear.")
+                    if self._env_bool(
+                        "ATLAS_TREND_RELEVANCE_STRICT",
+                        True,
+                    ):
+                        raise NoFaithfulBackgroundError(
+                            "Portao de relevancia falhou em modo estrito; "
+                            f"video descartado: {gate_exc}"
+                        ) from gate_exc
+                    print(
+                        "⚠️ [MEDIA ENGINE] Portao de relevancia falhou "
+                        f"({gate_exc}); modo nao estrito permite continuar."
+                    )
                     approved, detail = True, {}
 
                 if not approved:

@@ -277,8 +277,13 @@ def generate(prompt: str) -> dict:
 
 async def _tts_async(text: str, voice: str, output_path: str) -> None:
     import edge_tts
+    from app.automation.spoken_units import expand_spoken_units
 
-    communicate = edge_tts.Communicate(text, voice)
+    language = "en" if str(voice or "").lower().startswith("en") else "pt"
+    communicate = edge_tts.Communicate(
+        expand_spoken_units(text, language),
+        voice,
+    )
     await communicate.save(output_path)
 
 

@@ -43,6 +43,71 @@ _MARKET_URLS = {
     },
 }
 
+# ----------------------------------------------------------------
+# Tipos de relatorio baixados do Amazon Associates.
+#
+# "Produto relacionado" traz CLIQUES por produto (clicks). "Ganhos/Pedidos"
+# traz as VENDAS de verdade (quantidade, receita, comissao). O robo baixa OS
+# DOIS: sem o relatorio de Ganhos a pagina "Vendas Amazon" mostrava sempre 0
+# vendas, mesmo com milhares de cliques.
+#
+# A Amazon muda o layout/IDs do modal com o tempo, entao cada tipo tem uma
+# LISTA de seletores candidatos (o robo usa o primeiro que existir). Da para
+# sobrescrever pelo .env sem mexer no codigo:
+#   ATLAS_AMAZON_CLICKS_CHECKBOX_SELECTOR=...
+#   ATLAS_AMAZON_EARNINGS_CHECKBOX_SELECTOR=...
+# ----------------------------------------------------------------
+_CLICKS_CHECKBOX_CANDIDATES = (
+    "#report-download-program-commission-creativeasin label",
+    "#report-download-program-commission-creativeasin",
+    "label[for='report-download-program-commission-creativeasin']",
+)
+_EARNINGS_CHECKBOX_CANDIDATES = (
+    # NAO existe um relatorio separado de "Ganhos/Pedidos" no modal da Amazon:
+    # o relatorio de COMISSAO ja traz as vendas/comissao, e "Produto relacionado"
+    # (clicks acima) e uma das formas de agrupa-lo. Baixamos tambem a visao por
+    # "ID de rastreamento", que mostra comissao/cliques por campanha/link - util
+    # para ver QUAL video/link converteu.
+    "#report-download-program-commission-trackingid label",
+    "#report-download-program-commission-trackingid",
+    "label[for='report-download-program-commission-trackingid']",
+)
+
+
+def _report_specs() -> tuple[dict, ...]:
+    """Relatorios a baixar, em ordem. Cada um traz seus seletores candidatos
+    (com override opcional pelo .env)."""
+    clicks_override = (os.getenv("ATLAS_AMAZON_CLICKS_CHECKBOX_SELECTOR") or "").strip()
+    earnings_override = (os.getenv("ATLAS_AMAZON_EARNINGS_CHECKBOX_SELECTOR") or "").strip()
+    clicks_selectors = (
+        (clicks_override,) + _CLICKS_CHECKBOX_CANDIDATES
+        if clicks_override
+        else _CLICKS_CHECKBOX_CANDIDATES
+    )
+    earnings_selectors = (
+        (earnings_override,) + _EARNINGS_CHECKBOX_CANDIDATES
+        if earnings_override
+        else _EARNINGS_CHECKBOX_CANDIDATES
+    )
+    return (
+        {
+            "key": "clicks",
+            "label": "Produto relacionado (cliques)",
+            "selectors": clicks_selectors,
+            # O relatorio de cliques ja funcionava; se ele falhar, e erro real.
+            "required": True,
+        },
+        {
+            "key": "trackingid",
+            "label": "Comissao por ID de rastreamento (campanhas)",
+            "selectors": earnings_selectors,
+            # Visao complementar do mesmo relatorio de comissao; se o layout
+            # mudar, nao derruba o ciclo - vira aviso.
+            "required": False,
+        },
+    )
+
+
 # Textos que indicam que a Amazon pediu algo que o robo NAO consegue
 # responder sozinho (captcha, verificacao em duas etapas, senha errada).
 _BLOCKED_HINTS = (
@@ -186,33 +251,33 @@ def _login(page, market: str, email: str, password: str) -> None:
     _submit_login_form(page, market, email, password)
 
 
-def _download_earnings_report(page, market: str, email: str, password: str) -> tuple[str, bytes]:
-    """Abre a pagina de 'Relatorios', pede um relatorio de ganhos (CSV, por
-    produto) do periodo padrao (ultimos 30 dias) e baixa o arquivo assim
-    que a Amazon terminar de gera-lo.
+def _select_first_present(page, selectors) -> bool:
+    """Clica no primeiro seletor da lista que existir na pagina. Retorna
+    True se conseguiu clicar em algum; False se nenhum candidato apareceu
+    (ex.: a Amazon nao oferece aquele tipo de relatorio nesta conta/layout)."""
+    for sel in selectors:
+        if not sel:
+            continue
+        loc = page.locator(sel)
+        try:
+            if loc.count() > 0:
+                loc.first.click()
+                return True
+        except Exception:  # noqa: BLE001
+            continue
+    return False
 
-    O fluxo real da Amazon Associates e assincrono:
-      1. Clica em "Fazer download de relatorios" (abre um popover/modal).
-      2. Marca o formato CSV e pelo menos um tipo de relatorio (usamos
-         "Produto relacionado", que traz o detalhamento por produto/ASIN).
-      3. Clica em "Gerar Relatorios".
-      4. A Amazon processa em segundo plano; o modal mostra uma tabela
-         "Relatorios Disponiveis" com o status ("Preparando...", depois um
-         link "Fazer download"). Precisamos clicar em "Atualizar" ate o
-         link aparecer.
-      5. O arquivo baixado e um .zip com um unico CSV dentro - extraimos
-         esse CSV e devolvemos os bytes (o amazon_report_service ja sabe
-         ler CSV puro).
-    """
+
+def _open_report_modal(page, market: str, email: str, password: str) -> None:
+    """Abre a pagina de Relatorios (reautenticando se preciso) e o modal de
+    download. Levanta AmazonLoginBlocked/RuntimeError em caso de problema."""
     urls = _MARKET_URLS[market]
     page.goto(urls["reports"], wait_until="domcontentloaded", timeout=45000)
     page.wait_for_timeout(2000)
 
     # A Amazon Associates exige autenticacao RECENTE (max_auth_age=3600) para
     # abrir os Relatorios: mesmo com a sessao salva "logada", ela redireciona
-    # para /ap/signin pedindo a SENHA de novo (tela do usuario lembrado). Sem
-    # tratar isso, o robo seguia sem logar e nao achava o botao de download -
-    # era a causa do "nao conseguiu conectar no US". Re-autentica e volta.
+    # para /ap/signin pedindo a SENHA de novo. Re-autentica e volta.
     if _on_signin_page(page):
         _submit_login_form(page, market, email, password)
         page.goto(urls["reports"], wait_until="domcontentloaded", timeout=45000)
@@ -238,15 +303,10 @@ def _download_earnings_report(page, market: str, email: str, password: str) -> t
     launcher.click()
     page.wait_for_timeout(1000)
 
-    # Formato CSV (o clique no <label> evita o icone customizado da Amazon
-    # que fica por cima do <input type=radio> de verdade).
-    csv_label = page.locator("#report-download-export-format-csv label")
-    csv_label.click()
 
-    # Tipo de relatorio: "Produto relacionado" (detalhamento por produto).
-    product_checkbox = page.locator("#report-download-program-commission-creativeasin label")
-    product_checkbox.click()
-
+def _generate_and_fetch(page, market: str) -> tuple[str, bytes]:
+    """Depois de marcar o formato/tipo no modal, clica em 'Gerar Relatorios',
+    espera ficar pronto e baixa o arquivo. Extrai o CSV de dentro do zip."""
     generate_btn = page.locator("#ac-reports-download-generate-osp-announce")
     generate_btn.click()
     page.wait_for_timeout(2000)
@@ -289,7 +349,7 @@ def _download_earnings_report(page, market: str, email: str, password: str) -> t
         except Exception:
             pass
 
-    suggested = download.suggested_filename or f"amazon_{market.lower()}_earnings.zip"
+    suggested = download.suggested_filename or f"amazon_{market.lower()}_report.zip"
     if suggested.lower().endswith(".zip") or raw[:2] == b"PK":
         with zipfile.ZipFile(io.BytesIO(raw)) as z:
             names = z.namelist()
@@ -302,6 +362,58 @@ def _download_earnings_report(page, market: str, email: str, password: str) -> t
         data = raw
 
     return filename, data
+
+
+def _download_single_report(
+    page, market: str, email: str, password: str, spec: dict
+) -> tuple[str, bytes]:
+    """Baixa UM relatorio (tipo definido por `spec`). Abre o modal do zero,
+    marca CSV + a caixa do tipo pedido e baixa. Levanta se o tipo nao existir
+    e for obrigatorio."""
+    _open_report_modal(page, market, email, password)
+
+    # Formato CSV (o clique no <label> evita o icone customizado da Amazon
+    # que fica por cima do <input type=radio> de verdade).
+    csv_label = page.locator("#report-download-export-format-csv label")
+    if csv_label.count() > 0:
+        csv_label.click()
+
+    picked = _select_first_present(page, spec["selectors"])
+    if not picked:
+        raise LookupError(
+            f"Nao encontrei a opcao de relatorio '{spec['label']}' no modal da "
+            "Amazon (o layout/ID pode ter mudado). Ajuste o seletor via .env "
+            "(ATLAS_AMAZON_EARNINGS_CHECKBOX_SELECTOR) se necessario."
+        )
+
+    return _generate_and_fetch(page, market)
+
+
+def _download_all_reports(
+    page, market: str, email: str, password: str
+) -> tuple[list[tuple[str, bytes]], list[str]]:
+    """Baixa TODOS os relatorios configurados (cliques + ganhos). Retorna
+    (lista de (filename, data), lista de avisos). Relatorios opcionais que
+    falharem viram aviso, sem derrubar o ciclo."""
+    downloads: list[tuple[str, bytes]] = []
+    warnings: list[str] = []
+    for spec in _report_specs():
+        try:
+            filename, data = _download_single_report(page, market, email, password, spec)
+            if data:
+                downloads.append((filename, data))
+            else:
+                warnings.append(f"{spec['label']}: download veio vazio.")
+        except (AmazonLoginBlocked, RuntimeError):
+            # Erros de login/geracao sao criticos para o relatorio obrigatorio.
+            if spec.get("required"):
+                raise
+            warnings.append(f"{spec['label']}: nao foi possivel baixar (segue sem ele).")
+        except LookupError as exc:
+            if spec.get("required"):
+                raise RuntimeError(str(exc))
+            warnings.append(str(exc))
+    return downloads, warnings
 
 
 
@@ -331,6 +443,7 @@ def fetch_report_for_market(db: Session, market: str) -> dict:
     session_file = _session_path(market)
     storage_state = str(session_file) if session_file.exists() else None
 
+    download_warnings: list[str] = []
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
@@ -345,7 +458,12 @@ def fetch_report_for_market(db: Session, market: str) -> dict:
             page = context.new_page()
             try:
                 _login(page, market, email, password)
-                filename, data = _download_earnings_report(page, market, email, password)
+                # Baixa OS DOIS relatorios: cliques (Produto relacionado) E
+                # ganhos/pedidos (vendas). Sem o de ganhos, a pagina "Vendas
+                # Amazon" mostrava sempre 0 vendas.
+                downloads, download_warnings = _download_all_reports(
+                    page, market, email, password
+                )
                 # Sessao deu certo: salva os cookies para o proximo clique
                 # em "Atualizar" nao precisar logar de novo.
                 context.storage_state(path=str(session_file))
@@ -363,21 +481,38 @@ def fetch_report_for_market(db: Session, market: str) -> dict:
     except Exception as exc:  # noqa: BLE001
         return {"market": market, "ok": False, "error": f"Falha ao acessar a Amazon: {exc}"}
 
-    if not data:
+    if not downloads:
         return {"market": market, "ok": False, "error": "O download do relatorio veio vazio."}
 
-    try:
-        result = amazon_report_service.import_report(db, filename, data, default_market=market)
-    except ValueError as exc:
-        return {"market": market, "ok": False, "error": str(exc)}
+    imported = 0
+    skipped = 0
+    total_rows = 0
+    import_errors: list[str] = []
+    for filename, data in downloads:
+        if not data:
+            continue
+        try:
+            result = amazon_report_service.import_report(
+                db, filename, data, default_market=market
+            )
+            imported += result.get("imported", 0)
+            skipped += result.get("skipped", 0)
+            total_rows += result.get("total_rows", 0)
+        except ValueError as exc:
+            import_errors.append(f"{filename}: {exc}")
 
+    if imported == 0 and import_errors:
+        return {"market": market, "ok": False, "error": "; ".join(import_errors)}
+
+    notes = download_warnings + import_errors
     return {
         "market": market,
         "ok": True,
-        "error": None,
-        "imported": result["imported"],
-        "skipped": result["skipped"],
-        "total_rows": result["total_rows"],
+        "error": "; ".join(notes) if notes else None,
+        "imported": imported,
+        "skipped": skipped,
+        "total_rows": total_rows,
+        "reports_downloaded": len(downloads),
     }
 
 

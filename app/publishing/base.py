@@ -41,6 +41,19 @@ def resolve_video_path(video_path: str) -> str:
     return os.path.abspath(os.path.join(project_root(), video_path))
 
 
+def local_media_file(video_path: str) -> str:
+    """Caminho absoluto do arquivo LOCAL do video, se ele existir no disco.
+
+    Usado para enviar os BYTES direto para a Meta (rupload.facebook.com), sem
+    depender de uma URL publica. Isso elimina de vez o erro recorrente
+    "403 Restricted by robots.txt": a Meta so bate em robots.txt quando PRECISA
+    BAIXAR o video de uma URL (Supabase esgotado -> fallback para o tunel
+    trycloudflare, que bloqueia bots). Enviando os bytes, nao ha URL para a Meta
+    buscar e o robots.txt deixa de importar."""
+    full = resolve_video_path(video_path)
+    return full if full and os.path.isfile(full) else ""
+
+
 def public_media_url(video_path: str) -> str:
     """URL publica do video, servida pela rota /media/{path}.
 
@@ -64,6 +77,13 @@ def public_media_url(video_path: str) -> str:
         # Nunca quebra a publicacao por causa do armazenamento; cai no fallback.
         pass
     base = (os.getenv("ATLAS_PUBLIC_BASE_URL") or "http://localhost:8000").rstrip("/")
+    from app.services.public_tunnel_service import (
+        ensure_public_base_url,
+        is_public_https_url,
+    )
+
+    if not is_public_https_url(base):
+        base = ensure_public_base_url() or base
     rel = str(video_path).replace("\\", "/").lstrip("/")
     return f"{base}/media/{rel}"
 

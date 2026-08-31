@@ -8,17 +8,20 @@ from urllib.parse import quote_plus, urlparse
 import argparse
 import asyncio
 import csv
+import hashlib
 import importlib
 import inspect
 import json
 import os
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 import uuid
 
 import requests
+from sqlalchemy.exc import SQLAlchemyError
 
 # Importações do novo motor de vídeo autorizado
 from app.automation.authorized_broll_renderer import (
@@ -30,26 +33,28 @@ from app.automation.authorized_broll_renderer import (
     render_listing_video,
     render_live_variant,
 )
+from app.automation.spoken_units import expand_spoken_units
 
 WIDTH = 1080
 HEIGHT = 1920
 FPS = 30
 
-ROOT = Path(
-    os.getenv("ATLAS_ROOT", "/atlas")
-).resolve()
+_DEFAULT_ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.getenv("ATLAS_ROOT") or _DEFAULT_ROOT).resolve()
 
 if not (ROOT / "app").exists():
-    ROOT = Path.cwd().resolve()
+    ROOT = _DEFAULT_ROOT
 
 STORAGE = ROOT / "storage"
 AMAZON_STORAGE = STORAGE / "amazon"
 IMPORT_DIRECTORY = AMAZON_STORAGE / "imports"
+SHOPEE_IMPORT_DIRECTORY = STORAGE / "shopee" / "imports"
 SEED_PATH = AMAZON_STORAGE / "seed_terms.json"
 
 VIDEO_STORAGE = STORAGE / "video_pipeline"
 OUTPUT_DIRECTORY = VIDEO_STORAGE / "outputs"
 WORK_DIRECTORY = VIDEO_STORAGE / "work"
+RESERVATION_DIRECTORY = VIDEO_STORAGE / "reservations"
 
 APPROVAL_DIRECTORY = STORAGE / "approval"
 PENDING_DIRECTORY = APPROVAL_DIRECTORY / "pending"
@@ -58,6 +63,7 @@ FAILED_DIRECTORY = APPROVAL_DIRECTORY / "failed"
 
 STATE_PATH = VIDEO_STORAGE / "pipeline_state.json"
 LOG_PATH = VIDEO_STORAGE / "pipeline.jsonl"
+BIO_HISTORY_PATH = ROOT / "docs" / "_bio_historico.json"
 
 MARKETS = {
     "BR": {
@@ -107,6 +113,9 @@ FISH_VOICE_OVERRIDES: dict[str, dict[str, str]] = {
 
 # alternate (padrao) | random | female | male
 FISH_VOICE_MODE = os.getenv("AFFILIATE_TTS_VOICE_MODE", "alternate").strip().lower()
+GENERATE_LIVE_VARIANTS = os.getenv(
+    "ATLAS_GENERATE_LIVE_VARIANTS", "false"
+).strip().lower() in {"1", "true", "yes", "on"}
 
 _FISH_VOICE_CACHE: dict[str, dict[str, str]] = {}
 
@@ -140,6 +149,15 @@ class Product:
     currency: str = ""
     category: str = ""
     category_label: str = ""
+    platform: str = "amazon"
+    language: str = ""
+    listing_video_url: str = ""
+    listing_image_urls: list[str] = field(default_factory=list)
+    media_rights_confirmed: bool = False
+    commission_rate: float = 0.0
+    commission_amount: float = 0.0
+    sold_count: int = 0
+    official_page_urls: list[str] = field(default_factory=list)
 
 
 # Nomes amigaveis das categorias (slug -> rotulo exibido no painel).
@@ -161,6 +179,28 @@ CATEGORY_LABELS: dict[str, str] = {
     "musical-instruments": "Instrumentos Musicais",
     "appliances": "Eletrodomesticos",
 }
+
+
+def _load_dynamic_category_labels() -> None:
+    """Carrega rotulos de categorias descobertas dinamicamente pelo scraper
+    (storage/amazon/imports/category_labels.json) e MESCLA no mapa fixo, sem
+    sobrescrever os rotulos curados. Assim, quando a Amazon traz uma categoria
+    NOVA, ela ja aparece no painel/bio com um nome, sem precisar editar codigo."""
+    try:
+        path = ROOT / "storage" / "amazon" / "imports" / "category_labels.json"
+        if not path.is_file():
+            return
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for slug, label in (data or {}).items():
+            slug = str(slug or "").strip().lower()
+            label = str(label or "").strip()
+            if slug and label and slug not in CATEGORY_LABELS:
+                CATEGORY_LABELS[slug] = label
+    except Exception:  # noqa: BLE001
+        pass
+
+
+_load_dynamic_category_labels()
 
 
 def _category_of(item: dict[str, Any]) -> tuple[str, str]:
@@ -220,6 +260,7 @@ def ensure_directories() -> None:
         IMPORT_DIRECTORY,
         OUTPUT_DIRECTORY,
         WORK_DIRECTORY,
+        RESERVATION_DIRECTORY,
         PENDING_DIRECTORY,
         PROCESSED_DIRECTORY,
         FAILED_DIRECTORY,
@@ -285,8 +326,11 @@ def discover_products() -> list[Product]:
     products: list[Product] = []
 
     # Importa JSONs (Scrapers / OMNI)
-    if IMPORT_DIRECTORY.exists():
-        for path in IMPORT_DIRECTORY.glob("*.json"):
+    import_directories = (IMPORT_DIRECTORY, SHOPEE_IMPORT_DIRECTORY)
+    for import_directory in import_directories:
+        if not import_directory.exists():
+            continue
+        for path in import_directory.glob("*.json"):
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
                 if isinstance(data, list):
@@ -310,6 +354,37 @@ def discover_products() -> list[Product]:
                                 rating=number(item.get("rating")),
                                 review_count=integer(item.get("review_count"), 0)
                                 or None,
+                                platform=clean_text(
+                                    item.get("platform") or "amazon", 30
+                                ).lower(),
+                                language=clean_text(item.get("language"), 20),
+                                listing_video_url=clean_text(
+                                    item.get("listing_video_url"), 2000
+                                ),
+                                listing_image_urls=[
+                                    clean_text(url, 2000)
+                                    for url in (item.get("listing_image_urls") or [])
+                                    if clean_text(url, 2000)
+                                ],
+                                media_rights_confirmed=bool(
+                                    item.get("media_rights_confirmed")
+                                ),
+                                commission_rate=float(
+                                    number(item.get("commission_rate")) or 0.0
+                                ),
+                                commission_amount=float(
+                                    number(item.get("commission_amount")) or 0.0
+                                ),
+                                sold_count=integer(item.get("sold_count"), 0),
+                                official_page_urls=[
+                                    clean_text(url, 2000)
+                                    for url in (
+                                        item.get("official_page_urls") or []
+                                    )
+                                    if clean_text(url, 2000).startswith(
+                                        ("https://", "http://")
+                                    )
+                                ],
                             )
                         )
             except Exception as e:
@@ -327,6 +402,75 @@ def discover_products() -> list[Product]:
     return products
 
 
+_ASIN_URL_PATTERN = re.compile(
+    r"/(?:dp|gp/product)/([A-Z0-9]{10})(?:[/?]|$)",
+    re.IGNORECASE,
+)
+
+
+def _normalize_market(value: Any, url: str = "") -> str:
+    market = str(value or "").strip().upper().replace("-", "_")
+    if market in {"BR", "AMAZON_BR"}:
+        return "BR"
+    if market in {"US", "AMAZON_US"}:
+        return "US"
+    host = urlparse(str(url or "")).netloc.lower()
+    if "amazon.com.br" in host:
+        return "BR"
+    if "amazon.com" in host:
+        return "US"
+    return ""
+
+
+def _real_asin_from_url(url: str) -> str:
+    match = _ASIN_URL_PATTERN.search(str(url or ""))
+    return match.group(1).upper() if match else ""
+
+
+def _stable_asin(real_asin: str) -> str:
+    digest = hashlib.sha1(real_asin.upper().encode("utf-8")).hexdigest().upper()
+    return "M" + digest[:9]
+
+
+def _identity_keys(
+    market: Any,
+    asin: Any,
+    url: str = "",
+) -> set[tuple[str, str]]:
+    normalized_market = _normalize_market(market, url)
+    identifiers = {
+        str(asin or "").strip().upper(),
+        _real_asin_from_url(url),
+    }
+    real_asin = _real_asin_from_url(url)
+    if not real_asin:
+        candidate = str(asin or "").strip().upper()
+        if re.fullmatch(r"[A-Z0-9]{10}", candidate) and not re.fullmatch(r"M[0-9A-F]{9}", candidate):
+            real_asin = candidate
+    if real_asin:
+        identifiers.add(_stable_asin(real_asin))
+    return {
+        (normalized_market, identifier)
+        for identifier in identifiers
+        if normalized_market and identifier
+    }
+
+
+def product_identity_keys(product: Product) -> set[tuple[str, str]]:
+    return _identity_keys(
+        product.marketplace_code,
+        product.asin,
+        product.detail_url,
+    )
+
+
+def product_was_processed(
+    product: Product,
+    processed_keys: set[tuple[str, str]],
+) -> bool:
+    return bool(product_identity_keys(product) & processed_keys)
+
+
 def pending_product_keys() -> set[tuple[str, str]]:
     keys: set[tuple[str, str]] = set()
 
@@ -342,13 +486,226 @@ def pending_product_keys() -> set[tuple[str, str]]:
                 data = json.loads(path.read_text(encoding="utf-8"))
                 market = data.get("marketplace_code")
                 asin = data.get("asin")
+                url = data.get("affiliate_url") or data.get("detail_url") or ""
+                keys.update(_identity_keys(market, asin, url))
+            except (OSError, json.JSONDecodeError, TypeError) as error:
+                log_event("DEDUP_SIDECAR_READ_FAILED", file=str(path), error=str(error))
 
-                if market and asin:
-                    keys.add((market, asin))
-            except Exception:
-                pass
+    if BIO_HISTORY_PATH.is_file():
+        try:
+            history = json.loads(BIO_HISTORY_PATH.read_text(encoding="utf-8"))
+            records = history.values() if isinstance(history, dict) else []
+            for record in records:
+                if not isinstance(record, dict):
+                    continue
+                keys.update(
+                    _identity_keys(
+                        record.get("market"),
+                        record.get("asin"),
+                        record.get("url") or "",
+                    )
+                )
+        except (OSError, json.JSONDecodeError, TypeError) as error:
+            log_event("DEDUP_BIO_HISTORY_READ_FAILED", error=str(error))
+
+    try:
+        from app.core.database import SessionLocal
+        from app.models.dashboard import ShortLink
+
+        db = SessionLocal()
+        try:
+            for link in db.query(
+                ShortLink.marketplace,
+                ShortLink.asin,
+                ShortLink.target_url,
+            ).all():
+                keys.update(
+                    _identity_keys(
+                        link.marketplace,
+                        link.asin,
+                        link.target_url or "",
+                    )
+                )
+        finally:
+            db.close()
+    except (ImportError, OSError, RuntimeError, SQLAlchemyError) as error:
+        log_event("DEDUP_DATABASE_READ_FAILED", error=str(error))
+        sqlite_path = ROOT / "atlas_local.db"
+        if sqlite_path.is_file():
+            try:
+                with sqlite3.connect(sqlite_path) as connection:
+                    rows = connection.execute(
+                        "SELECT marketplace, asin, target_url FROM short_links"
+                    ).fetchall()
+                for market, asin, target_url in rows:
+                    keys.update(_identity_keys(market, asin, target_url or ""))
+            except (OSError, sqlite3.Error) as sqlite_error:
+                log_event(
+                    "DEDUP_SQLITE_FALLBACK_FAILED",
+                    database=str(sqlite_path),
+                    error=str(sqlite_error),
+                )
+
+    if RESERVATION_DIRECTORY.is_dir():
+        cutoff = datetime.now(timezone.utc).timestamp() - (12 * 60 * 60)
+        for path in RESERVATION_DIRECTORY.glob("*.json"):
+            try:
+                if path.stat().st_mtime < cutoff:
+                    path.unlink(missing_ok=True)
+                    continue
+                data = json.loads(path.read_text(encoding="utf-8"))
+                keys.update(
+                    _identity_keys(
+                        data.get("marketplace_code"),
+                        data.get("asin"),
+                        data.get("detail_url") or "",
+                    )
+                )
+            except (OSError, json.JSONDecodeError, TypeError) as error:
+                log_event("DEDUP_RESERVATION_READ_FAILED", file=str(path), error=str(error))
 
     return keys
+
+
+def canonical_product_key(product: Product) -> tuple[str, str]:
+    market = _normalize_market(product.marketplace_code, product.detail_url)
+    real_asin = _real_asin_from_url(product.detail_url)
+    identifier = (
+        _stable_asin(real_asin)
+        if real_asin
+        else str(product.asin or "").strip().upper()
+    )
+    return market, identifier
+
+
+def _reservation_path(product: Product) -> Path:
+    market, identifier = canonical_product_key(product)
+    return RESERVATION_DIRECTORY / f"{market}-{identifier}.json"
+
+
+def reserve_product(product: Product) -> bool:
+    RESERVATION_DIRECTORY.mkdir(parents=True, exist_ok=True)
+    path = _reservation_path(product)
+    payload = json.dumps(
+        {
+            "marketplace_code": product.marketplace_code,
+            "asin": product.asin,
+            "detail_url": product.detail_url,
+            "reserved_at": utc_now(),
+            "pid": os.getpid(),
+        },
+        ensure_ascii=False,
+    ).encode("utf-8")
+    try:
+        descriptor = os.open(
+            path,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+        )
+    except FileExistsError:
+        return False
+    try:
+        os.write(descriptor, payload)
+    finally:
+        os.close(descriptor)
+    return True
+
+
+def release_product_reservation(product: Product) -> None:
+    try:
+        _reservation_path(product).unlink(missing_ok=True)
+    except OSError as error:
+        log_event(
+            "PRODUCT_RESERVATION_RELEASE_FAILED",
+            market=product.marketplace_code,
+            asin=product.asin,
+            error=str(error),
+        )
+
+
+def _parse_price(price_display: Any, market: str = "") -> float | None:
+    """Extrai o valor numerico de um preco exibido, tratando formatos BR e US.
+
+    Ex.: 'R$ 1.299,90' -> 1299.90 ; '$1,299.99' -> 1299.99 ; 'R$ 49,90' -> 49.90.
+    Retorna None quando nao ha numero legivel."""
+    if price_display is None:
+        return None
+    if isinstance(price_display, (int, float)):
+        return float(price_display)
+
+    text = str(price_display)
+    # Mantem apenas digitos e separadores decimais/milhar.
+    cleaned = re.sub(r"[^0-9.,]", "", text)
+    if not cleaned:
+        return None
+
+    has_dot = "." in cleaned
+    has_comma = "," in cleaned
+    if has_dot and has_comma:
+        # O ULTIMO separador e o decimal; o outro e milhar.
+        if cleaned.rfind(",") > cleaned.rfind("."):
+            cleaned = cleaned.replace(".", "").replace(",", ".")
+        else:
+            cleaned = cleaned.replace(",", "")
+    elif has_comma:
+        # So virgula: decimal se houver exatamente 1-2 casas no fim (ex.: 49,90).
+        if re.search(r",\d{1,2}$", cleaned):
+            cleaned = cleaned.replace(",", ".")
+        else:
+            cleaned = cleaned.replace(",", "")
+    elif has_dot:
+        # So ponto: decimal se 1-2 casas no fim; senao e milhar (ex.: 1.299).
+        if not re.search(r"\.\d{1,2}$", cleaned):
+            cleaned = cleaned.replace(".", "")
+
+    try:
+        value = float(cleaned)
+    except ValueError:
+        return None
+    return value if value > 0 else None
+
+
+# Faixa de preco de COMPRA POR IMPULSO por mercado (converte melhor com
+# trafego frio de rede social). Configuravel por .env. Fora da faixa o
+# produto perde pontos; muito caro perde bastante.
+def _impulse_band(market: str) -> tuple[float, float, float]:
+    """Retorna (ideal_min, ideal_max, teto_caro) por mercado."""
+    mk = (market or "").strip().upper()
+    if mk == "BR":
+        lo = float(os.getenv("ATLAS_AFFILIATE_IMPULSE_MIN_BRL", "30"))
+        hi = float(os.getenv("ATLAS_AFFILIATE_IMPULSE_MAX_BRL", "150"))
+        cap = float(os.getenv("ATLAS_AFFILIATE_EXPENSIVE_BRL", "500"))
+    else:
+        lo = float(os.getenv("ATLAS_AFFILIATE_IMPULSE_MIN_USD", "12"))
+        hi = float(os.getenv("ATLAS_AFFILIATE_IMPULSE_MAX_USD", "45"))
+        cap = float(os.getenv("ATLAS_AFFILIATE_EXPENSIVE_USD", "150"))
+    return lo, hi, cap
+
+
+def _price_conversion_bonus(product: Product) -> float:
+    """Pontos de conversao baseados no preco: cheio dentro da faixa de impulso,
+    caindo fora dela e com penalidade para itens caros (baixa conversao em
+    trafego frio). Preco desconhecido = neutro (0)."""
+    price = _parse_price(product.price_display, product.marketplace_code)
+    if price is None:
+        return 0.0
+    lo, hi, cap = _impulse_band(product.marketplace_code)
+    full = float(os.getenv("ATLAS_AFFILIATE_IMPULSE_BONUS", "8"))
+
+    if lo <= price <= hi:
+        return full
+    if price < lo:
+        # Muito barato: ainda bom, leve reducao proporcional.
+        ratio = price / lo if lo > 0 else 1.0
+        return round(full * max(0.4, ratio), 2)
+    # Acima da faixa ideal: decai ate o teto; acima do teto, penalidade.
+    if price <= cap:
+        span = max(1.0, cap - hi)
+        decay = (price - hi) / span  # 0 -> 1
+        return round(full * (1.0 - decay), 2)
+    # Item caro: penalidade crescente (converte muito mal por impulso).
+    over = (price - cap) / cap
+    penalty = float(os.getenv("ATLAS_AFFILIATE_EXPENSIVE_PENALTY", "6"))
+    return round(-min(penalty, penalty * min(2.0, over + 0.5)), 2)
 
 
 def score_product(product: Product) -> None:
@@ -359,18 +716,32 @@ def score_product(product: Product) -> None:
         score += (product.rating - 3.5) * 2.0
     if product.discount_percent:
         score += min(product.discount_percent / 5.0, 5.0)
+    if product.platform == "shopee":
+        score += min(max(product.sold_count, 0) ** 0.5, 50.0)
+        score += min(max(product.commission_rate, 0.0) * 0.5, 20.0)
+        score += min(max(product.commission_amount, 0.0) * 0.2, 20.0)
+    # Fator de CONVERSAO por preco (compra por impulso). Pode ser desligado
+    # com ATLAS_AFFILIATE_IMPULSE_MODE=0.
+    if os.getenv("ATLAS_AFFILIATE_IMPULSE_MODE", "1").strip().lower() not in ("0", "false", "no", "off"):
+        score += _price_conversion_bonus(product)
     product.score = max(0.0, round(score, 1))
 
 
 def select_products(products: list[Product], maximum: int) -> list[Product]:
     already_processed = pending_product_keys()
-
-    eligible = [
-        p for p in products
-        if (p.marketplace_code, p.asin) not in already_processed
-        and p.title
-        and p.detail_url
-    ]
+    eligible: list[Product] = []
+    seen: set[tuple[str, str]] = set()
+    for product in products:
+        key = canonical_product_key(product)
+        if (
+            key in seen
+            or product_was_processed(product, already_processed)
+            or not product.title
+            or not product.detail_url
+        ):
+            continue
+        seen.add(key)
+        eligible.append(product)
 
     for p in eligible:
         score_product(p)
@@ -379,7 +750,7 @@ def select_products(products: list[Product], maximum: int) -> list[Product]:
     return eligible[:maximum]
 
 
-def available_products() -> list[dict[str, Any]]:
+def available_products(platform: str = "amazon") -> list[dict[str, Any]]:
     """Lista os produtos ainda NAO transformados em video, agrupados por
     mercado + categoria, para o painel montar a selecao.
 
@@ -389,15 +760,23 @@ def available_products() -> list[dict[str, Any]]:
     separadamente."""
     already_processed = pending_product_keys()
 
-    groups: dict[tuple[str, str], dict[str, Any]] = {}
+    groups: dict[tuple[str, str, str], dict[str, Any]] = {}
+    seen_products: set[tuple[str, str]] = set()
 
     # A ordem em que a Amazon devolve os produtos ja reflete os mais vendidos
     # (primeiro = mais vendido). Guardamos essa posicao para desempate.
+    wanted_platform = (platform or "amazon").strip().lower()
     for position, product in enumerate(discover_products()):
+        if product.platform != wanted_platform:
+            continue
         if not product.title or not product.detail_url:
             continue
-        if (product.marketplace_code, product.asin) in already_processed:
+        if product_was_processed(product, already_processed):
             continue
+        product_key = canonical_product_key(product)
+        if product_key in seen_products:
+            continue
+        seen_products.add(product_key)
 
         # Numero de avaliacoes = melhor sinal de "quanto vendeu" (quanto mais
         # gente avaliou, mais vendeu). Estrelas servem de desempate.
@@ -406,12 +785,13 @@ def available_products() -> list[dict[str, Any]]:
 
         slug = product.category or "outros"
         label = product.category_label or CATEGORY_LABELS.get(slug, slug)
-        key = (product.marketplace_code, slug)
+        key = (product.platform, product.marketplace_code, slug)
 
         group = groups.get(key)
         if group is None:
             group = {
                 "marketplace_code": product.marketplace_code,
+                "platform": product.platform,
                 "category": slug,
                 "category_label": label,
                 "count": 0,
@@ -440,6 +820,14 @@ def available_products() -> list[dict[str, Any]]:
                 "reviews": reviews,
                 "rating": rating,
                 "position": position,
+                "platform": product.platform,
+                "commission_rate": product.commission_rate,
+                "commission_amount": product.commission_amount,
+                "sold_count": product.sold_count,
+                "ready_for_video": bool(
+                    product.media_rights_confirmed
+                    and (product.listing_video_url or product.image_url)
+                ),
             }
         )
 
@@ -459,6 +847,7 @@ def available_products() -> list[dict[str, Any]]:
     ordered = sorted(
         groups.values(),
         key=lambda g: (
+            g["platform"],
             g["marketplace_code"],
             -g["best_reviews"],
             -g["best_rating"],
@@ -914,6 +1303,10 @@ def create_voice(
         " ",
         cleaned_text,
     ).strip()
+    cleaned_text = expand_spoken_units(
+        cleaned_text,
+        MARKETS[product.marketplace_code]["language"],
+    )
 
     if len(cleaned_text) < 80:
         log_event(
@@ -1138,7 +1531,10 @@ def create_video_for_product(product: Product, report: Any = None) -> dict[str, 
     work.mkdir(parents=True, exist_ok=True)
 
     slug = re.sub(r"[^a-zA-Z0-9_-]+", "-", product.title).strip("-")[:50]
-    output_name = f"{product.marketplace_code.lower()}-{product.asin.lower()}-{slug}-{job_id[:8]}"
+    output_name = (
+        f"{product.platform}-{product.marketplace_code.lower()}-"
+        f"{product.asin.lower()}-{slug}-{job_id[:8]}"
+    )
     
     video_path = OUTPUT_DIRECTORY / (output_name + ".mp4")
     approval_path = PENDING_DIRECTORY / (output_name + ".json")
@@ -1147,7 +1543,7 @@ def create_video_for_product(product: Product, report: Any = None) -> dict[str, 
         # Usa as funcoes do authorized_broll_renderer
         _sub(0.03, "gerando roteiro")
         story = make_story(product)
-        narration = narration_from_story(story)
+        narration = narration_from_story(story, product.marketplace_code)
 
         _sub(0.12, "gerando narração (voz)")
         audio_path = work / "voice.mp3"
@@ -1174,11 +1570,22 @@ def create_video_for_product(product: Product, report: Any = None) -> dict[str, 
             "created_at": utc_now(),
             "publication_executed": False,
             "marketplace_code": product.marketplace_code,
-            "marketplace": MARKETS[product.marketplace_code]["marketplace"],
-            "partner_tag": MARKETS[product.marketplace_code]["partner_tag"],
+            "marketplace": (
+                "shopee.com.br"
+                if product.platform == "shopee"
+                else MARKETS[product.marketplace_code]["marketplace"]
+            ),
+            "platform": product.platform,
+            "partner_tag": (
+                ""
+                if product.platform == "shopee"
+                else MARKETS[product.marketplace_code]["partner_tag"]
+            ),
             "asin": product.asin,
             "title": product.title,
             "affiliate_url": product.detail_url,
+            "platform": product.platform,
+            "image_url": product.image_url,
             "source": product.source,
             "opportunity_score": product.score,
             "video_path": str(video_path),
@@ -1205,6 +1612,8 @@ def create_video_for_product(product: Product, report: Any = None) -> dict[str, 
                     "title": product.title,
                     "marketplace_code": product.marketplace_code,
                     "affiliate_url": product.detail_url,
+                    "platform": product.platform,
+                    "image_url": product.image_url,
                     "language": MARKETS[product.marketplace_code]["language"],
                     "job_id": job_id,
                     "created_at": utc_now(),
@@ -1238,10 +1647,27 @@ def create_video_for_product(product: Product, report: Any = None) -> dict[str, 
         # ------------------------------------------------------------------
         try:
             broll_path = broll_metadata.get("broll_path")
-            if broll_path and Path(broll_path).is_file():
+            if product.platform == "shopee":
+                log_event(
+                    "LIVE_VARIANT_SKIPPED",
+                    job_id=job_id,
+                    asin=product.asin,
+                    error="Shopee gera somente video de afiliado.",
+                )
+            elif not GENERATE_LIVE_VARIANTS:
+                log_event(
+                    "LIVE_VARIANT_SKIPPED",
+                    job_id=job_id,
+                    asin=product.asin,
+                    error="geracao desativada por ATLAS_GENERATE_LIVE_VARIANTS",
+                )
+            elif broll_path and Path(broll_path).is_file():
                 _sub(0.90, "gerando versão live")
                 live_story = make_story(product, mode="live")
-                live_narration = narration_from_story(live_story)
+                live_narration = narration_from_story(
+                    live_story,
+                    product.marketplace_code,
+                )
                 live_audio = work / "voice_live.mp3"
 
                 if create_voice(product, live_narration, live_audio, stream="live"):
@@ -1326,10 +1752,20 @@ def run_pipeline(
     selection: list[dict[str, Any]] | None = None,
     progress_callback: Any = None,
     on_video_ready: Any = None,
+    stop_flag: Any = None,
 ) -> dict[str, Any]:
     ensure_directories()
     started_at = utc_now()
     target = max(1, maximum_videos)
+
+    def _stop_requested() -> bool:
+        # stop_flag e um threading.Event opcional (usado pelo robo automatico
+        # de afiliados). So verificamos ENTRE um video e outro - nunca no meio
+        # da geracao de um video, para nao corromper um arquivo pela metade.
+        try:
+            return bool(stop_flag is not None and stop_flag.is_set())
+        except Exception:
+            return False
 
     def _report(percent: float, title: str = "", stage: str = "") -> None:
         """Envia a % de progresso para o painel (igual aos reels)."""
@@ -1367,20 +1803,14 @@ def run_pipeline(
     unique: dict[tuple[str, str], Product] = {}
 
     for product in products:
-        key = (
-            product.marketplace_code,
-            product.asin,
-        )
+        key = canonical_product_key(product)
         if key not in unique:
             unique[key] = product
 
     eligible = [
         product
         for product in unique.values()
-        if (
-            product.marketplace_code,
-            product.asin,
-        ) not in already_processed
+        if not product_was_processed(product, already_processed)
         and product.title
         and product.detail_url
     ]
@@ -1408,36 +1838,58 @@ def run_pipeline(
         "oster",
     )
 
-    eligible.sort(
-        key=lambda product: (
-            any(
-                term in product.title.lower()
-                for term in priority_terms
+    # Ordenacao: por padrao (modo impulso), o SCORE de conversao (que ja
+    # inclui o fator de preco) manda, e a marca conhecida vira so desempate.
+    # Isso evita empurrar itens caros de marca (que convertem mal em trafego
+    # frio) para o topo. Com ATLAS_AFFILIATE_IMPULSE_MODE=0 volta ao antigo
+    # (marca conhecida primeiro).
+    impulse_mode = os.getenv("ATLAS_AFFILIATE_IMPULSE_MODE", "1").strip().lower() not in ("0", "false", "no", "off")
+    if impulse_mode:
+        eligible.sort(
+            key=lambda product: (
+                product.score,
+                any(term in product.title.lower() for term in priority_terms),
+                product.review_count or 0,
             ),
-            product.score,
-            product.review_count or 0,
-        ),
-        reverse=True,
-    )
+            reverse=True,
+        )
+    else:
+        eligible.sort(
+            key=lambda product: (
+                any(
+                    term in product.title.lower()
+                    for term in priority_terms
+                ),
+                product.score,
+                product.review_count or 0,
+            ),
+            reverse=True,
+        )
 
     # Se veio uma selecao do painel (categorias + quantidade por categoria),
     # filtra os produtos elegiveis para gerar apenas o que foi escolhido.
     if selection:
-        wanted: dict[tuple[str, str], int] = {}
+        wanted: dict[tuple[str, str, str], int] = {}
         for item in selection:
             try:
                 market = str(item.get("marketplace_code") or "").strip().upper()
                 category = str(item.get("category") or "").strip().lower()
+                platform = str(item.get("platform") or "amazon").strip().lower()
                 quantity = int(item.get("quantity") or 0)
             except Exception:
                 continue
             if market and category and quantity > 0:
-                wanted[(market, category)] = wanted.get((market, category), 0) + quantity
+                selection_key = (platform, market, category)
+                wanted[selection_key] = wanted.get(selection_key, 0) + quantity
 
         picked: list[Product] = []
-        used: dict[tuple[str, str], int] = {}
+        used: dict[tuple[str, str, str], int] = {}
         for product in eligible:
-            key = (product.marketplace_code, product.category or "outros")
+            key = (
+                product.platform,
+                product.marketplace_code,
+                product.category or "outros",
+            )
             cap = wanted.get(key)
             if not cap or used.get(key, 0) >= cap:
                 continue
@@ -1456,6 +1908,31 @@ def run_pipeline(
     for product in eligible:
         if len(completed) >= target:
             break
+
+        if _stop_requested():
+            # Robo automatico foi desligado enquanto este lote rodava: para
+            # AGORA, entre um video e outro (o video atual ja terminou),
+            # em vez de seguir gerando o resto do lote sem ninguem saber.
+            _report(
+                int(len(completed) / max(1, target) * 100),
+                "",
+                "Robô parado pelo usuário — lote interrompido.",
+            )
+            log_event(
+                "PIPELINE_STOPPED_BY_USER",
+                videos_created=len(completed),
+                target_videos=target,
+            )
+            break
+
+        if not reserve_product(product):
+            log_event(
+                "PRODUCT_SKIPPED_ALREADY_RESERVED",
+                market=product.marketplace_code,
+                asin=product.asin,
+                title=product.title,
+            )
+            continue
 
         attempted += 1
 
@@ -1507,8 +1984,12 @@ def run_pipeline(
                 title=product.title,
                 reason=str(error),
             )
+        finally:
+            release_product_reservation(product)
 
-    _report(100, "", "Vídeos gerados")
+    stopped_early = _stop_requested()
+    if not stopped_early:
+        _report(100, "", "Vídeos gerados")
 
     if completed:
         status = "AWAITING_APPROVAL"
@@ -1531,6 +2012,7 @@ def run_pipeline(
         "failures": failures,
         "publication_executed": False,
         "static_image_fallback": False,
+        "stopped_by_user": stopped_early,
         "pending_approval": [
             {
                 "marketplace_code": record["marketplace_code"],

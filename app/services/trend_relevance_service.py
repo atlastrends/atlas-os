@@ -309,6 +309,72 @@ def _gemini_vision_judge(prompt: str, frames: list) -> Optional[str]:
     return None
 
 
+_VISION_PROVIDERS_CACHE: Optional[list] = None
+_VISION_PROVIDERS_BUILT = False
+
+
+def _get_vision_providers() -> list:
+    """Provedores de visao compativeis com OpenAI (gpt-4o etc.), construidos 1x."""
+    global _VISION_PROVIDERS_CACHE, _VISION_PROVIDERS_BUILT
+    if not _VISION_PROVIDERS_BUILT:
+        try:
+            from app.services.ai_providers import build_vision_providers
+            _VISION_PROVIDERS_CACHE = build_vision_providers("TREND RELEVANCE")
+        except Exception as exc:  # noqa: BLE001
+            print(f"⚠️ [TREND RELEVANCE] Falha ao preparar visao extra: {exc}")
+            _VISION_PROVIDERS_CACHE = []
+        _VISION_PROVIDERS_BUILT = True
+    return _VISION_PROVIDERS_CACHE or []
+
+
+def _openai_vision_judge(prompt: str, frames: list) -> Optional[str]:
+    """Juiz de visao via OpenAI/ChatGPT (gpt-4o) e outros multimodais.
+    Fallback para quando o Gemini esta sem cota (429). Envia os frames como
+    imagens e espera o mesmo JSON {relevant, confidence, reason}."""
+    providers = _get_vision_providers()
+    if not providers or not frames:
+        return None
+
+    import base64
+
+    content: list = [{"type": "text", "text": prompt}]
+    for fb in frames:
+        try:
+            b64 = base64.b64encode(fb).decode("ascii")
+            content.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+            })
+        except Exception:
+            pass
+
+    if len(content) <= 1:
+        return None
+
+    messages = [{"role": "user", "content": content}]
+
+    global _LAST_JUDGE_ERROR
+    for provider in providers:
+        for model in provider["models"]:
+            try:
+                print(f"🤝 [TREND RELEVANCE] Juiz de visão via {provider['label']} ({model})…")
+                response = provider["client"].chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=300,
+                    temperature=0.0,
+                )
+                text = response.choices[0].message.content
+                if text and text.strip():
+                    return text
+            except Exception as exc:  # noqa: BLE001
+                line = str(exc).strip().splitlines()[0][:160] if str(exc).strip() else "erro"
+                _LAST_JUDGE_ERROR = f"{provider['label']}: {line}"
+                print(f"⚠️ [TREND RELEVANCE] Visão {provider['label']} ({model}) falhou: {line}")
+                continue
+    return None
+
+
 def _parse_judge(raw: str) -> Optional[dict]:
     if not raw:
         return None
@@ -350,7 +416,11 @@ def evaluate_background(
         result["reason"] = "sem frames"
         return result
 
-    raw = _gemini_vision_judge(_build_prompt(topic, narration, media_words), frames)
+    prompt = _build_prompt(topic, narration, media_words)
+    raw = _gemini_vision_judge(prompt, frames)
+    if not raw:
+        # Gemini sem cota (429) -> tenta a visao da OpenAI (gpt-4o) e outros.
+        raw = _openai_vision_judge(prompt, frames)
     if not raw:
         err = (_LAST_JUDGE_ERROR or "").strip()
         result["reason"] = (

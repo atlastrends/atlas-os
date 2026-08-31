@@ -26,9 +26,12 @@ from app.routers import (
     amazon_sales,
     auth,
     dashboard_api,
+    ebooks,
     live_api,
     media,
+    shopee,
     shortlink,
+    stories,
     users,
 )
 
@@ -104,6 +107,25 @@ async def lifespan(app: FastAPI):
     # Silencia os tracebacks de conexao cancelada pelo navegador ao carregar
     # os videos (ConnectionResetError [WinError 10054]) que poluiam o log.
     _silenciar_conexoes_abortadas()
+
+    if _env_bool("ATLAS_AUTO_PUBLIC_TUNNEL", True):
+        from app.services.public_tunnel_service import (
+            ensure_public_base_url,
+            is_public_https_url,
+        )
+
+        configured_public_url = (
+            os.getenv("ATLAS_PUBLIC_BASE_URL") or ""
+        ).strip()
+        if not is_public_https_url(configured_public_url):
+            public_url = await asyncio.to_thread(ensure_public_base_url)
+            if public_url:
+                print(f"[ATLAS PUBLIC] Tunel automatico ativo: {public_url}")
+            else:
+                print(
+                    "[ATLAS PUBLIC] Aviso: URL publica indisponivel; "
+                    "publicacoes Meta ficarao pendentes sem apagar o video."
+                )
 
     # Garante que as tabelas do painel existam (idempotente).
     try:
@@ -182,6 +204,10 @@ async def lifespan(app: FastAPI):
 
     print("[ATLAS OS] API desligando...")
 
+    from app.services.public_tunnel_service import shutdown_public_tunnel
+
+    shutdown_public_tunnel()
+
     try:
         from app.services.scheduler_service import shutdown_scheduler
 
@@ -219,6 +245,9 @@ app.include_router(dashboard_api.router)
 app.include_router(live_api.router)
 app.include_router(shortlink.router)
 app.include_router(media.router)
+app.include_router(shopee.router)
+app.include_router(ebooks.router)
+app.include_router(stories.router)
 
 
 @app.get("/api/health", tags=["Health"])

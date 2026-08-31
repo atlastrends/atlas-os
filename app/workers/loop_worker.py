@@ -8,7 +8,11 @@ from app.core.database import SessionLocal
 from app.models.content import Content
 from app.services.trend_service import TrendService
 from app.services.content_service import ContentService
-from app.services.media_service import MediaService, NoFaithfulBackgroundError
+from app.services.media_service import (
+    MediaService,
+    NoFaithfulBackgroundError,
+    NoFaithfulVoiceError,
+)
 from app.services.metadata_service import MetadataService
 from app.services.metadata_storage_service import MetadataStorageService
 
@@ -104,11 +108,6 @@ class Engine:
         # Pausa pequena entre vídeos para aliviar APIs/CPU.
         self.pause_between_videos_seconds = int(
             os.getenv("ATLAS_PAUSE_BETWEEN_VIDEOS_SECONDS", "10")
-        )
-
-        # Score mínimo para aceitar tendência.
-        self.min_trend_score = float(
-            os.getenv("ATLAS_MIN_TREND_SCORE", "80")
         )
 
         # Arquivo persistente de memória de assuntos usados. Ancorado na raiz do
@@ -237,6 +236,68 @@ class Engine:
         self._save_used_topics_memory()
 
     # =====================================================================
+    # RODIZIO DE CATEGORIAS (variedade de assuntos entre ciclos)
+    # =====================================================================
+    # Ordem fixa do rodizio. "busca" (tendencia de busca em ascensao = o
+    # urgente do dia) sempre lidera. Assim, ciclos seguidos NAO caem sempre
+    # no mesmo tipo (ex.: 3 games seguidos): cada ciclo comeca na categoria
+    # seguinte a ultima usada.
+    _CATEGORY_ROTATION = ["busca", "esporte", "entretenimento", "games", "tech", "popular"]
+
+    def _category_state_path(self) -> str:
+        return os.path.join(self.memory_dir, "category_rotation.json")
+
+    def _load_category_state(self) -> dict:
+        try:
+            with open(self._category_state_path(), encoding="utf-8") as fh:
+                data = json.load(fh)
+                return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+
+    def _get_last_category(self, country_code: str) -> str:
+        return str(self._load_category_state().get(country_code, "") or "")
+
+    def _mark_category_used(self, country_code: str, category: str):
+        if not category:
+            return
+        try:
+            state = self._load_category_state()
+            state[country_code] = category
+            with open(self._category_state_path(), "w", encoding="utf-8") as fh:
+                json.dump(state, fh, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+
+    def _diversify_by_category(self, trends: list, last_category: str) -> list:
+        """
+        Reordena as trends por RODIZIO de categoria (round-robin), preservando a
+        ordem por score dentro de cada categoria. O rodizio comeca na categoria
+        seguinte a `last_category`, garantindo que o assunto varie a cada ciclo
+        em vez de repetir games/trailers. Categorias fora da lista fixa entram
+        ao final como "popular".
+        """
+        buckets: dict[str, list] = {}
+        for t in trends:
+            cat = t.get("category", "popular")
+            if cat not in self._CATEGORY_ROTATION:
+                cat = "popular"
+            buckets.setdefault(cat, []).append(t)
+
+        if last_category in self._CATEGORY_ROTATION:
+            start = self._CATEGORY_ROTATION.index(last_category) + 1
+            rotation = self._CATEGORY_ROTATION[start:] + self._CATEGORY_ROTATION[:start]
+        else:
+            rotation = list(self._CATEGORY_ROTATION)
+
+        result: list = []
+        while any(buckets.get(cat) for cat in rotation):
+            for cat in rotation:
+                if buckets.get(cat):
+                    result.append(buckets[cat].pop(0))
+        return result
+
+    # =====================================================================
     # VALIDAÇÃO DE ROTEIRO E TENDÊNCIAS
     # =====================================================================
 
@@ -272,6 +333,25 @@ class Engine:
             return False
 
         return True
+
+    def _is_ambiguous_source_topic(self, topic: str) -> bool:
+        """Descarta titulos virais vagos que fazem a IA inventar outro assunto."""
+        normalized = re.sub(
+            r"\s+",
+            " ",
+            str(topic or "").lower(),
+        ).strip()
+        if not normalized:
+            return True
+        patterns = (
+            r"\b(this|that)\s+(game|video|thing|one)\b",
+            r"\b(este|esse|aquele)\s+(jogo|video|vídeo|negocio|negócio)\b",
+            r"\bi shouldn'?t be allowed\b",
+            r"\byou won'?t believe\b",
+            r"\bwait for it\b",
+            r"\bwhat happens next\b",
+        )
+        return any(re.search(pattern, normalized) for pattern in patterns)
 
     # Estúdios/distribuidoras cujo conteúdo (trailers oficiais, cenas de
     # filmes) costuma disparar Content ID / copyright strike no YouTube.
@@ -328,14 +408,15 @@ class Engine:
         pool_size: int | None = None,
     ):
         """
-        Seleciona as melhores trends sem repetição.
-        Também remove tópicos com score baixo e pula assuntos usados recentemente.
+        Seleciona as trends mais vistas sem repetição.
 
         `pool_size` (se informado) permite coletar MAIS candidatos do que
         `target_videos` — usados como assuntos RESERVA/substitutos quando um
         assunto escolhido precisa ser descartado (ex.: sem vídeo real fiel ao
         assunto encontrado) e o worker precisa buscar o próximo assunto em
         alta no lugar dele, sem precisar buscar as trends de novo.
+
+        A ordem recebida por visualizações é preservada.
         """
         collect_limit = max(target_videos, pool_size or target_videos)
 
@@ -345,10 +426,18 @@ class Engine:
         if not trends:
             return valid_trends
 
+        # Coleta candidatos na ordem semanal de visualizações.
         for t in trends:
             topic = str(t.get("topic", "")).strip()
 
             if not topic:
+                continue
+
+            if self._is_ambiguous_source_topic(topic):
+                print(
+                    "🚫 [ATLAS ENGINE] Título de trend ambíguo, pulando para "
+                    f"não inventar outro assunto: {topic}"
+                )
                 continue
 
             topic_key = topic.lower()
@@ -356,62 +445,15 @@ class Engine:
             if topic_key in seen_topics:
                 continue
 
-            score = float(t.get("score", 0))
-
-            # Mantém apenas assuntos fortes.
-            if score < self.min_trend_score:
-                continue
-
             # Evita repetir assunto dentro do cooldown.
             if self._was_topic_used_recently(country_code, topic):
                 print(f"⏭️ [ATLAS ENGINE] Assunto já usado recentemente em {country_code}: {topic}")
                 continue
 
-            # Evita assuntos com alto risco de direitos autorais (trailers
-            # oficiais de estúdio) — pula e deixa outro assunto preencher a vaga.
-            if self._is_copyright_risky_topic(topic, str(t.get("source", ""))):
-                print(f"🚫 [ATLAS ENGINE] Assunto com risco de direitos autorais, pulando: {topic}")
-                continue
-
             seen_topics.add(topic_key)
             valid_trends.append(t)
 
-            if len(valid_trends) >= collect_limit:
-                break
-
-        # Fallback de idioma/produção:
-        # Se NENHUMA trend passou no corte de score para este canal
-        # (ex.: as trends do Brasil vieram com score abaixo do mínimo),
-        # ainda assim garante pelo menos 1 vídeo por canal usando a melhor
-        # trend disponível que não tenha sido usada recentemente.
-        # Isso evita que o canal BR fique sem produzir e o resultado saia
-        # só em inglês.
-        if not valid_trends:
-            fallback_pool = []
-            for t in trends:
-                topic = str(t.get("topic", "")).strip()
-                if not topic:
-                    continue
-                if self._was_topic_used_recently(country_code, topic):
-                    continue
-                if self._is_copyright_risky_topic(topic, str(t.get("source", ""))):
-                    continue
-                fallback_pool.append(t)
-
-            fallback_pool.sort(
-                key=lambda x: float(x.get("score", 0)),
-                reverse=True,
-            )
-
-            for t in fallback_pool[:max(1, collect_limit)]:
-                print(
-                    f"🩹 [ATLAS ENGINE] Nenhuma trend acima do corte para "
-                    f"{country_code}; usando a melhor trend disponível: "
-                    f"{t.get('topic')}"
-                )
-                valid_trends.append(t)
-
-        return valid_trends
+        return valid_trends[:collect_limit]
 
     def _get_target_videos_for_channel(self, channel: dict) -> int:
         """
@@ -513,7 +555,7 @@ class Engine:
                     # Reserva assuntos extras: se um assunto for descartado
                     # (ex.: sem vídeo real fiel ao tema no YouTube), o próximo
                     # da lista assume a vaga sem precisar buscar trends de novo.
-                    pool_size=target_videos * 4,
+                    pool_size=len(trends),
                 )
 
                 if not selected_trends:
@@ -530,24 +572,51 @@ class Engine:
                         break
 
                     topic = trend["topic"]
-                    score = trend.get("score", 0)
+                    views = int(trend.get("views") or 0)
+                    score = 0
                     source = trend.get("source", "Unknown")
                     hashtags = trend.get("hashtags", [])
+                    source_description = str(
+                        trend.get("description") or ""
+                    ).strip()
+                    if len(source_description) < 40:
+                        print(
+                            "⏭️ [CONTENT ENGINE] Vídeo-fonte sem descrição "
+                            "suficiente; próximo mais visto."
+                        )
+                        continue
+                    source_context = (
+                        f"Source video title: {topic}\n"
+                        f"Source channel: {source}\n"
+                        f"Source views: {views}\n"
+                        f"Source publication: {trend.get('published_at') or ''}\n"
+                        f"Source description: {source_description}"
+                    )
 
                     print("")
                     print(f"⚙️ [PRODUÇÃO] Vídeo {index}/{len(selected_trends)} para {channel['country_code']}")
                     print(f"🎯 [ASSUNTO] {topic}")
-                    print(f"📊 [SCORE] {score}")
+                    print(f"👁️ [VISUALIZAÇÕES] {views:,}")
                     print(f"📡 [FONTE] {source}")
                     print(f"🏷️ [HASHTAGS BASE] {' '.join(hashtags)}")
                     print("")
 
                     # 2. Gera roteiro no idioma correto.
                     _report(0.05, topic, "Escrevendo o roteiro com IA…")
-                    script = self.content_service.generate_script(
-                        topic=topic,
-                        language=channel["language"]
-                    )
+                    try:
+                        script = self.content_service.generate_script(
+                            topic=topic,
+                            language=channel["language"],
+                            trend_source=source,
+                            research_context=source_context,
+                            allow_fallback=False,
+                        )
+                    except Exception as exc:
+                        print(
+                            "⏭️ [CONTENT ENGINE] Roteiro/informação "
+                            f"insuficiente; próximo mais visto: {exc}"
+                        )
+                        continue
 
                     if not self._is_valid_script(script):
                         print(f"⚠️ [CONTENT ENGINE] Roteiro inválido para '{topic}'. Pulando vídeo.")
@@ -565,14 +634,22 @@ class Engine:
                     
                     # 3. Gera pacote de metadata para upload futuro.
                     _report(0.28, topic, "Preparando título, legenda e hashtags…")
-                    metadata = self.metadata_service.build_metadata(
-                        topic=topic,
-                        script=script,
-                        geo=channel["country_code"],
-                        base_hashtags=hashtags,
-                        trend_source=source
-
-                    )
+                    try:
+                        metadata = self.metadata_service.build_metadata(
+                            topic=topic,
+                            script=script,
+                            geo=channel["country_code"],
+                            base_hashtags=hashtags,
+                            trend_source=source,
+                            research_context=source_context,
+                            allow_fallback=False,
+                        )
+                    except Exception as exc:
+                        print(
+                            "⏭️ [METADATA ENGINE] Metadata insuficiente; "
+                            f"próximo mais visto: {exc}"
+                        )
+                        continue
 
                     self._print_metadata_preview(metadata)
 
@@ -621,9 +698,18 @@ class Engine:
                             voice_name=channel["tts_voice"],
                             language=channel["language_code"],
                             hashtags=metadata.get("hashtags", hashtags),
-                            source=source
+                            source=source,
+                            # Habilita o auto-reparo de narracao curta: se o
+                            # audio sair abaixo do minimo, o MediaService pede
+                            # um roteiro mais longo (calibrado pela velocidade
+                            # REAL desta voz) em vez de so rejeitar o video.
+                            content_service=self.content_service,
+                            strict_no_fallback=True,
                         )
-                    except NoFaithfulBackgroundError as exc:
+                    except (
+                        NoFaithfulBackgroundError,
+                        NoFaithfulVoiceError,
+                    ) as exc:
                         # Sem vídeo real fiel ao assunto: DESCARTA este assunto
                         # (nao gera video com fundo generico/desconectado) e
                         # segue para o próximo assunto em alta da reserva.
@@ -663,6 +749,13 @@ class Engine:
                         self._mark_topic_as_used(
                             country_code=channel["country_code"],
                             topic=topic
+                        )
+
+                        # Avança o rodízio de categoria para o próximo ciclo
+                        # começar num tipo diferente (variedade de assuntos).
+                        self._mark_category_used(
+                            country_code=channel["country_code"],
+                            category=str(trend.get("category", "")),
                         )
 
                         videos_produced += 1
@@ -718,7 +811,15 @@ class Engine:
         while True:
             cycle_started_at = time.time()
 
-            self.run_cycle()
+            # Um ciclo que falha (ex.: 429 de cota/rate-limit numa API) NAO pode
+            # derrubar o motor continuo: registra o erro, descansa e tenta de novo.
+            try:
+                self.run_cycle()
+            except Exception as cycle_error:  # noqa: BLE001
+                print(
+                    f"⚠️ [ATLAS ENGINE] Ciclo falhou e foi ignorado para manter o "
+                    f"motor vivo (tenta de novo no proximo ciclo): {cycle_error}"
+                )
 
             elapsed_seconds = time.time() - cycle_started_at
             sleep_seconds = max(0, self.cycle_interval_seconds - elapsed_seconds)

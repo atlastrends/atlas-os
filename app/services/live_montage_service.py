@@ -76,7 +76,9 @@ def _lang_of(data: dict) -> str:
     return script._norm_language(data.get("language") or "")
 
 
-def _product_image(asin: str) -> str:
+def _product_image(asin: str, platform: str = "amazon") -> str:
+    if (platform or "").strip().lower() != "amazon":
+        return ""
     asin = (asin or "").upper()
     if not asin:
         return ""
@@ -84,7 +86,11 @@ def _product_image(asin: str) -> str:
     return cache.get(asin) or f"https://m.media-amazon.com/images/P/{asin}.01._SCLZZZZZZZ_.jpg"
 
 
-def list_sources(market: str = "", language: str = "") -> list[dict]:
+def list_sources(
+    market: str = "",
+    language: str = "",
+    platform: str = "",
+) -> list[dict]:
     """Lista os videos de produto JA gerados (afiliados) que podem virar live.
 
     market:   "" (todos) | "BR" | "US".
@@ -96,6 +102,7 @@ def list_sources(market: str = "", language: str = "") -> list[dict]:
 
     want_mk = (market or "").upper()
     want_lang = script._norm_language(language) if language else ""
+    want_platform = (platform or "").strip().lower()
 
     out: list[dict] = []
     for mp4 in sorted(_AFF_DIR.glob("*.mp4"), key=lambda p: p.stat().st_mtime, reverse=True):
@@ -113,10 +120,13 @@ def list_sources(market: str = "", language: str = "") -> list[dict]:
         data = _safe_json(mp4.with_suffix(".json"))
         mk = _market_of(data)
         lang = _lang_of(data)
+        source_platform = (data.get("platform") or "amazon").strip().lower()
 
         if want_mk and mk and mk != want_mk:
             continue
         if want_lang and lang and lang != want_lang:
+            continue
+        if want_platform and source_platform != want_platform:
             continue
 
         # Prefere a versao de LIVE (audio de apresentadora, sem gancho de
@@ -136,7 +146,10 @@ def list_sources(market: str = "", language: str = "") -> list[dict]:
                 "language": lang,
                 "category_label": data.get("category_label") or "",
                 "affiliate_url": data.get("affiliate_url") or "",
-                "image": _product_image(asin),
+                "platform": source_platform,
+                "image": data.get("image_url") or _product_image(
+                    asin, source_platform
+                ),
                 "video_rel": os.path.relpath(video_file, _ATLAS_ROOT).replace("\\", "/"),
                 "size_mb": round(video_file.stat().st_size / (1024 * 1024), 1),
                 "variant": "live" if has_live else "reel",
@@ -169,9 +182,12 @@ def list_sources(market: str = "", language: str = "") -> list[dict]:
         )
         mk = _market_of(data)
         lang = _lang_of(data)
+        source_platform = (data.get("platform") or "amazon").strip().lower()
         if want_mk and mk and mk != want_mk:
             continue
         if want_lang and lang and lang != want_lang:
+            continue
+        if want_platform and source_platform != want_platform:
             continue
         asin = (data.get("asin") or "").upper()
         title = html.unescape((data.get("title") or stem).strip())
@@ -185,7 +201,10 @@ def list_sources(market: str = "", language: str = "") -> list[dict]:
                 "language": lang,
                 "category_label": data.get("category_label") or "",
                 "affiliate_url": data.get("affiliate_url") or "",
-                "image": _product_image(asin),
+                "platform": source_platform,
+                "image": data.get("image_url") or _product_image(
+                    asin, source_platform
+                ),
                 "video_rel": os.path.relpath(live_mp4, _ATLAS_ROOT).replace("\\", "/"),
                 "size_mb": round(live_mp4.stat().st_size / (1024 * 1024), 1),
                 "variant": "live",
@@ -221,6 +240,7 @@ def _source_by_id(stem: str) -> dict | None:
         narration = (data.get("narration") or "").strip()
 
     asin = (data.get("asin") or "").upper()
+    source_platform = (data.get("platform") or "amazon").strip().lower()
     return {
         "id": mp4.stem,
         "title": html.unescape((data.get("title") or mp4.stem).strip()),
@@ -228,8 +248,11 @@ def _source_by_id(stem: str) -> dict | None:
         "market": _market_of(data),
         "language": _lang_of(data),
         "affiliate_url": data.get("affiliate_url") or "",
+        "platform": source_platform,
         "narration": narration,
-        "image": _product_image(asin),
+        "image": data.get("image_url") or _product_image(
+            asin, source_platform
+        ),
         "path": video_file,
     }
 
@@ -462,6 +485,7 @@ def build_live_from_videos(
     *,
     market: str = "",
     language: str = "pt",
+    platform: str = "",
     persona: str = "",
     use_ai: bool = True,
     qa: bool = True,
@@ -485,7 +509,11 @@ def build_live_from_videos(
             if src and src["path"].is_file():
                 products.append(src)
     else:
-        for meta in list_sources(market=market, language=language):
+        for meta in list_sources(
+            market=market,
+            language=language,
+            platform=platform,
+        ):
             src = _source_by_id(meta["id"])
             if src and src["path"].is_file():
                 products.append(src)
@@ -496,7 +524,10 @@ def build_live_from_videos(
         return {"ok": False, "reason": "Nenhum video de produto encontrado para montar a live."}
 
     mk = (market or products[0].get("market") or "").upper()
-    platform_name = "Amazon"
+    source_platform = (
+        platform or products[0].get("platform") or "amazon"
+    ).strip().lower()
+    platform_name = "Shopee" if source_platform == "shopee" else "Amazon"
 
     job = f"m{int(time.time())}"
     job_dir = _BUILD_DIR / job
@@ -628,7 +659,7 @@ def build_live_from_videos(
         return {"ok": False, "reason": "Nenhum clipe foi gerado."}
 
     stamp = time.strftime("%Y%m%d_%H%M%S")
-    name = f"live_montage_{mk or 'ALL'}_{stamp}.mp4"
+    name = f"live_montage_{source_platform}_{mk or 'ALL'}_{stamp}.mp4"
     out_mp4 = _VIDEO_DIR / name
     if not v._concat(clips, out_mp4):
         v._cleanup_dir(job_dir)
@@ -637,8 +668,8 @@ def build_live_from_videos(
     manifest = {
         "video": name,
         "source": "montage",
-        "platform": "amazon",
-        "platform_name": "Amazon (vídeos prontos)",
+        "platform": source_platform,
+        "platform_name": f"{platform_name} (vídeos prontos)",
         "market": mk,
         "language": language,
         "created": stamp,

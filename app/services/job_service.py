@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import os
 import threading
 import traceback
 from datetime import datetime, timedelta, timezone
@@ -81,9 +82,14 @@ def run_fetch_amazon_products():
     threading.Thread(target=_worker, daemon=True, name="atlas-fetch-amazon").start()
 
 
-def run_generate_selected(selection: list[dict] | None = None):
+def run_generate_selected(selection: list[dict] | None = None, stop_flag=None):
     """Gera os videos de afiliado APENAS para as categorias/quantidades
-    escolhidas no painel. selection = [{marketplace_code, category, quantity}]."""
+    escolhidas no painel. selection = [{marketplace_code, category, quantity}].
+
+    stop_flag (threading.Event opcional): quando setado, o pipeline para de
+    gerar novos videos deste lote assim que o video ATUAL terminar (usado
+    pelo robo automatico de afiliados, para o "Parar" realmente interromper
+    um lote em andamento em vez de so desligar o agendador de novos ciclos)."""
     job = "generate_selected"
     if is_running(job):
         return
@@ -151,6 +157,7 @@ def run_generate_selected(selection: list[dict] | None = None):
                 selection=selected,
                 progress_callback=_on_progress,
                 on_video_ready=_on_video_ready,
+                stop_flag=stop_flag,
             )
             summary = {"pipeline": pipeline_state}
 
@@ -363,6 +370,11 @@ def stop_auto_reels() -> dict:
 _auto_affiliate_scheduler = None
 _auto_affiliate_interval_minutes = 120
 _AUTO_AFFILIATE_JOB_ID = "auto_affiliate_cycle"
+# Sinal cooperativo de parada: setado quando o usuario clica em "Parar".
+# O pipeline de geracao (run_pipeline) confere isso ENTRE um video e outro,
+# para um lote ja em andamento parar de verdade em vez de continuar rodando
+# sozinho so porque o agendador de NOVOS ciclos ja foi desligado.
+_auto_affiliate_stop_event = threading.Event()
 
 
 def run_affiliate_cycle():
@@ -388,14 +400,44 @@ def run_affiliate_cycle():
         from app.automation.real_amazon_pipeline import available_products
 
         groups = available_products()
-        selection = [
+        try:
+            cycle_limit = max(
+                1,
+                int(os.getenv("ATLAS_AFFILIATE_MAX_PER_CYCLE", "4")),
+            )
+        except ValueError:
+            cycle_limit = 4
+        candidates = [
             {
                 "marketplace_code": g.get("marketplace_code"),
                 "category": g.get("category"),
-                "quantity": int(g.get("count") or 0),
+                "available": int(g.get("count") or 0),
+                "quantity": 0,
             }
             for g in groups
             if int(g.get("count") or 0) > 0
+        ]
+        remaining = cycle_limit
+        while remaining > 0:
+            added = False
+            for candidate in candidates:
+                if candidate["quantity"] >= candidate["available"]:
+                    continue
+                candidate["quantity"] += 1
+                remaining -= 1
+                added = True
+                if remaining <= 0:
+                    break
+            if not added:
+                break
+        selection = [
+            {
+                "marketplace_code": item["marketplace_code"],
+                "category": item["category"],
+                "quantity": item["quantity"],
+            }
+            for item in candidates
+            if item["quantity"] > 0
         ]
         total = sum(s["quantity"] for s in selection)
 
@@ -413,7 +455,7 @@ def run_affiliate_cycle():
         #    run_generate_selected chama a auto-aprovacao, que so publica
         #    sozinho os videos cujo assunto bate (certeza alta).
         _set_state(job, step="generating", stage="Gerando videos dos produtos novos…")
-        run_generate_selected(selection)
+        run_generate_selected(selection, stop_flag=_auto_affiliate_stop_event)
 
         _set_state(
             job,
@@ -469,6 +511,10 @@ def start_auto_affiliate(interval_minutes: int = 120) -> dict:
     ):
         return auto_affiliate_status()
 
+    # Novo "ligar": limpa qualquer pedido de parada de uma rodada anterior,
+    # senao o primeiro ciclo nasceria ja marcado para parar.
+    _auto_affiliate_stop_event.clear()
+
     try:
         from apscheduler.schedulers.background import BackgroundScheduler
     except ImportError:
@@ -505,8 +551,14 @@ def start_auto_affiliate(interval_minutes: int = 120) -> dict:
 
 
 def stop_auto_affiliate() -> dict:
-    """Desliga o robo de afiliados automatico."""
+    """Desliga o robo de afiliados automatico.
+
+    Alem de desligar o AGENDADOR (para nao comecar mais ciclos novos), seta
+    o sinal de parada: se um lote de videos deste robo ja estiver rodando,
+    ele para assim que o video ATUAL terminar, em vez de seguir gerando o
+    resto do lote sozinho depois que a tela ja mostra "Desligado"."""
     global _auto_affiliate_scheduler
+    _auto_affiliate_stop_event.set()
     if _auto_affiliate_scheduler is not None:
         try:
             _auto_affiliate_scheduler.shutdown(wait=False)
@@ -516,6 +568,147 @@ def stop_auto_affiliate() -> dict:
 
     _set_state("affiliate_cycle", status="stopped", finished_at=_now_iso())
     return auto_affiliate_status()
+
+
+# ----------------------------------------------------------------
+# JOB: Diario da Bela automatico (2 episodios/dia, horarios fixos)
+# ----------------------------------------------------------------
+# Diferente do robo de afiliados (roda a cada N minutos), o Diario da Bela
+# publica em HORARIOS FIXOS por dia (ex.: 09:00 e 20:00), configuraveis via
+# ATLAS_TEEN_DIARY_TIMES (formato "HH:MM,HH:MM..."). Cada disparo gera E
+# publica 1 episodio (a proxima parte, continuando a memoria persistida).
+
+_teen_diary_scheduler = None
+
+
+def _parse_teen_diary_times() -> list[str]:
+    raw = os.getenv("ATLAS_TEEN_DIARY_TIMES", "09:00,20:00")
+    out = []
+    for part in raw.split(","):
+        part = part.strip()
+        if ":" in part:
+            out.append(part)
+    return out or ["09:00", "20:00"]
+
+
+def run_teen_diary_cycle():
+    """Um disparo do Diario da Bela: gera 1 episodio (continuando de onde a
+    bible parou) e ja publica sozinho nas contas de TREND configuradas."""
+    job = "teen_diary_cycle"
+    if is_running(job):
+        return
+    _set_state(job, status="running", started_at=_now_iso(), error=None, result=None)
+
+    try:
+        from app.services.teen_diary_service import TeenDiaryService
+        from app.routers.stories import publish_story_folder
+
+        logs: list[str] = []
+
+        def log(msg: str) -> None:
+            logs.append(str(msg))
+
+        episodes = TeenDiaryService(log=log).generate_next(count=1)
+        published = []
+        for ep in episodes:
+            try:
+                posted = publish_story_folder(ep["slug"], log=log)
+                published.append({"slug": ep["slug"], "posted": posted})
+            except Exception as exc:  # noqa: BLE001
+                log(f"[DIARY AUTO] falha ao publicar {ep.get('slug')}: {exc}")
+
+        _set_state(
+            job,
+            status="done",
+            step="done",
+            finished_at=_now_iso(),
+            result={"episodes": episodes, "published": published, "log": logs[-200:]},
+        )
+    except Exception as exc:  # noqa: BLE001
+        _set_state(
+            job,
+            status="error",
+            finished_at=_now_iso(),
+            error=f"{exc}",
+            traceback=traceback.format_exc()[-2000:],
+        )
+
+
+def teen_diary_auto_status() -> dict:
+    global _teen_diary_scheduler
+    active = _teen_diary_scheduler is not None and getattr(
+        _teen_diary_scheduler, "running", False
+    )
+    next_runs: list[str] = []
+    if active:
+        try:
+            for job in _teen_diary_scheduler.get_jobs():
+                if job.next_run_time is not None:
+                    next_runs.append(job.next_run_time.astimezone(timezone.utc).isoformat())
+        except Exception:  # noqa: BLE001
+            pass
+    return {
+        "active": active,
+        "times": _parse_teen_diary_times(),
+        "next_runs": sorted(next_runs),
+    }
+
+
+def start_teen_diary_auto() -> dict:
+    """Liga o Diario da Bela automatico: gera e publica 1 episodio novo nos
+    horarios configurados (padrao 09:00 e 20:00, horario de Brasilia), ate o
+    usuario parar."""
+    global _teen_diary_scheduler
+
+    if _teen_diary_scheduler is not None and getattr(_teen_diary_scheduler, "running", False):
+        return teen_diary_auto_status()
+
+    try:
+        from apscheduler.schedulers.background import BackgroundScheduler
+        from apscheduler.triggers.cron import CronTrigger
+    except ImportError:
+        _set_state(
+            "teen_diary_cycle",
+            status="error",
+            error="APScheduler nao instalado; nao da para agendar o Diario da Bela.",
+        )
+        return teen_diary_auto_status()
+
+    scheduler = BackgroundScheduler(timezone="America/Sao_Paulo")
+    for i, slot in enumerate(_parse_teen_diary_times()):
+        hour_s, _, minute_s = slot.partition(":")
+        try:
+            hour, minute = int(hour_s), int(minute_s or 0)
+        except ValueError:
+            continue
+        scheduler.add_job(
+            run_teen_diary_cycle,
+            trigger=CronTrigger(hour=hour, minute=minute),
+            id=f"teen_diary_slot_{i}",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+        )
+    scheduler.start()
+    _teen_diary_scheduler = scheduler
+
+    _set_state("teen_diary_cycle", status="active", started_at=_now_iso(), error=None)
+    return teen_diary_auto_status()
+
+
+def stop_teen_diary_auto() -> dict:
+    """Desliga o agendamento automatico do Diario da Bela (nao afeta um
+    episodio ja em geracao neste instante - so para de agendar novos)."""
+    global _teen_diary_scheduler
+    if _teen_diary_scheduler is not None:
+        try:
+            _teen_diary_scheduler.shutdown(wait=False)
+        except Exception:  # noqa: BLE001
+            pass
+        _teen_diary_scheduler = None
+
+    _set_state("teen_diary_cycle", status="stopped", finished_at=_now_iso())
+    return teen_diary_auto_status()
 
 
 def run_collect_metrics(force_meta: bool = False):

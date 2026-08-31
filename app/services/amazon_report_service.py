@@ -51,18 +51,19 @@ _FIELD_KEYWORDS = {
     "asin": ["asin"],
     "category": ["category", "categoria"],
     "qty": [
-        "items shipped", "qty shipped", "quantity", "items ordered",
+        "items shipped", "items ordered", "order quantity", "qty shipped", "quantity",
         "unidades", "quantidade", "qtd", "itens enviados", "itens",
     ],
     "returns": ["returns", "devolucoes", "devolucao", "returned"],
     "revenue": [
-        "revenue", "product sales", "receita", "vendas de produtos",
-        "valor", "sale amount", "ordered revenue", "price",
+        "items shipped revenue", "ordered revenue", "product sales", "revenue",
+        "receita", "vendas de produtos", "valor", "sale amount", "price",
     ],
     "commission": [
-        "ad fees", "fees", "earnings", "comissao", "comissoes",
+        "total earnings", "items shipped earnings", "ad fees", "advertising fees",
+        "earnings", "comissao", "comissoes",
         "taxa de publicidade", "receita de publicidade", "ganhos",
-        "advertising fees", "commission",
+        "fees", "commission",
     ],
     "clicks": ["clicks", "cliques"],
     "date": ["date shipped", "date", "data", "period", "periodo", "day"],
@@ -84,14 +85,23 @@ def _match_headers(headers: list[str]) -> dict[str, int]:
     for field in _FIELD_ORDER:
         keywords = _FIELD_KEYWORDS[field]
         best_idx = -1
-        best_len = 0
+        best_score: tuple[int, int, int] = (-1, -1, -1)
         for idx, h in enumerate(normed):
             if idx in used or not h:
                 continue
-            for kw in keywords:
-                if kw in h and len(kw) > best_len:
+            for priority, kw in enumerate(keywords):
+                if kw not in h:
+                    continue
+                # Cabecalho exato sempre vence um casamento parcial. Dentro
+                # da mesma classe, respeita a prioridade declarada acima.
+                score = (
+                    1 if h == kw else 0,
+                    -priority,
+                    len(kw),
+                )
+                if score > best_score:
                     best_idx = idx
-                    best_len = len(kw)
+                    best_score = score
         if best_idx >= 0:
             mapping[field] = best_idx
             used.add(best_idx)

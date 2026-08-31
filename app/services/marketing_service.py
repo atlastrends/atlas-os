@@ -798,7 +798,12 @@ Formato obrigatório (exatamente estas chaves):
         budget_amount: float,
         budget_period: str = "weekly",
         publish: bool = False,
+        confirm_spend: bool = False,
     ) -> dict:
+        if publish and not confirm_spend:
+            raise PermissionError(
+                "Publicacao bloqueada: confirme explicitamente o novo gasto."
+            )
         asset = self.db.query(VideoAsset).filter(VideoAsset.id == video_id).first()
         if asset is None:
             raise ValueError("Video nao encontrado.")
@@ -836,14 +841,23 @@ Formato obrigatório (exatamente estas chaves):
         self.db.refresh(campaign)
 
         if publish:
-            return self.launch_campaign(campaign.id)
+            return self.launch_campaign(campaign.id, confirm_spend=True)
 
         return self._serialize(campaign)
 
     # ----------------------------------------------------------------
     # PUBLICAR (envia para a Meta como campanha PAUSADA, por seguranca)
     # ----------------------------------------------------------------
-    def launch_campaign(self, campaign_id: int) -> dict:
+    def launch_campaign(
+        self,
+        campaign_id: int,
+        *,
+        confirm_spend: bool = False,
+    ) -> dict:
+        if not confirm_spend:
+            raise PermissionError(
+                "Publicacao bloqueada: confirme explicitamente o novo gasto."
+            )
         campaign = (
             self.db.query(AdCampaign).filter(AdCampaign.id == campaign_id).first()
         )
@@ -934,13 +948,104 @@ Formato obrigatório (exatamente estas chaves):
     # ----------------------------------------------------------------
     # LEITURA
     # ----------------------------------------------------------------
-    def list_campaigns(self) -> list[dict]:
+    def list_campaigns(self, sync_meta: bool = False) -> list[dict]:
         rows = (
             self.db.query(AdCampaign)
             .order_by(AdCampaign.created_at.desc())
             .all()
         )
-        return [self._serialize(c) for c in rows]
+        items = [self._serialize(c) for c in rows]
+        if not sync_meta:
+            return items
+
+        token = (os.getenv("META_ACCESS_TOKEN") or "").strip()
+        for item in items:
+            external_id = item.get("external_campaign_id")
+            if not external_id:
+                continue
+            if not token:
+                item["sync_error"] = "Token da Meta nao configurado."
+                continue
+            try:
+                item.update(self._meta_campaign_snapshot(external_id, token))
+            except Exception as exc:
+                item["sync_error"] = str(exc)
+        return items
+
+    def _meta_campaign_snapshot(self, campaign_id: str, token: str) -> dict:
+        import requests
+
+        campaign_response = requests.get(
+            f"{GRAPH_BASE}/{campaign_id}",
+            params={
+                "fields": "name,status,effective_status,start_time,stop_time",
+                "access_token": token,
+            },
+            timeout=30,
+        )
+        campaign_data = campaign_response.json() if campaign_response.content else {}
+        if campaign_response.status_code >= 400 or campaign_data.get("error"):
+            error = (campaign_data.get("error") or {}).get("message")
+            if error == "Authorization Error":
+                raise RuntimeError(
+                    "O token da Meta nao possui a permissao ads_read para esta "
+                    "conta de anuncios. Reconecte a Meta com ads_read."
+                )
+            raise RuntimeError(f"Meta API: {error or campaign_response.text}")
+
+        insight_response = requests.get(
+            f"{GRAPH_BASE}/{campaign_id}/insights",
+            params={
+                "fields": (
+                    "spend,impressions,reach,clicks,inline_link_clicks,"
+                    "actions,ctr,cpc,cpm,frequency"
+                ),
+                "date_preset": "maximum",
+                "access_token": token,
+            },
+            timeout=30,
+        )
+        insight_data = insight_response.json() if insight_response.content else {}
+        if insight_response.status_code >= 400 or insight_data.get("error"):
+            error = (insight_data.get("error") or {}).get("message")
+            raise RuntimeError(f"Meta Insights API: {error or insight_response.text}")
+
+        insight = (insight_data.get("data") or [{}])[0]
+        actions = {
+            row.get("action_type"): float(row.get("value") or 0)
+            for row in (insight.get("actions") or [])
+            if row.get("action_type")
+        }
+        meta_status = (
+            campaign_data.get("effective_status")
+            or campaign_data.get("status")
+            or "UNKNOWN"
+        ).upper()
+
+        return {
+            "meta_name": campaign_data.get("name"),
+            "meta_status": meta_status.lower(),
+            "status": (
+                AdCampaignStatusEnum.ACTIVE.value
+                if meta_status == "ACTIVE"
+                else AdCampaignStatusEnum.PAUSED.value
+                if meta_status in {"PAUSED", "CAMPAIGN_PAUSED", "ADSET_PAUSED"}
+                else meta_status.lower()
+            ),
+            "spend": float(insight.get("spend") or 0),
+            "impressions": int(float(insight.get("impressions") or 0)),
+            "reach": int(float(insight.get("reach") or 0)),
+            "clicks": int(float(insight.get("clicks") or 0)),
+            "link_clicks": int(float(insight.get("inline_link_clicks") or 0)),
+            "landing_page_views": int(actions.get("landing_page_view", 0)),
+            "ctr": float(insight.get("ctr") or 0),
+            "cpc": float(insight.get("cpc") or 0),
+            "cpm": float(insight.get("cpm") or 0),
+            "frequency": float(insight.get("frequency") or 0),
+            "meta_start_time": campaign_data.get("start_time"),
+            "meta_stop_time": campaign_data.get("stop_time"),
+            "last_synced_at": _now().isoformat(),
+        }
 
     def get_campaign(self, campaign_id: int) -> Optional[dict]:
         c = self.db.query(AdCampaign).filter(AdCampaign.id == campaign_id).first()
@@ -968,6 +1073,19 @@ Formato obrigatório (exatamente estas chaves):
         }
 
     def _serialize(self, c: AdCampaign) -> dict:
+        market = (c.market or "BR").upper()
+        ad_account = (
+            os.getenv(f"META_AD_ACCOUNT_ID_{market}")
+            or os.getenv("META_AD_ACCOUNT_ID")
+            or ""
+        )
+        external_url = c.external_url
+        if not external_url and c.external_campaign_id:
+            external_url = (
+                "https://adsmanager.facebook.com/adsmanager/manage/campaigns"
+                f"?act={ad_account.replace('act_', '')}"
+                f"&selected_campaign_ids={c.external_campaign_id}"
+            )
         return {
             "id": c.id,
             "video_id": c.video_asset_id,
@@ -991,7 +1109,7 @@ Formato obrigatório (exatamente estas chaves):
             "link_url": c.link_url,
             "status": c.status.value if hasattr(c.status, "value") else str(c.status),
             "external_campaign_id": c.external_campaign_id,
-            "external_url": c.external_url,
+            "external_url": external_url,
             "error": c.error,
             "notes": c.notes,
             "created_at": c.created_at.isoformat() if c.created_at else None,

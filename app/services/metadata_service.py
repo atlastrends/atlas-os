@@ -10,6 +10,8 @@ import yt_dlp
 from openai import OpenAI
 from dotenv import load_dotenv
 
+from app.services.ai_providers import build_extra_providers
+
 load_dotenv()
 
 
@@ -44,6 +46,10 @@ class MetadataService:
             )
         else:
             self.client = None
+
+        # Provedores extras (OpenAI/ChatGPT, OpenRouter, DeepSeek...) — fallback
+        # quando o Groq bate limite, para a metadata nao travar a producao.
+        self.extra_providers = build_extra_providers("METADATA ENGINE")
 
         self.max_research_items = self._env_int("ATLAS_METADATA_RESEARCH_ITEMS", 5)
 
@@ -227,6 +233,18 @@ class MetadataService:
             seen.add(model_name)
             models_to_try.append(model_name)
 
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are an expert social video metadata strategist. "
+                    "Return valid JSON only. No markdown. No explanation. "
+                    "Use only the provided topic, script, source, and research context."
+                )
+            },
+            {"role": "user", "content": prompt}
+        ]
+
         last_error = None
 
         for model_name in models_to_try:
@@ -236,20 +254,7 @@ class MetadataService:
 
                 response = self.client.chat.completions.create(
                     model=model_name,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are an expert social video metadata strategist. "
-                                "Return valid JSON only. No markdown. No explanation. "
-                                "Use only the provided topic, script, source, and research context."
-                            )
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ],
+                    messages=messages,
                     max_tokens=700,
                     temperature=temperature,
                     top_p=0.90,
@@ -267,9 +272,38 @@ class MetadataService:
                     print(f"⚠️ [METADATA ENGINE] Limite atingido no modelo {model_name}. Tentando próximo modelo...")
                     continue
 
-                raise
+                # Nao desiste: ainda ha provedores extras a tentar.
+                continue
+
+        # Groq esgotado -> provedores extras (OpenAI/ChatGPT, OpenRouter...).
+        extra_text = self._try_extra_providers(messages, temperature)
+        if extra_text:
+            return extra_text
 
         raise last_error
+
+    def _try_extra_providers(self, messages, temperature: float):
+        """Fallback multi-provedor (OpenAI/ChatGPT, OpenRouter, DeepSeek...).
+        Entra so quando o Groq falha; cada provedor precisa da chave no .env."""
+        for provider in getattr(self, "extra_providers", []):
+            for model_name in provider["models"]:
+                try:
+                    print(f"🤝 [METADATA ENGINE] Tentando {provider['label']} ({model_name})...")
+                    response = provider["client"].chat.completions.create(
+                        model=model_name,
+                        messages=messages,
+                        max_tokens=700,
+                        temperature=temperature,
+                        top_p=0.90,
+                    )
+                    text = response.choices[0].message.content
+                    if text and text.strip():
+                        print(f"✅ [METADATA ENGINE] {provider['label']} gerou a metadata.")
+                        return text
+                except Exception as exc:  # noqa: BLE001
+                    print(f"⚠️ [METADATA ENGINE] {provider['label']} ({model_name}) falhou: {exc}")
+                    continue
+        return None
 
     # ====================================================================
     # PESQUISA SOBRE A TREND
@@ -793,6 +827,36 @@ Rules:
     # FUNÇÃO PRINCIPAL
     # ====================================================================
 
+    def _fallback_metadata(self, topic: str, geo: str, base_hashtags=None) -> dict:
+        """Metadata de emergencia SEM IA: garante upload mesmo com toda IA fora."""
+        topic = self._clean_text(topic) or "Trending"
+        is_br = str(geo or "US").upper().strip() == "BR"
+        words = [w for w in re.split(r"[^A-Za-z0-9À-ÿ]+", topic) if len(w) > 2]
+        tags = (words[:8] or [topic])
+        hashtags = ["#" + re.sub(r"[^A-Za-z0-9]", "", w) for w in words[:6] if w]
+        if is_br:
+            desc = f"{topic}. Fique por dentro de tudo sobre {topic} agora."
+            insta = f"{topic}\nTudo sobre {topic}."
+            face = f"{topic} — veja o que está acontecendo."
+        else:
+            desc = f"{topic}. Everything you need to know about {topic}."
+            insta = f"{topic}\nEverything about {topic}."
+            face = f"{topic} — here's what's going on."
+        payload = {
+            "youtube_title": topic,
+            "youtube_description": desc,
+            "youtube_tags": tags,
+            "tiktok_caption": topic,
+            "instagram_caption": insta,
+            "facebook_caption": face,
+            "hashtags": hashtags,
+        }
+        try:
+            return self._sanitize_metadata_payload(payload=payload, geo=geo, base_hashtags=base_hashtags or [])
+        except Exception:
+            payload["title"] = topic
+            return payload
+
     def build_metadata(
         self,
         topic: str,
@@ -800,7 +864,8 @@ Rules:
         geo: str = "US",
         base_hashtags=None,
         trend_source: str = "",
-        research_context: str = ""
+        research_context: str = "",
+        allow_fallback: bool = True,
     ):
         """
         Retorna metadata pronta para upload.
@@ -850,38 +915,46 @@ Rules:
             research_context=research_context
         )
 
-        raw_response = self._generate_with_ai(
-            prompt=prompt,
-            active_model=active_model,
-            temperature=0.52
-        )
-
         try:
-            payload = self._extract_json_object(raw_response)
-            self._validate_metadata_payload(payload)
-        except Exception as first_error:
-            print(f"⚠️ [METADATA ENGINE] Metadata IA inválida. Tentando reparar: {first_error}")
-
-            repair_prompt = self._build_repair_prompt(
-                previous_response=raw_response,
-                issue=str(first_error)
-            )
-
-            repaired_response = self._generate_with_ai(
-                prompt=repair_prompt,
+            raw_response = self._generate_with_ai(
+                prompt=prompt,
                 active_model=active_model,
-                temperature=0.30
+                temperature=0.52
             )
 
-            payload = self._extract_json_object(repaired_response)
-            self._validate_metadata_payload(payload)
+            try:
+                payload = self._extract_json_object(raw_response)
+                self._validate_metadata_payload(payload)
+            except Exception as first_error:
+                print(f"⚠️ [METADATA ENGINE] Metadata IA inválida. Tentando reparar: {first_error}")
 
-        metadata = self._sanitize_metadata_payload(
-            payload=payload,
-            geo=geo,
-            base_hashtags=base_hashtags or []
-        )
+                repair_prompt = self._build_repair_prompt(
+                    previous_response=raw_response,
+                    issue=str(first_error)
+                )
 
-        print("✅ [METADATA ENGINE] Metadata IA pronta.")
+                repaired_response = self._generate_with_ai(
+                    prompt=repair_prompt,
+                    active_model=active_model,
+                    temperature=0.30
+                )
+
+                payload = self._extract_json_object(repaired_response)
+                self._validate_metadata_payload(payload)
+
+            metadata = self._sanitize_metadata_payload(
+                payload=payload,
+                geo=geo,
+                base_hashtags=base_hashtags or []
+            )
+
+            print("✅ [METADATA ENGINE] Metadata IA pronta.")
+        except Exception as ai_error:
+            if not allow_fallback:
+                raise RuntimeError(
+                    f"Metadata Trending indisponível sem fallback: {ai_error}"
+                ) from ai_error
+            print(f"⚠️ [METADATA ENGINE] IA indisponível ({ai_error}). Gerando metadata de emergência (sem IA) para não travar.")
+            metadata = self._fallback_metadata(topic, geo, base_hashtags or [])
 
         return metadata

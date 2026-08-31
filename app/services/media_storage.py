@@ -34,6 +34,7 @@ log = logging.getLogger("atlas.media_storage")
 # Cache por processo: caminho local -> URL publica (evita subir 2x o mesmo
 # video quando IG e FB publicam em seguida).
 _uploaded: dict[str, str] = {}
+_quota_blocked = False
 
 
 def _cfg() -> tuple[str, str, str]:
@@ -50,7 +51,7 @@ def _cfg() -> tuple[str, str, str]:
 def is_enabled() -> bool:
     """True quando o armazenamento na nuvem esta configurado."""
     url, key, bucket = _cfg()
-    return bool(url and key and bucket)
+    return bool(url and key and bucket and not _quota_blocked)
 
 
 def _resolve_file(local_path: str) -> Path | None:
@@ -190,6 +191,7 @@ def _compress_for_upload(file: Path, max_bytes: int) -> tuple[Path, bool]:
 
 def get_or_upload_public_url(local_path: str) -> str:
     """Sobe o video (se ainda nao subiu) e devolve a URL publica; '' se falhar."""
+    global _quota_blocked
     if not local_path:
         return ""
     abspath = str(Path(local_path).resolve())
@@ -229,8 +231,14 @@ def get_or_upload_public_url(local_path: str) -> str:
                 timeout=600,
             )
         if resp.status_code >= 400:
+            response_text = resp.text[:500]
+            if resp.status_code == 402 and (
+                "quota" in response_text.lower()
+                or "restricted" in response_text.lower()
+            ):
+                _quota_blocked = True
             log.warning(
-                "Upload Supabase falhou (%s): %s", resp.status_code, resp.text[:300]
+                "Upload Supabase falhou (%s): %s", resp.status_code, response_text[:300]
             )
             return ""
     except Exception as exc:  # pragma: no cover - rede
