@@ -48,3 +48,26 @@ def test_sanitized_sqlite_backup_clears_tokens(tmp_path):
         ).fetchone()
     assert result["created"] is True
     assert row == ("Atlas", "", "contact [REDACTED_EMAIL]")
+
+
+def test_sanitized_sqlite_backup_preserves_unique_external_ids(tmp_path):
+    source = tmp_path / "source.db"
+    destination = tmp_path / "backup.db"
+    with sqlite3.connect(source) as db:
+        db.execute(
+            "CREATE TABLE comments (id INTEGER PRIMARY KEY, "
+            "external_comment_id TEXT UNIQUE NOT NULL)"
+        )
+        db.executemany(
+            "INSERT INTO comments (external_comment_id) VALUES (?)",
+            [("123456789012345",), ("987654321098765",)],
+        )
+        db.commit()
+
+    backup.sanitized_sqlite_backup(source, destination)
+
+    with sqlite3.connect(destination) as db:
+        values = db.execute(
+            "SELECT external_comment_id FROM comments ORDER BY id"
+        ).fetchall()
+    assert values == [("123456789012345",), ("987654321098765",)]

@@ -207,6 +207,8 @@ def sanitized_sqlite_backup(source: Path, destination: Path) -> dict:
                     continue
                 if "CHAR" not in column_type.upper() and "TEXT" not in column_type.upper():
                     continue
+                if column.lower() == "id" or column.lower().endswith("_id"):
+                    continue
                 rows = db.execute(
                     f'SELECT rowid, "{column}" FROM "{table}" WHERE "{column}" IS NOT NULL'
                 ).fetchall()
