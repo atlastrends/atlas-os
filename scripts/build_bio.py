@@ -484,7 +484,21 @@ def fetch_products() -> dict[str, list[dict]]:
     """
     query = text(
         """
-        SELECT va.id, va.title, va.country_code, va.affiliate_url, va.payload
+        SELECT va.id, va.title, va.country_code, va.affiliate_url, va.payload,
+               (
+                   SELECT c.link_url
+                   FROM ad_campaigns c
+                   WHERE c.video_asset_id = va.id
+                     AND c.status IN (
+                         'DRAFT', 'draft', 'REVIEW', 'review',
+                         'PAUSED', 'paused', 'ACTIVE', 'active',
+                         'CREDENTIALS_MISSING', 'credentials_missing'
+                     )
+                     AND c.link_url IS NOT NULL
+                     AND c.link_url <> ''
+                   ORDER BY c.created_at DESC
+                   LIMIT 1
+               ) AS campaign_url
         FROM video_assets va
         WHERE va.kind = 'AFFILIATE'
           AND va.affiliate_url IS NOT NULL
@@ -498,6 +512,15 @@ def fetch_products() -> dict[str, list[dict]]:
                       AND p.external_id IS NOT NULL
                       AND p.external_id <> ''
                 )
+                OR EXISTS (
+                    SELECT 1 FROM ad_campaigns c
+                    WHERE c.video_asset_id = va.id
+                      AND c.status IN (
+                          'DRAFT', 'draft', 'REVIEW', 'review',
+                          'PAUSED', 'paused', 'ACTIVE', 'active',
+                          'CREDENTIALS_MISSING', 'credentials_missing'
+                      )
+                )
               )
         ORDER BY va.published_at DESC
         """
@@ -506,7 +529,7 @@ def fetch_products() -> dict[str, list[dict]]:
     seen: dict[str, set[str]] = {"BR": set(), "US": set()}
     img_cache = _load_img_cache()
     with SessionLocal() as db:
-        for asset_id, title, country, url, payload in db.execute(query):
+        for asset_id, title, country, url, payload, campaign_url in db.execute(query):
             cc = (country or "").upper()
             if cc not in grouped:
                 continue
@@ -535,6 +558,7 @@ def fetch_products() -> dict[str, list[dict]]:
                     "image": imgs[0] if imgs else "",
                     "images": imgs,
                     "cat": _category(title, _payload_category(payload)),
+                    "campaign_url": (campaign_url or "").strip(),
                 }
             )
     _save_img_cache(img_cache)
@@ -694,23 +718,43 @@ def build_products_index(grouped: dict[str, list[dict]]) -> list[dict]:
     return items
 
 
-def _card_html(product: dict, cta: str) -> str:
+def _campaign_href(url: str) -> str:
+    public_prefix = "https://atlastrends.github.io/atlas-os/"
+    if url.startswith(public_prefix):
+        return url[len(public_prefix) :].split("?", 1)[0]
+    return url
+
+
+def _card_html(product: dict, cta: str, *, advertised: bool = False) -> str:
     title = html.escape(product["title"])
     title_attr = html.escape(product["title"].lower(), quote=True)
     cat = html.escape(product.get("cat", FALLBACK_CAT[0]), quote=True)
-    url = html.escape(product["url"], quote=True)
+    asin = html.escape(product.get("asin") or "", quote=True)
+    destination = (
+        _campaign_href(product.get("campaign_url") or product["url"])
+        if advertised
+        else product["url"]
+    )
+    url = html.escape(destination, quote=True)
     images = product.get("images") or ([product["image"]] if product.get("image") else [])
     image = html.escape(images[0], quote=True) if images else ""
     srcs = html.escape("|".join(images[1:]), quote=True) if len(images) > 1 else ""
+    loading = "eager" if advertised else "lazy"
     img_tag = (
-        f'<img class="card-img" src="{image}" alt="{title}" loading="lazy" '
+        f'<img class="card-img" src="{image}" alt="{title}" loading="{loading}" '
         f'data-srcs="{srcs}" onerror="imgFallback(this)">'
         if image
         else ""
     )
+    card_class = "card advertised-card" if advertised else "card"
+    target = "_self" if advertised else "_blank"
+    rel = "noopener" if advertised else "nofollow noopener sponsored"
+    tracking = "trackAdvertisedProduct(this)" if advertised else "trackAmazonOutbound(this)"
+    badge = '<span class="ad-badge">Featured ad</span>' if advertised else ""
+    card_id = f"advertised-product-{asin}" if advertised else f"product-{asin}"
     return f"""
-      <a class="card" data-title="{title_attr}" data-cat="{cat}" href="{url}" target="_blank" rel="nofollow noopener sponsored">
-        <div class="card-media">{img_tag}<span class="card-fallback">{title}</span></div>
+      <a class="{card_class}" id="{card_id}" data-asin="{asin}" data-title="{title_attr}" data-cat="{cat}" href="{url}" target="{target}" rel="{rel}" onclick="{tracking}">
+        <div class="card-media">{badge}{img_tag}<span class="card-fallback">{title}</span></div>
         <div class="card-info">
           <span class="card-title">{title}</span>
           <span class="card-btn">{cta}</span>
@@ -718,8 +762,13 @@ def _card_html(product: dict, cta: str) -> str:
       </a>"""
 
 
-def _socials_html(market: str, active: bool) -> str:
-    links = SOCIALS.get(market, {})
+def _socials_html(
+    market: str,
+    active: bool,
+    *,
+    social_market: str | None = None,
+) -> str:
+    links = SOCIALS.get(social_market or market, {})
     parts = []
     for network in ("tiktok", "instagram", "facebook"):
         href = links.get(network)
@@ -764,14 +813,25 @@ def _catlist_html(market: str, products: list[dict]) -> str:
 def build_html(grouped: dict[str, list[dict]]) -> str:
     br = grouped["BR"]
     us = grouped["US"]
+    advertised = [
+        product
+        for market in ("US", "BR")
+        for product in grouped[market]
+        if product.get("campaign_url")
+    ]
     generated = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M UTC")
 
     br_cards = "\n".join(_card_html(p, "Ver na Amazon") for p in br)
     us_cards = "\n".join(_card_html(p, "View on Amazon") for p in us)
+    advertised_cards = "\n".join(
+        _card_html(p, "View featured page", advertised=True) for p in advertised
+    ).strip()
     br_socials = _socials_html("BR", active=True)
     us_socials = _socials_html("US", active=False)
+    advertised_socials = _socials_html("ADS", active=False, social_market="US")
     br_cats = _catlist_html("BR", br)
     us_cats = _catlist_html("US", us)
+    advertised_cats = _catlist_html("ADS", advertised)
     br_flag = FLAG_SVG["BR"]
     us_flag = FLAG_SVG["US"]
 
@@ -842,6 +902,12 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
   .tab.active {{ color:#fff; box-shadow:0 6px 16px rgba(0,0,0,.2); }}
   .tab[data-market="BR"].active {{ background:linear-gradient(135deg,#009c3b 0%,#00701f 100%); box-shadow:0 6px 16px rgba(0,130,45,.34); }}
   .tab[data-market="US"].active {{ background:linear-gradient(135deg,#3c3b6e 0%,#b22234 100%); box-shadow:0 6px 16px rgba(60,59,110,.34); }}
+  .tab[data-market="ADS"].active {{ background:var(--grad); box-shadow:0 6px 16px rgba(178,34,52,.28); }}
+  .ad-symbol {{
+    flex:0 0 auto; width:22px; height:22px; display:inline-flex; align-items:center;
+    justify-content:center; border-radius:7px; background:#f2f2f4; font-size:13px;
+  }}
+  .tab.active .ad-symbol {{ background:rgba(255,255,255,.16); }}
   /* BUSCA + CATEGORIAS */
   .searchrow {{ margin-top:10px; display:flex; gap:8px; align-items:stretch; }}
   .searchbar {{
@@ -913,10 +979,22 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
   }}
   .card:hover {{ transform:translateY(-4px); box-shadow:0 16px 34px rgba(15,23,42,.14); }}
   .card:active {{ transform:translateY(-1px); }}
+  .card.featured {{
+    outline:4px solid #ff9900;
+    box-shadow:0 0 0 7px rgba(255,153,0,.2),0 20px 45px rgba(15,23,42,.2);
+    transform:translateY(-4px);
+  }}
   .card-media {{
     position:relative; height:190px; background:#f7f8fa; padding:16px;
     display:flex; align-items:center; justify-content:center;
   }}
+  .ad-badge {{
+    position:absolute; top:10px; left:10px; z-index:2; padding:6px 9px;
+    border-radius:9px; color:#fff; background:linear-gradient(135deg,#3c3b6e,#b22234);
+    box-shadow:0 4px 12px rgba(60,59,110,.24); font-size:9.5px; font-weight:800;
+    letter-spacing:.04em; text-transform:uppercase;
+  }}
+  .advertised-card {{ box-shadow:0 0 0 2px rgba(178,34,52,.08),0 8px 22px rgba(15,23,42,.09); }}
   .card-img {{ width:100%; height:100%; object-fit:contain; mix-blend-mode:multiply; }}
   .card-fallback {{
     display:none; font-size:11px; color:#fff; font-weight:700; padding:8px;
@@ -951,10 +1029,12 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     <header class="hero">
       <img class="hero-banner active" id="banner-BR" src="banner-br.jpg" alt="Atlas Trends Brasil" fetchpriority="high">
       <img class="hero-banner" id="banner-US" src="banner-us.jpg" alt="Atlas Trends US">
+      <img class="hero-banner" id="banner-ADS" src="banner-us.jpg" alt="Atlas Finds advertised products">
       <div class="hero-content">
         <div class="hero-socials">
           {br_socials}
           {us_socials}
+          {advertised_socials}
         </div>
       </div>
     </header>
@@ -966,6 +1046,9 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
         </button>
         <button class="tab" data-market="US" onclick="showMarket('US')">
           <span class="tflag">{us_flag}</span><span class="tlabel">USA</span><span class="tflag">{us_flag}</span>
+        </button>
+        <button class="tab" data-market="ADS" onclick="showMarket('ADS')">
+          <span class="ad-symbol">📣</span><span class="tlabel">Ads</span><span class="ad-symbol">📣</span>
         </button>
       </div>
       <div class="searchrow">
@@ -981,6 +1064,7 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
         <p class="sidebar-title">Categorias</p>
         {br_cats}
         {us_cats}
+        {advertised_cats}
       </aside>
       <main class="content">
       <section class="market active" id="market-BR">
@@ -1004,6 +1088,17 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
           <div class="empty noresult" style="display:none">No products found 🔍</div>
         </div>
       </section>
+
+      <section class="market" id="market-ADS">
+        <div class="sec-head">
+          <h2>Advertised products</h2>
+          <span>{len(advertised)} {'item' if len(advertised) == 1 else 'items'}</span>
+        </div>
+        <div class="grid">
+          {advertised_cards or '<div class="empty">No advertised products yet.</div>'}
+          <div class="empty noresult" style="display:none">No advertised products found 🔍</div>
+        </div>
+      </section>
       </main>
     </div>
 
@@ -1015,7 +1110,7 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
   </div>
 
   <script>
-    var catState = {{ BR: 'all', US: 'all' }};
+    var catState = {{ BR: 'all', US: 'all', ADS: 'all' }};
     function showMarket(m) {{
       document.querySelectorAll('.market').forEach(function (el) {{
         el.classList.toggle('active', el.id === 'market-' + m);
@@ -1033,7 +1128,7 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
         el.classList.toggle('active', el.id === 'cats-' + m);
       }});
       var qEl = document.getElementById('q');
-      if (qEl) qEl.placeholder = (m === 'US') ? 'Search product...' : 'Buscar produto...';
+      if (qEl) qEl.placeholder = (m === 'BR') ? 'Buscar produto...' : 'Search product...';
       applyFilter();
       if (history.replaceState) history.replaceState(null, '', '#' + m);
     }}
@@ -1081,10 +1176,47 @@ def build_html(grouped: dict[str, list[dict]]) -> str:
     window.addEventListener('load', fitBars);
     window.addEventListener('resize', fitBars);
     fitBars();
-    // Abre direto na aba certa se a URL terminar com #US ou #BR.
+    function trackAmazonOutbound(card) {{
+      if (typeof window.fbq !== 'function') return;
+      window.fbq('trackCustom', 'AmazonOutboundClick', {{
+        asin: card.dataset.asin || '',
+        product_title: card.dataset.title || '',
+        market: 'US'
+      }});
+    }}
+    function trackAdvertisedProduct(card) {{
+      if (typeof window.fbq !== 'function') return;
+      window.fbq('trackCustom', 'AdvertisedProductSelect', {{
+        asin: card.dataset.asin || '',
+        product_title: card.dataset.title || ''
+      }});
+    }}
+    // Abre mercado e produto exatos quando a campanha usa
+    // ?market=US&product=ASIN. O clique Amazon continua voluntario.
     (function () {{
+      var params = new URLSearchParams(location.search);
+      var requestedMarket = (params.get('market') || '').toUpperCase();
+      var requestedProduct = (params.get('product') || '').toUpperCase();
       var h = (location.hash || '').replace('#', '').toUpperCase();
-      if (h === 'US' || h === 'BR') showMarket(h);
+      var market = (requestedMarket === 'US' || requestedMarket === 'BR')
+        ? requestedMarket : h;
+      if (market === 'US' || market === 'BR' || market === 'ADS') showMarket(market);
+      if (!requestedProduct) return;
+      var card = document.querySelector(
+        '.card[data-asin="' + CSS.escape(requestedProduct) + '"]'
+      );
+      if (!card) return;
+      document.getElementById('q').value = '';
+      catState[market || 'US'] = 'all';
+      applyFilter();
+      card.classList.add('featured');
+      card.scrollIntoView({{ behavior:'smooth', block:'center' }});
+      if (typeof window.fbq === 'function') {{
+        window.fbq('track', 'ViewContent', {{
+          content_ids:[requestedProduct],
+          content_type:'product'
+        }});
+      }}
     }})();
   </script>
 </body>
