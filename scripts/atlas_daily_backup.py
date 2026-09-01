@@ -345,6 +345,22 @@ def create_backup(args: argparse.Namespace) -> Path:
         encoding="utf-8",
     )
 
+    if args.portable_root:
+        portable_root = Path(args.portable_root).resolve()
+        portable_root.mkdir(parents=True, exist_ok=True)
+        archive_base = portable_root / f"Atlas-Backup-{date_key}-{run_key}"
+        archive_path = Path(
+            shutil.make_archive(
+                str(archive_base),
+                "zip",
+                root_dir=destination,
+            )
+        )
+        archive_path.with_suffix(".zip.sha256").write_text(
+            f"{sha256(archive_path)}  {archive_path.name}\n",
+            encoding="utf-8",
+        )
+
     if args.mirror_root:
         mirror = (
             Path(args.mirror_root).resolve()
@@ -379,6 +395,7 @@ def parser() -> argparse.ArgumentParser:
     create = subparsers.add_parser("create")
     create.add_argument("--repo-root", default=str(root))
     create.add_argument("--private-root", default=str(root / "backups" / "daily"))
+    create.add_argument("--portable-root", default=str(root / "backups" / "portable"))
     create.add_argument("--mirror-root", default=os.getenv("ATLAS_BACKUP_MIRROR", ""))
     create.add_argument("--session-log")
     create.add_argument("--date")

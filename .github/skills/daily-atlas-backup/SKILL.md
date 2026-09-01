@@ -16,7 +16,8 @@ Use esta skill ao final de cada dia ou antes de mudanças estruturais.
    C:\atlas-os\scripts\run_daily_backup.ps1
    ```
 
-3. Localize o manifesto em `C:\atlas-os\backups\daily\AAAA\AAAA-MM-DD\manifest.json`.
+3. Localize o manifesto em `C:\atlas-os\backups\daily\AAAA\AAAA-MM-DD\HHMMSS\manifest.json`.
+   O ZIP para transferência fica em `C:\atlas-os\backups\portable\`.
 4. Valide o arquivo:
 
    ```powershell

@@ -9,7 +9,8 @@ $arguments = @(
     (Join-Path $PSScriptRoot "atlas_daily_backup.py"),
     "create",
     "--repo-root", $repo,
-    "--private-root", (Join-Path $repo "backups\daily")
+    "--private-root", (Join-Path $repo "backups\daily"),
+    "--portable-root", (Join-Path $repo "backups\portable")
 )
 
 if ($env:ATLAS_BACKUP_MIRROR) {
