@@ -34,6 +34,7 @@ Use esta skill ao final de cada dia ou antes de mudanças estruturais.
 - bundle Git completo;
 - hash e estado do commit;
 - prompts e respostas sanitizados;
+- conteúdo de anexos textuais sanitizado;
 - banco SQLite sanitizado, sem tokens;
 - nomes das variáveis de ambiente, sem valores;
 - versões de runtime;

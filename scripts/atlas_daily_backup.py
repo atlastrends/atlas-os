@@ -49,6 +49,8 @@ ARTIFACT_DIRS = (
     "ebooks",
     "app/assets",
 )
+TEXT_ATTACHMENT_SUFFIXES = {".txt", ".md", ".json", ".csv", ".log"}
+ATTACHMENT_PATTERN = re.compile(r"#attachment:([^\r\n]+?)(?=\s+#attachment:|$)")
 
 
 def run(command: list[str], cwd: Path, check: bool = True) -> str:
@@ -121,7 +123,70 @@ def newest_session_log() -> Path | None:
     return max(candidates, key=lambda path: path.stat().st_mtime) if candidates else None
 
 
-def archive_session(log_path: Path | None, destination: Path, date_key: str) -> dict:
+def default_attachment_root() -> Path | None:
+    appdata = os.environ.get("APPDATA")
+    if not appdata:
+        return None
+    root = Path(appdata) / "Code" / "agentSessionData"
+    return root if root.is_dir() else None
+
+
+def resolve_text_attachments(
+    content: str,
+    timestamp: str | None,
+    attachment_root: Path | None,
+) -> list[dict]:
+    if attachment_root is None or not attachment_root.is_dir():
+        return []
+    try:
+        event_time = datetime.fromisoformat(
+            timestamp.replace("Z", "+00:00")
+        ).timestamp() if timestamp else None
+    except ValueError:
+        event_time = None
+
+    attachments = []
+    for match in ATTACHMENT_PATTERN.finditer(content):
+        name = match.group(1).strip()
+        candidate_names = {name}
+        if not Path(name).suffix:
+            candidate_names.update(f"{name}{suffix}" for suffix in TEXT_ATTACHMENT_SUFFIXES)
+        candidates = [
+            path
+            for candidate_name in candidate_names
+            for path in attachment_root.rglob(candidate_name)
+            if path.is_file()
+            and path.suffix.lower() in TEXT_ATTACHMENT_SUFFIXES
+            and path.stat().st_size <= 1024 * 1024
+        ]
+        if not candidates:
+            continue
+        if event_time is None:
+            selected = max(candidates, key=lambda path: path.stat().st_mtime)
+        else:
+            selected = min(
+                candidates,
+                key=lambda path: abs(path.stat().st_mtime - event_time),
+            )
+            if abs(selected.stat().st_mtime - event_time) > 24 * 60 * 60:
+                continue
+        attachments.append(
+            {
+                "name": selected.name,
+                "content": redact_text(
+                    selected.read_text(encoding="utf-8", errors="replace")
+                ),
+            }
+        )
+    return attachments
+
+
+def archive_session(
+    log_path: Path | None,
+    destination: Path,
+    date_key: str,
+    attachment_root: Path | None = None,
+) -> dict:
     prompt_path = destination / "prompts.sanitized.jsonl"
     assistant_path = destination / "assistant.sanitized.jsonl"
     prompt_count = 0
@@ -155,9 +220,19 @@ def archive_session(log_path: Path | None, destination: Path, date_key: str) -> 
             data = event.get("data") or {}
             if event_type == "user.message":
                 content = redact_text(data.get("content") or "")
+                attachments = resolve_text_attachments(
+                    data.get("content") or "",
+                    timestamp,
+                    attachment_root,
+                )
                 prompts.write(
                     json.dumps(
-                        {"timestamp": timestamp, "role": "user", "content": content},
+                        {
+                            "timestamp": timestamp,
+                            "role": "user",
+                            "content": content,
+                            "attachments": attachments,
+                        },
                         ensure_ascii=False,
                     )
                     + "\n"
@@ -283,7 +358,17 @@ def create_backup(args: argparse.Namespace) -> Path:
     )
 
     session_log = Path(args.session_log).resolve() if args.session_log else newest_session_log()
-    session = archive_session(session_log, destination / "session", date_key)
+    attachment_root = (
+        Path(args.attachment_root).resolve()
+        if args.attachment_root
+        else default_attachment_root()
+    )
+    session = archive_session(
+        session_log,
+        destination / "session",
+        date_key,
+        attachment_root,
+    )
     db_result = sanitized_sqlite_backup(
         repo / "atlas_local.db",
         destination / "db" / "atlas_local.sanitized.db",
@@ -398,6 +483,7 @@ def parser() -> argparse.ArgumentParser:
     create.add_argument("--portable-root", default=str(root / "backups" / "portable"))
     create.add_argument("--mirror-root", default=os.getenv("ATLAS_BACKUP_MIRROR", ""))
     create.add_argument("--session-log")
+    create.add_argument("--attachment-root")
     create.add_argument("--date")
     verify = subparsers.add_parser("verify")
     verify.add_argument("--manifest", required=True)

@@ -1,5 +1,6 @@
 import importlib.util
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -71,3 +72,35 @@ def test_sanitized_sqlite_backup_preserves_unique_external_ids(tmp_path):
             "SELECT external_comment_id FROM comments ORDER BY id"
         ).fetchall()
     assert values == [("123456789012345",), ("987654321098765",)]
+
+
+def test_text_attachments_are_archived_and_sanitized(tmp_path):
+    attachment = (
+        tmp_path
+        / "session"
+        / "attachments"
+        / "item"
+        / "Pasted text #1.txt"
+    )
+    attachment.parent.mkdir(parents=True)
+    attachment.write_text(
+        "save this prompt for test@example.com",
+        encoding="utf-8",
+    )
+    timestamp = datetime.fromtimestamp(
+        attachment.stat().st_mtime,
+        timezone.utc,
+    ).isoformat()
+
+    result = backup.resolve_text_attachments(
+        "#attachment:Pasted text #1",
+        timestamp,
+        tmp_path,
+    )
+
+    assert result == [
+        {
+            "name": "Pasted text #1.txt",
+            "content": "save this prompt for [REDACTED_EMAIL]",
+        }
+    ]

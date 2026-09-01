@@ -5,6 +5,10 @@ if (-not (Test-Path $python)) {
     $python = "py"
 }
 
+param(
+    [switch]$PreviousDay
+)
+
 $arguments = @(
     (Join-Path $PSScriptRoot "atlas_daily_backup.py"),
     "create",
@@ -12,6 +16,10 @@ $arguments = @(
     "--private-root", (Join-Path $repo "backups\daily"),
     "--portable-root", (Join-Path $repo "backups\portable")
 )
+
+if ($PreviousDay) {
+    $arguments += @("--date", (Get-Date).Date.AddDays(-1).ToString("yyyy-MM-dd"))
+}
 
 if ($env:ATLAS_BACKUP_MIRROR) {
     $arguments += @("--mirror-root", $env:ATLAS_BACKUP_MIRROR)
