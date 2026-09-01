@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Guia de instalação e primeiro uso do Atlas Creator Core Basic.">
+  <title>Instalação | Atlas Creator Software</title>
+  <style>
+    :root{--ink:#11131a;--muted:#656c79;--paper:#f5f5f7;--card:#fff;--line:#dfe1e7;--red:#b22234;--blue:#3c3b6e;--green:#079455;--grad:linear-gradient(135deg,var(--blue),var(--red));--shadow:0 18px 54px rgba(23,22,47,.09)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 12% 3%,rgba(60,59,110,.1),transparent 28rem),var(--paper);color:var(--ink);font-family:"Segoe UI",Arial,sans-serif}.shell{width:min(1120px,calc(100% - 30px));margin:auto}.top{position:sticky;top:0;z-index:10;color:#fff;background:linear-gradient(110deg,#292a32,#12131a)}.top-inner{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:11px;color:#fff;text-decoration:none;font-weight:900}.mark{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:var(--grad)}.brand small{display:block;color:#b9bdca;font-size:10px;letter-spacing:.16em;margin-top:3px}.nav{display:flex;gap:8px}.nav a{padding:11px 14px;border-radius:10px;color:#d9dbe3;text-decoration:none;font-size:13px;font-weight:800}.nav a.active{background:#fff;color:#14151d}.hero{padding:88px 0 54px}.eyebrow{display:inline-flex;padding:7px 10px;border-radius:999px;color:#9d1e31;background:rgba(178,34,52,.1);font-size:11px;font-weight:900;letter-spacing:.12em}.hero h1{max-width:860px;margin:16px 0;font-size:clamp(42px,6vw,72px);line-height:1;letter-spacing:-.055em}.hero p{max-width:760px;color:var(--muted);font-size:18px;line-height:1.7}.notice{margin-top:26px;padding:19px 22px;border-radius:16px;color:#fff;background:linear-gradient(135deg,#17162f,#292653);box-shadow:var(--shadow)}section{padding:54px 0}.head{max-width:760px;margin-bottom:24px}.head h2{margin:8px 0;font-size:38px;letter-spacing:-.035em}.head p,.card p,.card li{color:var(--muted);line-height:1.65}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.card{padding:24px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--shadow)}.check{display:flex;gap:14px;align-items:flex-start}.check-mark{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:50%;color:#fff;background:var(--green);font-weight:900}.card h3{margin:2px 0 8px}.steps{counter-reset:item;display:grid;gap:12px}.step{display:grid;grid-template-columns:54px 1fr;gap:18px;align-items:start}.step::before{counter-increment:item;content:counter(item,decimal-leading-zero);width:48px;height:48px;display:grid;place-items:center;border-radius:14px;color:#fff;background:var(--grad);font-weight:900}.step h3{margin:2px 0 6px}.button{display:inline-flex;padding:13px 18px;border-radius:11px;color:#fff;background:linear-gradient(135deg,#d42a43,#8d1728);text-decoration:none;font-weight:900}.button.disabled{cursor:not-allowed;background:#a8abb4}.diagnostic{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}.pill{display:inline-flex;padding:6px 9px;border-radius:999px;color:#4e4b92;background:#efeff9;font-size:10px;font-weight:900}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.field{display:grid;gap:6px;color:#5e6471;font-size:12px;font-weight:800}.field input{width:100%;padding:12px;border:1px solid #ccd0d9;border-radius:10px;background:#f2f3f6;color:#7c8290}.safe{padding:28px;border-radius:20px;color:#fff;background:var(--grad)}.safe p{color:#e8e9ef}.links{display:grid;gap:9px}.links a{color:#403c88;font-weight:800}details{padding:18px 20px;border:1px solid var(--line);border-radius:13px;background:#fff}details+details{margin-top:9px}summary{cursor:pointer;font-weight:900}footer{padding:46px 0;color:#7c8290;text-align:center;font-size:12px}@media(max-width:720px){.top-inner{display:block;padding:14px 0}.nav{margin-top:12px;overflow:auto}.nav a{white-space:nowrap}.grid,.fields{grid-template-columns:1fr}.diagnostic{grid-template-columns:1fr}.hero{padding-top:56px}}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="shell top-inner">
+      <a class="brand" href="../"><span class="mark">A</span><span>ATLAS<small>CREATOR SOFTWARE</small></span></a>
+      <nav class="nav" aria-label="Navegação">
+        <a href="../#core">Core</a>
+        <a href="../#plugins">Plugins</a>
+        <a class="active" href="./">Instalação</a>
+        <a href="../#onboarding">Configuração</a>
+        <a href="../#montar">Montar meu Atlas</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="shell hero">
+      <span class="eyebrow">GUIA DO COMPRADOR · CORE BASIC</span>
+      <h1>Do download ao primeiro vídeo, sem depender de suporte.</h1>
+      <p>Este guia acompanha a instalação como se fosse o primeiro computador do cliente. Cada etapa informa o que será verificado e o que nunca deve ser solicitado.</p>
+      <div class="notice"><strong>O cliente não precisa instalar Python, Node.js ou FFmpeg.</strong><br>Esses componentes são empacotados e verificados pelo instalador Atlas. Links técnicos aparecem abaixo apenas para desenvolvimento e diagnóstico avançado.</div>
+    </div>
+
+    <section>
+      <div class="shell">
+        <div class="head"><span class="eyebrow">ANTES DE BAIXAR</span><h2>Checklist da máquina</h2><p>O instalador interrompe de forma segura se um requisito obrigatório não estiver disponível.</p></div>
+        <div class="grid">
+          <article class="card check"><span class="check-mark">✓</span><div><h3>Windows 10 ou 11, 64 bits</h3><p>Versões atualizadas e ainda suportadas pela Microsoft.</p></div></article>
+          <article class="card check"><span class="check-mark">✓</span><div><h3>8 GB de RAM recomendados</h3><p>4 GB para operações simples; 8 GB ou mais para vídeo Full HD.</p></div></article>
+          <article class="card check"><span class="check-mark">✓</span><div><h3>2 GB livres para o Core</h3><p>Projetos e vídeos exportados precisam de espaço adicional escolhido pelo cliente.</p></div></article>
+          <article class="card check"><span class="check-mark">✓</span><div><h3>Navegador moderno</h3><p>Edge ou Chrome atualizado. A interface abre localmente e não fica exposta na internet.</p></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell">
+        <div class="head"><span class="eyebrow">DOWNLOAD SEGURO</span><h2>Como reconhecer o arquivo verdadeiro</h2></div>
+        <div class="card diagnostic">
+          <div><h3>AtlasCreator-Setup.exe</h3><p>O download comercial será liberado no portal do cliente por um link temporário. Antes da venda, o instalador precisa mostrar assinatura válida de “Atlas Creator Software”.</p><span class="pill">CHECKOUT AINDA DESATIVADO</span></div>
+          <span class="button disabled" aria-disabled="true">Disponível após a compra</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell">
+        <div class="head"><span class="eyebrow">INSTALAÇÃO</span><h2>Passo a passo</h2></div>
+        <div class="steps">
+          <article class="card step"><div><h3>Baixe pelo portal</h3><p>Não aceite arquivos enviados por mensagem, drive público ou link permanente.</p></div></article>
+          <article class="card step"><div><h3>Verifique o editor</h3><p>Clique com o botão direito, abra Propriedades → Assinaturas Digitais e confirme o editor antes de executar.</p></div></article>
+          <article class="card step"><div><h3>Execute o instalador</h3><p>Escolha o idioma, leia os termos, confirme a pasta e conclua. O Core não exige privilégios administrativos no modo por usuário.</p></div></article>
+          <article class="card step"><div><h3>Abra pelo Menu Iniciar</h3><p>O Atlas escolhe uma porta local aleatória, gera uma sessão temporária e abre a interface no navegador.</p></div></article>
+          <article class="card step"><div><h3>Crie seu workspace</h3><p>Informe nome, país/idioma e fuso horário. Nenhum token é pedido no Core Basic.</p></div></article>
+          <article class="card step"><div><h3>Crie e teste</h3><p>Crie um projeto, importe uma imagem ou vídeo, gere um vídeo vertical e confirme o limite de cinco exportações diárias.</p></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell">
+        <div class="head"><span class="eyebrow">PRIMEIRO PLUGIN</span><h2>Instagram será conectado de forma guiada.</h2><p>TikTok não faz parte do primeiro plugin. Ele será vendido e configurado separadamente.</p></div>
+        <div class="grid">
+          <article class="card">
+            <h3>O cliente prepara</h3>
+            <ul>
+              <li>e-mail de trabalho acessível;</li>
+              <li>conta Instagram profissional;</li>
+              <li>Página do Facebook vinculada;</li>
+              <li>acesso administrativo ao negócio Meta.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>O Atlas faz</h3>
+            <ul>
+              <li>abre o login oficial da Meta;</li>
+              <li>mostra as permissões solicitadas;</li>
+              <li>valida Página e Instagram escolhidos;</li>
+              <li>salva credenciais no Cofre do Windows;</li>
+              <li>mostra somente valores mascarados.</li>
+            </ul>
+          </article>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <span class="pill">EXEMPLO DA TELA LOCAL</span>
+          <div class="fields">
+            <label class="field">E-mail da conta<input value="xxx@xxxxx.com" disabled></label>
+            <label class="field">Instagram profissional<input value="@xxxxxxxx" disabled></label>
+            <label class="field">Página do Facebook<input value="Página selecionada" disabled></label>
+            <label class="field">Token seguro<input value="••••••••••••••••" disabled></label>
+          </div>
+          <p>O token real nunca aparece no site público e nunca é salvo em `.env`. Clientes comuns não precisam criar tokens manualmente; o OAuth oficial faz isso.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell safe">
+        <h2>Segurança por padrão</h2>
+        <p>Core Basic não possui redes sociais, APIs pagas, anúncios ou renovação automática. Cada plugin é assinado, licenciado e ativado separadamente. Qualquer operação com custo exige confirmação explícita.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell">
+        <div class="head"><span class="eyebrow">LINKS OFICIAIS</span><h2>Somente para atualização e diagnóstico</h2><p>O cliente comum não precisa baixar estes componentes separadamente.</p></div>
+        <div class="card links">
+          <a href="https://support.microsoft.com/windows/windows-update-faq" target="_blank" rel="noopener">Atualizar o Windows — Microsoft</a>
+          <a href="https://www.microsoft.com/edge/download" target="_blank" rel="noopener">Microsoft Edge — download oficial</a>
+          <a href="https://www.python.org/downloads/windows/" target="_blank" rel="noopener">Python para Windows — somente desenvolvimento</a>
+          <a href="https://ffmpeg.org/download.html" target="_blank" rel="noopener">FFmpeg — somente desenvolvimento e auditoria</a>
+          <a href="https://www.facebook.com/business/help/898752960195806" target="_blank" rel="noopener">Conta profissional do Instagram — Meta</a>
+          <a href="https://business.facebook.com/" target="_blank" rel="noopener">Meta Business — acesso oficial</a>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell">
+        <div class="head"><span class="eyebrow">AUTOSSUPORTE</span><h2>Problemas comuns</h2></div>
+        <details><summary>O instalador pediu Python ou FFmpeg.</summary><p>Interrompa a instalação. O pacote comercial correto deve incluir ambos. Não baixe dependências indicadas por sites desconhecidos.</p></details>
+        <details><summary>O Windows diz que o editor é desconhecido.</summary><p>Não prossiga com uma versão comercial. Builds internas de teste são explicitamente marcadas como não assinadas e não podem ser revendidas.</p></details>
+        <details><summary>O navegador não abriu.</summary><p>Abra Atlas Creator novamente pelo Menu Iniciar. O aplicativo cria uma nova sessão local; não reutilize URLs antigas.</p></details>
+        <details><summary>Onde coloco tokens?</summary><p>Core Basic não usa tokens. Após comprar um plugin, a aba Configuração mostrará o login oficial ou o campo específico e salvará a credencial no cofre seguro.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="shell">Atlas Creator Software · Guia de pré-lançamento · Nenhum pagamento ou download comercial ativo</div></footer>
+</body>
+</html>
