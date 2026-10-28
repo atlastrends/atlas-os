@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-28T19:19:37.839265+00:00",
+  "updated_at": "2026-10-28T19:24:20.840409+00:00",
   "products": [
+    {
+      "keyword": "REVLON",
+      "title": "Revlon Profissional Uniq One - Leave-in 150ml",
+      "url": "https://www.amazon.com.br/dp/B00CZC5F0G?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "940557928890746"
+    },
     {
       "keyword": "BANQUETA",
       "title": "Banqueta Plástica Dobrável, Branca, Altura 450 Mm, Vonder",
@@ -3229,14 +3237,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "REVLON",
-      "title": "Revlon Profissional Uniq One - Leave-in 150ml",
-      "url": "https://www.amazon.com.br/dp/B00CZC5F0G?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
