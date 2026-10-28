@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-28T19:35:30.825928+00:00",
+  "updated_at": "2026-10-28T19:36:00.694217+00:00",
   "products": [
+    {
+      "keyword": "CHARLIE",
+      "title": "A Charlie Brown Christmas (4K Ultra HD + BD+UV) [Blu-ray]",
+      "url": "https://www.amazon.com.br/dp/B073VC9D8X?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18131761717833831",
+      "facebook_post_id": "2327489108015108"
+    },
     {
       "keyword": "STANLEY",
       "title": "Stanley Garrafa Térmica Quick Flip Black 710ml",
@@ -3247,14 +3255,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CHARLIE",
-      "title": "A Charlie Brown Christmas (4K Ultra HD + BD+UV) [Blu-ray]",
-      "url": "https://www.amazon.com.br/dp/B073VC9D8X?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18131761717833831",
       "facebook_post_id": ""
     },
     {
