@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-28T19:42:32.022998+00:00",
+  "updated_at": "2026-10-28T19:43:04.773958+00:00",
   "products": [
+    {
+      "keyword": "EVERMORE",
+      "title": "evermore [Transparent Green 2 LP]",
+      "url": "https://www.amazon.com.br/dp/B08QFRKNNJ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18121879168981252",
+      "facebook_post_id": "1811744349946724"
+    },
     {
       "keyword": "CHARLIE",
       "title": "A Charlie Brown Christmas (4K Ultra HD + BD+UV) [Blu-ray]",
@@ -3255,14 +3263,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "EVERMORE",
-      "title": "evermore [Transparent Green 2 LP]",
-      "url": "https://www.amazon.com.br/dp/B08QFRKNNJ?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18121879168981252",
       "facebook_post_id": ""
     },
     {
