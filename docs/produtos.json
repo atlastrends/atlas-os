@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-28T14:42:51.528189+00:00",
+  "updated_at": "2026-10-28T14:50:07.858580+00:00",
   "products": [
+    {
+      "keyword": "CRISTIANISMO",
+      "title": "Cristianismo puro e simples",
+      "url": "https://www.amazon.com.br/dp/8578601777?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1109537405254735"
+    },
     {
       "keyword": "CONSOLE",
       "title": "Console Xbox Series S",
@@ -3133,14 +3141,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CRISTIANISMO",
-      "title": "Cristianismo puro e simples",
-      "url": "https://www.amazon.com.br/dp/8578601777?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
