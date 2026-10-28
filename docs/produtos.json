@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-28T14:38:44.445666+00:00",
+  "updated_at": "2026-10-28T14:39:14.047022+00:00",
   "products": [
+    {
+      "keyword": "CONSOLE",
+      "title": "Console Xbox Series S",
+      "url": "https://www.amazon.com.br/dp/B08JN2VMGX?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17909138739568517",
+      "facebook_post_id": "1432997539039255"
+    },
     {
       "keyword": "DURACELL",
       "title": "Duracell Pilha Alcalina AA – Pack com 4 Unidades – Dura até 10x Mais – Ideal para Controles Remotos, Brinquedos e Lanternas",
@@ -3127,14 +3135,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "CONSOLE",
-      "title": "Console Xbox Series S",
-      "url": "https://www.amazon.com.br/dp/B08JN2VMGX?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17909138739568517",
       "facebook_post_id": ""
     },
     {
