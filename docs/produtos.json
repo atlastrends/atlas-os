@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-28T21:13:17.535206+00:00",
+  "updated_at": "2026-10-28T21:13:49.667156+00:00",
   "products": [
+    {
+      "keyword": "TANQUERAY",
+      "title": "Gin Tanqueray London Dry, 750ml",
+      "url": "https://www.amazon.com.br/dp/B006I1M8ZU?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17988622823881626",
+      "facebook_post_id": "1149749867807570"
+    },
     {
       "keyword": "RAQUETE",
       "title": "Raquete Elétrica Mata-Insetos Multilaser, Bivolt | Bateria Recarregável",
@@ -3287,14 +3295,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "TANQUERAY",
-      "title": "Gin Tanqueray London Dry, 750ml",
-      "url": "https://www.amazon.com.br/dp/B006I1M8ZU?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17988622823881626",
       "facebook_post_id": ""
     },
     {
