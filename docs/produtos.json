@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-29T16:38:33.976024+00:00",
+  "updated_at": "2026-10-29T16:57:46.739201+00:00",
   "products": [
+    {
+      "keyword": "FUJIFILM",
+      "title": "Fujifilm Filme Instax Mini com 20 Fotos, 8.6 x 5.4 cm",
+      "url": "https://www.amazon.com.br/dp/B0000C73CQ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18118959286808310",
+      "facebook_post_id": "2294442831338209"
+    },
     {
       "keyword": "MOCHILA",
       "title": "Mochila Lenovo Casual B210 Preta para Notebook 15,6\" - GX40Q17225",
@@ -3375,14 +3383,6 @@
       "url": "https://www.amazon.com.br/dp/B07JN19LDF?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "FUJIFILM",
-      "title": "Fujifilm Filme Instax Mini com 20 Fotos, 8.6 x 5.4 cm",
-      "url": "https://www.amazon.com.br/dp/B0000C73CQ?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18118959286808310",
       "facebook_post_id": ""
     },
     {
@@ -7437,6 +7437,14 @@
       "keyword": "CUSTOM",
       "title": "Custom Metal Name Sign | Split Letter Monogram | Outdoor Last Name Sign | Metal Wall Art, Personalized Wedding Gift, Outdoor",
       "url": "https://www.amazon.com/dp/B081732LNJ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "GROCERY",
+      "title": "Amazon Grocery, Peas & Carrots, 12 Oz, Frozen",
+      "url": "https://www.amazon.com/dp/B07WSD8QPR?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
