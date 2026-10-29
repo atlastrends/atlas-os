@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-29T03:18:39.548339+00:00",
+  "updated_at": "2026-10-29T03:19:03.160366+00:00",
   "products": [
+    {
+      "keyword": "LAST",
+      "title": "The Last Of Us Part II - PlayStation 4",
+      "url": "https://www.amazon.com.br/dp/B07ZGFHZVZ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17972267334171850",
+      "facebook_post_id": "1630185995507730"
+    },
     {
       "keyword": "BUSCA",
       "title": "Em Busca De Sentido: Um psicólogo no campo de concentração -o número de edições pode variar, mas o conteúdo é o mesmo",
@@ -3311,14 +3319,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "LAST",
-      "title": "The Last Of Us Part II - PlayStation 4",
-      "url": "https://www.amazon.com.br/dp/B07ZGFHZVZ?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17972267334171850",
       "facebook_post_id": ""
     },
     {
