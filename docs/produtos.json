@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-29T14:28:54.894370+00:00",
+  "updated_at": "2026-10-29T14:29:19.766478+00:00",
   "products": [
+    {
+      "keyword": "PANASONIC",
+      "title": "Panasonic Micro-ondas 21L Branco 127v NN-ST25LWRU",
+      "url": "https://www.amazon.com.br/dp/B08JN318M2?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18082452701365009",
+      "facebook_post_id": "2623695571447720"
+    },
     {
       "keyword": "VACAS",
       "title": "As vacas não me olham mais na cara",
@@ -3335,14 +3343,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PANASONIC",
-      "title": "Panasonic Micro-ondas 21L Branco 127v NN-ST25LWRU",
-      "url": "https://www.amazon.com.br/dp/B08JN318M2?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18082452701365009",
       "facebook_post_id": ""
     },
     {
