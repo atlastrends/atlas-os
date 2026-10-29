@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-29T19:24:56.610384+00:00",
+  "updated_at": "2026-10-29T19:25:27.305866+00:00",
   "products": [
+    {
+      "keyword": "PROCESSADOR",
+      "title": "Processador AMD Ryzen 5 5500 100100000457BOX, Cerâmica Cinza",
+      "url": "https://www.amazon.com.br/dp/B09VCJ171S?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18110740856620113",
+      "facebook_post_id": "1815707966240228"
+    },
     {
       "keyword": "LIMPEZA",
       "title": "Gel de Limpeza Facial Neutrogena Deep Clean Intensive, Grapefruit, 150g | Controle de Oleosidade, Dermatologicamente Testado",
@@ -3423,14 +3431,6 @@
       "url": "https://www.amazon.com.br/dp/B07JN19LDF?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PROCESSADOR",
-      "title": "Processador AMD Ryzen 5 5500 100100000457BOX, Cerâmica Cinza",
-      "url": "https://www.amazon.com.br/dp/B09VCJ171S?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18110740856620113",
       "facebook_post_id": ""
     },
     {
