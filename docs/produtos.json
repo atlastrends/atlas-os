@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-29T17:12:06.856198+00:00",
+  "updated_at": "2026-10-29T17:52:16.284516+00:00",
   "products": [
+    {
+      "keyword": "BODY",
+      "title": "Body Pacote com 6 bodies sem mangas Simple Joys by Carter&#x27;sMeninas",
+      "url": "https://www.amazon.com.br/dp/B077YDJXBZ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18131640910838600",
+      "facebook_post_id": "2202875553975774"
+    },
     {
       "keyword": "GILLETTE",
       "title": "Gillette Mach3 Sensitive Carga Aparelho de Barbear com Aloe 8 Unidades",
@@ -3391,14 +3399,6 @@
       "url": "https://www.amazon.com.br/dp/B07JN19LDF?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "BODY",
-      "title": "Body Pacote com 6 bodies sem mangas Simple Joys by Carter&#x27;sMeninas",
-      "url": "https://www.amazon.com.br/dp/B077YDJXBZ?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18131640910838600",
       "facebook_post_id": ""
     },
     {
@@ -7469,6 +7469,14 @@
       "keyword": "CUSTOM",
       "title": "Custom Metal Name Sign | Split Letter Monogram | Outdoor Last Name Sign | Metal Wall Art, Personalized Wedding Gift, Outdoor",
       "url": "https://www.amazon.com/dp/B081732LNJ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "MEGA",
+      "title": "MEGA BLOKS First Builders Big Building Bag Toddler Blocks Toy Blue | 80 Colorful Pieces, Creative Open-Ended Play, Storage, B",
+      "url": "https://www.amazon.com/dp/B007GE75HY?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
