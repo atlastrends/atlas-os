@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-29T22:04:24.307709+00:00",
+  "updated_at": "2026-10-29T22:05:11.852765+00:00",
   "products": [
+    {
+      "keyword": "TABUA",
+      "title": "Mor - Tábua Retangular Bamboo 35cm x 25cm",
+      "url": "https://www.amazon.com.br/dp/B076X5ZLZQ?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18105084728144390",
+      "facebook_post_id": "1391195772800971"
+    },
     {
       "keyword": "BASE",
       "title": "Base BB Cream L&#x27;Oréal Paris Dermo Expertise Cor Clara FPS 20, 30ml",
@@ -3439,14 +3447,6 @@
       "url": "https://www.amazon.com.br/dp/B07JN19LDF?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "TABUA",
-      "title": "Mor - Tábua Retangular Bamboo 35cm x 25cm",
-      "url": "https://www.amazon.com.br/dp/B076X5ZLZQ?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18105084728144390",
       "facebook_post_id": ""
     },
     {
