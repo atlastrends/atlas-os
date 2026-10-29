@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-29T18:24:34.522338+00:00",
+  "updated_at": "2026-10-29T18:50:43.285703+00:00",
   "products": [
+    {
+      "keyword": "FONE",
+      "title": "JBL, Fone de Ouvido Com Fio, Intra-Auricular, Tune 310 C - Preto",
+      "url": "https://www.amazon.com.br/dp/B0CTMTYY1D?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "2118087515736710"
+    },
     {
       "keyword": "CONTROLE",
       "title": "Controle sem fio DualSense Midnight Black",
@@ -3405,14 +3413,6 @@
       "keyword": "FORCE",
       "title": "Force Line Extensão Elétrica Slim 3 Metros 3 Tomadas Tripolar Branca | Extensão de tomada com cabo PP, plugue de 3 pinos e ca",
       "url": "https://www.amazon.com.br/dp/B07JN19LDF?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "FONE",
-      "title": "JBL, Fone de Ouvido Com Fio, Intra-Auricular, Tune 310 C - Preto",
-      "url": "https://www.amazon.com.br/dp/B0CTMTYY1D?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
@@ -7493,6 +7493,14 @@
       "keyword": "CUSTOM",
       "title": "Custom Metal Name Sign | Split Letter Monogram | Outdoor Last Name Sign | Metal Wall Art, Personalized Wedding Gift, Outdoor",
       "url": "https://www.amazon.com/dp/B081732LNJ?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "",
+      "facebook_post_id": ""
+    },
+    {
+      "keyword": "CHRONICLE",
+      "title": "Chronicle: The 20 Greatest Hits",
+      "url": "https://www.amazon.com/dp/B000000XB8?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
       "facebook_post_id": ""
