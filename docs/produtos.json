@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-29T12:03:43.488163+00:00",
+  "updated_at": "2026-10-29T12:04:08.632566+00:00",
   "products": [
+    {
+      "keyword": "VACAS",
+      "title": "As vacas não me olham mais na cara",
+      "url": "https://www.amazon.com.br/dp/B0H2G1W8GR?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18103348190440324",
+      "facebook_post_id": "2363261061087763"
+    },
     {
       "keyword": "CAPACETE",
       "title": "Capacete Aberto PRO TORK New Liberty 3 Solid Branco Tam. 58",
@@ -3327,14 +3335,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "VACAS",
-      "title": "As vacas não me olham mais na cara",
-      "url": "https://www.amazon.com.br/dp/B0H2G1W8GR?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18103348190440324",
       "facebook_post_id": ""
     },
     {
