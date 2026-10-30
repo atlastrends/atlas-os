@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-30T01:47:06.935999+00:00",
+  "updated_at": "2026-10-30T01:47:29.968825+00:00",
   "products": [
+    {
+      "keyword": "WHISKY",
+      "title": "Whisky Johnnie Walker Red Label, 1L",
+      "url": "https://www.amazon.com.br/dp/B004Q47N5G?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18284955820289893",
+      "facebook_post_id": "1634191181543377"
+    },
     {
       "keyword": "BEBE",
       "title": "Ola Bebê Sabão Líquido para Roupas Finas e Delicadas, 3,8L",
@@ -3527,14 +3535,6 @@
       "url": "https://www.amazon.com.br/dp/B07JN19LDF?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "WHISKY",
-      "title": "Whisky Johnnie Walker Red Label, 1L",
-      "url": "https://www.amazon.com.br/dp/B004Q47N5G?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18284955820289893",
       "facebook_post_id": ""
     },
     {
