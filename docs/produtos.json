@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-30T21:09:37.078552+00:00",
+  "updated_at": "2026-10-30T21:10:47.675257+00:00",
   "products": [
+    {
+      "keyword": "PISCINA",
+      "title": "Mor - Piscina Inflável 1.000 Litros",
+      "url": "https://www.amazon.com.br/dp/B076PPQBDX?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18130944025856411",
+      "facebook_post_id": "1147852744565585"
+    },
     {
       "keyword": "APERITIVO",
       "title": "Aperitivo Aperol 750ml",
@@ -3615,14 +3623,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PISCINA",
-      "title": "Mor - Piscina Inflável 1.000 Litros",
-      "url": "https://www.amazon.com.br/dp/B076PPQBDX?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18130944025856411",
       "facebook_post_id": ""
     },
     {
