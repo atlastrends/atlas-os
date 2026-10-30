@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-30T21:06:59.769487+00:00",
+  "updated_at": "2026-10-30T21:07:24.198738+00:00",
   "products": [
+    {
+      "keyword": "APERITIVO",
+      "title": "Aperitivo Aperol 750ml",
+      "url": "https://www.amazon.com.br/dp/B07HM62BR7?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18114031745592268",
+      "facebook_post_id": "1112128964759383"
+    },
     {
       "keyword": "MOCHILA",
       "title": "Mochila de viagem coowoz unissex, grande, mala de mão, mochila para trilha, Preto, Large",
@@ -3607,14 +3615,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "APERITIVO",
-      "title": "Aperitivo Aperol 750ml",
-      "url": "https://www.amazon.com.br/dp/B07HM62BR7?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18114031745592268",
       "facebook_post_id": ""
     },
     {
