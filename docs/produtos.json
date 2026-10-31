@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-31T08:21:52.319655+00:00",
+  "updated_at": "2026-10-31T08:22:13.328905+00:00",
   "products": [
+    {
+      "keyword": "TOUCA",
+      "title": "Touca Classic Silicone",
+      "url": "https://www.amazon.com.br/dp/B0079JHHOW?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17958437052258645",
+      "facebook_post_id": "1872217254138755"
+    },
     {
       "keyword": "MASCARA",
       "title": "Máscara de Cílios Maybelline The Colossal Volum&#x27; Express, Preto, 8ml | 9x mais volume, efeito instantâneo, definição intensa,",
@@ -3791,14 +3799,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "TOUCA",
-      "title": "Touca Classic Silicone",
-      "url": "https://www.amazon.com.br/dp/B0079JHHOW?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17958437052258645",
       "facebook_post_id": ""
     },
     {
