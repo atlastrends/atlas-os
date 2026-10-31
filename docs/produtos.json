@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-10-31T04:25:16.177508+00:00",
+  "updated_at": "2026-10-31T04:25:39.584257+00:00",
   "products": [
+    {
+      "keyword": "GRANADO",
+      "title": "Granado Cera Nutritiva Unhas E Cutículas Pink, Rosa, 7g",
+      "url": "https://www.amazon.com.br/dp/B00MVAFX5O?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18090673850251969",
+      "facebook_post_id": "1122889143623134"
+    },
     {
       "keyword": "EXTERNO",
       "title": "HD Externo Portátil Toshiba 4TB Canvio Advance USB 3.0 Preto - HDTCA40XK3CA",
@@ -3775,14 +3783,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "GRANADO",
-      "title": "Granado Cera Nutritiva Unhas E Cutículas Pink, Rosa, 7g",
-      "url": "https://www.amazon.com.br/dp/B00MVAFX5O?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18090673850251969",
       "facebook_post_id": ""
     },
     {
