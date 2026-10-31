@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-31T05:21:43.682992+00:00",
+  "updated_at": "2026-10-31T05:22:28.168077+00:00",
   "products": [
     {
       "keyword": "GRANADO",
@@ -4842,6 +4842,14 @@
       "facebook_post_id": ""
     },
     {
+      "keyword": "SAMSUNG",
+      "title": "Samsung SSD 990 PRO 2TB, PCIe 4.0 M.2 2280, Up to 7,450 MB/s | NVMe Internal Solid State Hard Drive for High End Computing, G",
+      "url": "https://www.amazon.com/dp/B0BHJJ9Y77?tag=atlasfindsus-20",
+      "market": "US",
+      "instagram_media_id": "17907908526596426",
+      "facebook_post_id": "1056407047450915"
+    },
+    {
       "keyword": "ANKER",
       "title": "Anker USB A to USB C Cable, USB to USB C Cable(2Pack,3ft,Black) | For iPhone 17 Series, Samsung Galaxy S10 / S10+, LG V30, Be",
       "url": "https://www.amazon.com/dp/B07DD5YHMH?tag=atlasfindsus-20",
@@ -8287,14 +8295,6 @@
       "url": "https://www.amazon.com/dp/B07YFDF3YK?tag=atlasfindsus-20",
       "market": "US",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "SAMSUNG",
-      "title": "Samsung SSD 990 PRO 2TB, PCIe 4.0 M.2 2280, Up to 7,450 MB/s | NVMe Internal Solid State Hard Drive for High End Computing, G",
-      "url": "https://www.amazon.com/dp/B0BHJJ9Y77?tag=atlasfindsus-20",
-      "market": "US",
-      "instagram_media_id": "17907908526596426",
       "facebook_post_id": ""
     },
     {
