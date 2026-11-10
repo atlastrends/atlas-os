@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-11-10T22:36:53.975709+00:00",
+  "updated_at": "2026-11-10T22:37:59.478781+00:00",
   "products": [
+    {
+      "keyword": "ENDLESS",
+      "title": "Endless Alphabet",
+      "url": "https://www.amazon.com.br/dp/B00FN64M2S?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "2954401931601869"
+    },
     {
       "keyword": "TOCA",
       "title": "Toca Life: City",
@@ -4013,14 +4021,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "ENDLESS",
-      "title": "Endless Alphabet",
-      "url": "https://www.amazon.com.br/dp/B00FN64M2S?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
