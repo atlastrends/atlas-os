@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-11-10T22:35:55.381983+00:00",
+  "updated_at": "2026-11-10T22:36:14.122119+00:00",
   "products": [
+    {
+      "keyword": "TOCA",
+      "title": "Toca Life: City",
+      "url": "https://www.amazon.com.br/dp/B01555BUD0?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18642839647049199",
+      "facebook_post_id": "1952185012858705"
+    },
     {
       "keyword": "SESSENTA",
       "title": "Sessenta dias para ficar",
@@ -4007,14 +4015,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "TOCA",
-      "title": "Toca Life: City",
-      "url": "https://www.amazon.com.br/dp/B01555BUD0?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18642839647049199",
       "facebook_post_id": ""
     },
     {
