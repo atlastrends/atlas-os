@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-11-10T12:25:36.939697+00:00",
+  "updated_at": "2026-11-10T12:26:42.041431+00:00",
   "products": [
+    {
+      "keyword": "DISCO",
+      "title": "21 [Disco de Vinil]",
+      "url": "https://www.amazon.com.br/dp/B08P85K82V?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1102380732668957"
+    },
     {
       "keyword": "TOUCA",
       "title": "Touca Classic Silicone",
@@ -3797,14 +3805,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "DISCO",
-      "title": "21 [Disco de Vinil]",
-      "url": "https://www.amazon.com.br/dp/B08P85K82V?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
