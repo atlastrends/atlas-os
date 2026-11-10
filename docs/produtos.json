@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-11-10T22:33:31.302885+00:00",
+  "updated_at": "2026-11-10T22:34:45.897660+00:00",
   "products": [
+    {
+      "keyword": "SESSENTA",
+      "title": "Sessenta dias para ficar",
+      "url": "https://www.amazon.com.br/dp/B0HNKQRNR5?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "",
+      "facebook_post_id": "1517291026893418"
+    },
     {
       "keyword": "DELE",
       "title": "Dele por Dever: Prometida por Contrato ao Médico Sombrio (Magnatas Irresistíveis Livro 2)",
@@ -3997,14 +4005,6 @@
       "keyword": "NINTENDO",
       "title": "Nintendo, Cartão Samsung microSD Express, 256 GB, Cartão de Memória, Nintendo Switch 2",
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "SESSENTA",
-      "title": "Sessenta dias para ficar",
-      "url": "https://www.amazon.com.br/dp/B0HNKQRNR5?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
       "facebook_post_id": ""
