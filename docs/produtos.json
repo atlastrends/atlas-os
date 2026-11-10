@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-11-10T21:36:35.999919+00:00",
+  "updated_at": "2026-11-10T21:36:51.226522+00:00",
   "products": [
+    {
+      "keyword": "SONIC",
+      "title": "Sonic Jump",
+      "url": "https://www.amazon.com.br/dp/B00BFBSV72?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18121561580083485",
+      "facebook_post_id": "2192419687976520"
+    },
     {
       "keyword": "PERDICAO",
       "title": "A PERDIÇÃO DE DECLAN BLACKMOOR",
@@ -3983,14 +3991,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "SONIC",
-      "title": "Sonic Jump",
-      "url": "https://www.amazon.com.br/dp/B00BFBSV72?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18121561580083485",
       "facebook_post_id": ""
     },
     {
