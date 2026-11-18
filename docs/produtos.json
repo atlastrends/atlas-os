@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-11-18T20:43:10.939056+00:00",
+  "updated_at": "2026-11-18T20:43:31.825007+00:00",
   "products": [
+    {
+      "keyword": "PROCESSADOR",
+      "title": "PROCESSADOR AMD RYZEN 7 5700X 3.4GHz (Turbo 4.6GHz) 36MB Cache AM4 100-100000926WOF, Cerâmica Cinza",
+      "url": "https://www.amazon.com.br/dp/B09VCHQHZ6?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18111775594906351",
+      "facebook_post_id": "1706248861228012"
+    },
     {
       "keyword": "CARTUCHO",
       "title": "Cartucho de tinta HP 667 Preto Original (3YM79AB) Para Impressora Deskjet 2376, 2776, 6476, 5076, 5276",
@@ -4151,14 +4159,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "PROCESSADOR",
-      "title": "PROCESSADOR AMD RYZEN 7 5700X 3.4GHz (Turbo 4.6GHz) 36MB Cache AM4 100-100000926WOF, Cerâmica Cinza",
-      "url": "https://www.amazon.com.br/dp/B09VCHQHZ6?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18111775594906351",
       "facebook_post_id": ""
     },
     {
