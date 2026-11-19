@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-11-19T07:03:45.951312+00:00",
+  "updated_at": "2026-11-19T07:04:08.504707+00:00",
   "products": [
+    {
+      "keyword": "IMPRESSORA",
+      "title": "Impressora Epson EcoTank L1250 - Tanque de Tinta Colorida, Wi-Fi Direct, Comando de voz, Bivolt, Cor: Preto",
+      "url": "https://www.amazon.com.br/dp/B0DTTM47F9?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "17967292941276174",
+      "facebook_post_id": "1670373681447675"
+    },
     {
       "keyword": "CARTUCHO",
       "title": "Cartucho HP 662 preto Original (CZ103AB) Para Impressora DeskJet 2516, 3516, 3546, 2546, 1516, 4646, 2646",
@@ -4215,14 +4223,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "IMPRESSORA",
-      "title": "Impressora Epson EcoTank L1250 - Tanque de Tinta Colorida, Wi-Fi Direct, Comando de voz, Bivolt, Cor: Preto",
-      "url": "https://www.amazon.com.br/dp/B0DTTM47F9?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "17967292941276174",
       "facebook_post_id": ""
     },
     {
