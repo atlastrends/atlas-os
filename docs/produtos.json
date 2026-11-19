@@ -1,6 +1,14 @@
 {
-  "updated_at": "2026-11-19T04:05:58.777805+00:00",
+  "updated_at": "2026-11-19T04:06:28.232509+00:00",
   "products": [
+    {
+      "keyword": "GARRAFAS",
+      "title": "Kit de Garrafas de Tinta Original Epson, Magenta, Amarelo, Ciano | Compacto",
+      "url": "https://www.amazon.com.br/dp/B09JKXGSLG?tag=achadosatlasb-20",
+      "market": "BR",
+      "instagram_media_id": "18118542197590795",
+      "facebook_post_id": "2172447524147637"
+    },
     {
       "keyword": "NEXGARD",
       "title": "NexGard Antipulgas e Carrapatos para Cães de 10.1 a 25kg - 3 tabletes",
@@ -4191,14 +4199,6 @@
       "url": "https://www.amazon.com.br/dp/B0F3VTCZK8?tag=achadosatlasb-20",
       "market": "BR",
       "instagram_media_id": "",
-      "facebook_post_id": ""
-    },
-    {
-      "keyword": "GARRAFAS",
-      "title": "Kit de Garrafas de Tinta Original Epson, Magenta, Amarelo, Ciano | Compacto",
-      "url": "https://www.amazon.com.br/dp/B09JKXGSLG?tag=achadosatlasb-20",
-      "market": "BR",
-      "instagram_media_id": "18118542197590795",
       "facebook_post_id": ""
     },
     {
